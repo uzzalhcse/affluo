@@ -2,6 +2,7 @@ package handler
 
 import (
 	"affluo/ent"
+	"affluo/internal/dto"
 	"affluo/internal/service"
 	"net/mail"
 
@@ -18,47 +19,34 @@ func NewUserHandler(client *ent.Client) *UserHandler {
 	}
 }
 
-type CreateUserRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type UpdateUserRequest struct {
-	Username *string `json:"username"`
-	Email    *string `json:"email"`
-}
-
 func (h *UserHandler) validateEmail(email string) error {
 	_, err := mail.ParseAddress(email)
 	return err
 }
 
 func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
-	var req CreateUserRequest
+	var req dto.CreateUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request payload",
 		})
 	}
 
-	// Validate email
-	if err := h.validateEmail(req.Email); err != nil {
+	// Validate request
+	if err := req.Validate(); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid email format",
+			"error": err.Error(),
 		})
 	}
 
-	// Create user
 	user, err := h.userService.CreateUser(c.Context(), req.Username, req.Email, req.Password)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Failed to create user",
-			"details": err.Error(),
+			"error": "Failed to create user",
 		})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(user)
+	return c.Status(fiber.StatusCreated).JSON(dto.NewUserResponse(user))
 }
 
 func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
@@ -86,10 +74,17 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 
 func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	id := c.Params("id")
-	var req UpdateUserRequest
+	var req dto.UpdateUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request payload",
+		})
+	}
+
+	// Validate request
+	if err := req.Validate(); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
 		})
 	}
 
@@ -109,7 +104,7 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(user)
+	return c.JSON(dto.NewUserResponse(user))
 }
 
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {

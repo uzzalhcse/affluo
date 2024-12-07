@@ -4,20 +4,13 @@ import (
 	"affluo/ent"
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"entgo.io/ent/dialect"
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq" // <------------ here
+	_ "github.com/lib/pq"
 )
 
 func InitDatabase() (*ent.Client, error) {
-	// Load .env file
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
-
 	// Database connection parameters
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
