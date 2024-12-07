@@ -18,7 +18,7 @@ func NewPostHandler(client *ent.Client) *PostHandler {
 
 func (h *PostHandler) CreatePost(c *fiber.Ctx) error {
 	type CreatePostRequest struct {
-		UserID  string `json:"user_id"`
+		UserID  int64  `json:"user_id"`
 		Title   string `json:"title"`
 		Content string `json:"content"`
 	}
@@ -30,7 +30,7 @@ func (h *PostHandler) CreatePost(c *fiber.Ctx) error {
 		})
 	}
 
-	post, err := h.postService.CreatePost(c.Context(), req.UserID, req.Title, req.Content)
+	post, err := h.postService.CreatePost(c.Context(), req.Title, req.Content, req.UserID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create post",

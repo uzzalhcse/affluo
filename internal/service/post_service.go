@@ -16,7 +16,7 @@ func NewPostService(client *ent.Client) *PostService {
 	return &PostService{client: client}
 }
 
-func (s *PostService) CreatePost(ctx context.Context, userID, title, content string) (*ent.Post, error) {
+func (s *PostService) CreatePost(ctx context.Context, title, content string, userID int64) (*ent.Post, error) {
 	return s.client.Post.Create().
 		SetID(uuid.New().String()).
 		SetTitle(title).

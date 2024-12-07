@@ -57,13 +57,13 @@ func (pu *PostUpdate) SetNillableContent(s *string) *PostUpdate {
 }
 
 // SetAuthorID sets the "author" edge to the User entity by ID.
-func (pu *PostUpdate) SetAuthorID(id string) *PostUpdate {
+func (pu *PostUpdate) SetAuthorID(id int64) *PostUpdate {
 	pu.mutation.SetAuthorID(id)
 	return pu
 }
 
 // SetNillableAuthorID sets the "author" edge to the User entity by ID if the given value is not nil.
-func (pu *PostUpdate) SetNillableAuthorID(id *string) *PostUpdate {
+func (pu *PostUpdate) SetNillableAuthorID(id *int64) *PostUpdate {
 	if id != nil {
 		pu = pu.SetAuthorID(*id)
 	}
@@ -136,7 +136,7 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{post.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -149,7 +149,7 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{post.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -206,13 +206,13 @@ func (puo *PostUpdateOne) SetNillableContent(s *string) *PostUpdateOne {
 }
 
 // SetAuthorID sets the "author" edge to the User entity by ID.
-func (puo *PostUpdateOne) SetAuthorID(id string) *PostUpdateOne {
+func (puo *PostUpdateOne) SetAuthorID(id int64) *PostUpdateOne {
 	puo.mutation.SetAuthorID(id)
 	return puo
 }
 
 // SetNillableAuthorID sets the "author" edge to the User entity by ID if the given value is not nil.
-func (puo *PostUpdateOne) SetNillableAuthorID(id *string) *PostUpdateOne {
+func (puo *PostUpdateOne) SetNillableAuthorID(id *int64) *PostUpdateOne {
 	if id != nil {
 		puo = puo.SetAuthorID(*id)
 	}
@@ -315,7 +315,7 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 			Columns: []string{post.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -328,7 +328,7 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 			Columns: []string{post.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

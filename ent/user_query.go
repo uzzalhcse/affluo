@@ -3,8 +3,12 @@
 package ent
 
 import (
+	"affluo/ent/campaign"
+	"affluo/ent/payout"
 	"affluo/ent/post"
 	"affluo/ent/predicate"
+	"affluo/ent/referral"
+	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
 	"database/sql/driver"
@@ -20,11 +24,15 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx        *QueryContext
-	order      []user.OrderOption
-	inters     []Interceptor
-	predicates []predicate.User
-	withPosts  *PostQuery
+	ctx           *QueryContext
+	order         []user.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.User
+	withCampaigns *CampaignQuery
+	withReferrals *ReferralQuery
+	withTracks    *TrackQuery
+	withPayouts   *PayoutQuery
+	withPosts     *PostQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -59,6 +67,94 @@ func (uq *UserQuery) Unique(unique bool) *UserQuery {
 func (uq *UserQuery) Order(o ...user.OrderOption) *UserQuery {
 	uq.order = append(uq.order, o...)
 	return uq
+}
+
+// QueryCampaigns chains the current query on the "campaigns" edge.
+func (uq *UserQuery) QueryCampaigns() *CampaignQuery {
+	query := (&CampaignClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(campaign.Table, campaign.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CampaignsTable, user.CampaignsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReferrals chains the current query on the "referrals" edge.
+func (uq *UserQuery) QueryReferrals() *ReferralQuery {
+	query := (&ReferralClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(referral.Table, referral.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReferralsTable, user.ReferralsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTracks chains the current query on the "tracks" edge.
+func (uq *UserQuery) QueryTracks() *TrackQuery {
+	query := (&TrackClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(track.Table, track.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TracksTable, user.TracksColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPayouts chains the current query on the "payouts" edge.
+func (uq *UserQuery) QueryPayouts() *PayoutQuery {
+	query := (&PayoutClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(payout.Table, payout.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PayoutsTable, user.PayoutsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QueryPosts chains the current query on the "posts" edge.
@@ -107,8 +203,8 @@ func (uq *UserQuery) FirstX(ctx context.Context) *User {
 
 // FirstID returns the first User ID from the query.
 // Returns a *NotFoundError when no User ID was found.
-func (uq *UserQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (uq *UserQuery) FirstID(ctx context.Context) (id int64, err error) {
+	var ids []int64
 	if ids, err = uq.Limit(1).IDs(setContextOp(ctx, uq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -120,7 +216,7 @@ func (uq *UserQuery) FirstID(ctx context.Context) (id string, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (uq *UserQuery) FirstIDX(ctx context.Context) string {
+func (uq *UserQuery) FirstIDX(ctx context.Context) int64 {
 	id, err := uq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +254,8 @@ func (uq *UserQuery) OnlyX(ctx context.Context) *User {
 // OnlyID is like Only, but returns the only User ID in the query.
 // Returns a *NotSingularError when more than one User ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (uq *UserQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (uq *UserQuery) OnlyID(ctx context.Context) (id int64, err error) {
+	var ids []int64
 	if ids, err = uq.Limit(2).IDs(setContextOp(ctx, uq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -175,7 +271,7 @@ func (uq *UserQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (uq *UserQuery) OnlyIDX(ctx context.Context) string {
+func (uq *UserQuery) OnlyIDX(ctx context.Context) int64 {
 	id, err := uq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +299,7 @@ func (uq *UserQuery) AllX(ctx context.Context) []*User {
 }
 
 // IDs executes the query and returns a list of User IDs.
-func (uq *UserQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (uq *UserQuery) IDs(ctx context.Context) (ids []int64, err error) {
 	if uq.ctx.Unique == nil && uq.path != nil {
 		uq.Unique(true)
 	}
@@ -215,7 +311,7 @@ func (uq *UserQuery) IDs(ctx context.Context) (ids []string, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (uq *UserQuery) IDsX(ctx context.Context) []string {
+func (uq *UserQuery) IDsX(ctx context.Context) []int64 {
 	ids, err := uq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -270,16 +366,64 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:     uq.config,
-		ctx:        uq.ctx.Clone(),
-		order:      append([]user.OrderOption{}, uq.order...),
-		inters:     append([]Interceptor{}, uq.inters...),
-		predicates: append([]predicate.User{}, uq.predicates...),
-		withPosts:  uq.withPosts.Clone(),
+		config:        uq.config,
+		ctx:           uq.ctx.Clone(),
+		order:         append([]user.OrderOption{}, uq.order...),
+		inters:        append([]Interceptor{}, uq.inters...),
+		predicates:    append([]predicate.User{}, uq.predicates...),
+		withCampaigns: uq.withCampaigns.Clone(),
+		withReferrals: uq.withReferrals.Clone(),
+		withTracks:    uq.withTracks.Clone(),
+		withPayouts:   uq.withPayouts.Clone(),
+		withPosts:     uq.withPosts.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
 	}
+}
+
+// WithCampaigns tells the query-builder to eager-load the nodes that are connected to
+// the "campaigns" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithCampaigns(opts ...func(*CampaignQuery)) *UserQuery {
+	query := (&CampaignClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withCampaigns = query
+	return uq
+}
+
+// WithReferrals tells the query-builder to eager-load the nodes that are connected to
+// the "referrals" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithReferrals(opts ...func(*ReferralQuery)) *UserQuery {
+	query := (&ReferralClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withReferrals = query
+	return uq
+}
+
+// WithTracks tells the query-builder to eager-load the nodes that are connected to
+// the "tracks" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithTracks(opts ...func(*TrackQuery)) *UserQuery {
+	query := (&TrackClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withTracks = query
+	return uq
+}
+
+// WithPayouts tells the query-builder to eager-load the nodes that are connected to
+// the "payouts" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithPayouts(opts ...func(*PayoutQuery)) *UserQuery {
+	query := (&PayoutClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withPayouts = query
+	return uq
 }
 
 // WithPosts tells the query-builder to eager-load the nodes that are connected to
@@ -371,7 +515,11 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [5]bool{
+			uq.withCampaigns != nil,
+			uq.withReferrals != nil,
+			uq.withTracks != nil,
+			uq.withPayouts != nil,
 			uq.withPosts != nil,
 		}
 	)
@@ -393,6 +541,34 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := uq.withCampaigns; query != nil {
+		if err := uq.loadCampaigns(ctx, query, nodes,
+			func(n *User) { n.Edges.Campaigns = []*Campaign{} },
+			func(n *User, e *Campaign) { n.Edges.Campaigns = append(n.Edges.Campaigns, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withReferrals; query != nil {
+		if err := uq.loadReferrals(ctx, query, nodes,
+			func(n *User) { n.Edges.Referrals = []*Referral{} },
+			func(n *User, e *Referral) { n.Edges.Referrals = append(n.Edges.Referrals, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withTracks; query != nil {
+		if err := uq.loadTracks(ctx, query, nodes,
+			func(n *User) { n.Edges.Tracks = []*Track{} },
+			func(n *User, e *Track) { n.Edges.Tracks = append(n.Edges.Tracks, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withPayouts; query != nil {
+		if err := uq.loadPayouts(ctx, query, nodes,
+			func(n *User) { n.Edges.Payouts = []*Payout{} },
+			func(n *User, e *Payout) { n.Edges.Payouts = append(n.Edges.Payouts, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := uq.withPosts; query != nil {
 		if err := uq.loadPosts(ctx, query, nodes,
 			func(n *User) { n.Edges.Posts = []*Post{} },
@@ -403,9 +579,133 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	return nodes, nil
 }
 
+func (uq *UserQuery) loadCampaigns(ctx context.Context, query *CampaignQuery, nodes []*User, init func(*User), assign func(*User, *Campaign)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Campaign(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.CampaignsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_campaigns
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_campaigns" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_campaigns" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadReferrals(ctx context.Context, query *ReferralQuery, nodes []*User, init func(*User), assign func(*User, *Referral)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Referral(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ReferralsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_referrals
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_referrals" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_referrals" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadTracks(ctx context.Context, query *TrackQuery, nodes []*User, init func(*User), assign func(*User, *Track)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Track(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.TracksColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_tracks
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_tracks" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_tracks" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadPayouts(ctx context.Context, query *PayoutQuery, nodes []*User, init func(*User), assign func(*User, *Payout)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Payout(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.PayoutsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_payouts
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_payouts" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_payouts" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (uq *UserQuery) loadPosts(ctx context.Context, query *PostQuery, nodes []*User, init func(*User), assign func(*User, *Post)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*User)
+	nodeids := make(map[int64]*User)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -445,7 +745,7 @@ func (uq *UserQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (uq *UserQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64))
 	_spec.From = uq.sql
 	if unique := uq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

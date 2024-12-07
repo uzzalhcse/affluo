@@ -410,8 +410,8 @@ func (pq *PostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Post, e
 }
 
 func (pq *PostQuery) loadAuthor(ctx context.Context, query *UserQuery, nodes []*Post, init func(*Post), assign func(*Post, *User)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*Post)
+	ids := make([]int64, 0, len(nodes))
+	nodeids := make(map[int64][]*Post)
 	for i := range nodes {
 		if nodes[i].user_posts == nil {
 			continue

@@ -27,7 +27,7 @@ type Post struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PostQuery when eager-loading is set.
 	Edges        PostEdges `json:"edges"`
-	user_posts   *string
+	user_posts   *int64
 	selectValues sql.SelectValues
 }
 
@@ -61,7 +61,7 @@ func (*Post) scanValues(columns []string) ([]any, error) {
 		case post.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case post.ForeignKeys[0]: // user_posts
-			values[i] = new(sql.NullString)
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -102,11 +102,11 @@ func (po *Post) assignValues(columns []string, values []any) error {
 				po.CreatedAt = value.Time
 			}
 		case post.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field user_posts", values[i])
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field user_posts", value)
 			} else if value.Valid {
-				po.user_posts = new(string)
-				*po.user_posts = value.String
+				po.user_posts = new(int64)
+				*po.user_posts = int64(value.Int64)
 			}
 		default:
 			po.selectValues.Set(columns[i], values[i])

@@ -46,13 +46,13 @@ func (pc *PostCreate) SetID(s string) *PostCreate {
 }
 
 // SetAuthorID sets the "author" edge to the User entity by ID.
-func (pc *PostCreate) SetAuthorID(id string) *PostCreate {
+func (pc *PostCreate) SetAuthorID(id int64) *PostCreate {
 	pc.mutation.SetAuthorID(id)
 	return pc
 }
 
 // SetNillableAuthorID sets the "author" edge to the User entity by ID if the given value is not nil.
-func (pc *PostCreate) SetNillableAuthorID(id *string) *PostCreate {
+func (pc *PostCreate) SetNillableAuthorID(id *int64) *PostCreate {
 	if id != nil {
 		pc = pc.SetAuthorID(*id)
 	}
@@ -162,7 +162,7 @@ func (pc *PostCreate) createSpec() (*Post, *sqlgraph.CreateSpec) {
 			Columns: []string{post.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

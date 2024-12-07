@@ -2,8 +2,86 @@
 
 package ent
 
+import (
+	"affluo/ent/campaign"
+	"affluo/ent/campaignlink"
+	"affluo/ent/referral"
+	"affluo/ent/schema"
+	"affluo/ent/track"
+	"affluo/ent/user"
+	"time"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	campaignFields := schema.Campaign{}.Fields()
+	_ = campaignFields
+	// campaignDescName is the schema descriptor for name field.
+	campaignDescName := campaignFields[1].Descriptor()
+	// campaign.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	campaign.NameValidator = campaignDescName.Validators[0].(func(string) error)
+	// campaignDescID is the schema descriptor for id field.
+	campaignDescID := campaignFields[0].Descriptor()
+	// campaign.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	campaign.IDValidator = campaignDescID.Validators[0].(func(int64) error)
+	campaignlinkFields := schema.CampaignLink{}.Fields()
+	_ = campaignlinkFields
+	// campaignlinkDescCreatedAt is the schema descriptor for created_at field.
+	campaignlinkDescCreatedAt := campaignlinkFields[4].Descriptor()
+	// campaignlink.DefaultCreatedAt holds the default value on creation for the created_at field.
+	campaignlink.DefaultCreatedAt = campaignlinkDescCreatedAt.Default.(func() time.Time)
+	// campaignlinkDescIsActive is the schema descriptor for is_active field.
+	campaignlinkDescIsActive := campaignlinkFields[5].Descriptor()
+	// campaignlink.DefaultIsActive holds the default value on creation for the is_active field.
+	campaignlink.DefaultIsActive = campaignlinkDescIsActive.Default.(bool)
+	// campaignlinkDescID is the schema descriptor for id field.
+	campaignlinkDescID := campaignlinkFields[0].Descriptor()
+	// campaignlink.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	campaignlink.IDValidator = campaignlinkDescID.Validators[0].(func(int64) error)
+	referralFields := schema.Referral{}.Fields()
+	_ = referralFields
+	// referralDescCreatedAt is the schema descriptor for created_at field.
+	referralDescCreatedAt := referralFields[3].Descriptor()
+	// referral.DefaultCreatedAt holds the default value on creation for the created_at field.
+	referral.DefaultCreatedAt = referralDescCreatedAt.Default.(func() time.Time)
+	// referralDescID is the schema descriptor for id field.
+	referralDescID := referralFields[0].Descriptor()
+	// referral.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	referral.IDValidator = referralDescID.Validators[0].(func(int64) error)
+	trackFields := schema.Track{}.Fields()
+	_ = trackFields
+	// trackDescCreatedAt is the schema descriptor for created_at field.
+	trackDescCreatedAt := trackFields[7].Descriptor()
+	// track.DefaultCreatedAt holds the default value on creation for the created_at field.
+	track.DefaultCreatedAt = trackDescCreatedAt.Default.(func() time.Time)
+	// trackDescIsUniqueClick is the schema descriptor for is_unique_click field.
+	trackDescIsUniqueClick := trackFields[8].Descriptor()
+	// track.DefaultIsUniqueClick holds the default value on creation for the is_unique_click field.
+	track.DefaultIsUniqueClick = trackDescIsUniqueClick.Default.(bool)
+	// trackDescID is the schema descriptor for id field.
+	trackDescID := trackFields[0].Descriptor()
+	// track.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	track.IDValidator = trackDescID.Validators[0].(func(int64) error)
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescCreatedAt is the schema descriptor for created_at field.
+	userDescCreatedAt := userFields[7].Descriptor()
+	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
+	// userDescUpdatedAt is the schema descriptor for updated_at field.
+	userDescUpdatedAt := userFields[8].Descriptor()
+	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
+	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userDescIsActive is the schema descriptor for is_active field.
+	userDescIsActive := userFields[9].Descriptor()
+	// user.DefaultIsActive holds the default value on creation for the is_active field.
+	user.DefaultIsActive = userDescIsActive.Default.(bool)
+	// userDescID is the schema descriptor for id field.
+	userDescID := userFields[0].Descriptor()
+	// user.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	user.IDValidator = userDescID.Validators[0].(func(int64) error)
 }

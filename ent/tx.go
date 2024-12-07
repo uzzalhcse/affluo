@@ -12,10 +12,20 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Campaign is the client for interacting with the Campaign builders.
+	Campaign *CampaignClient
+	// CampaignLink is the client for interacting with the CampaignLink builders.
+	CampaignLink *CampaignLinkClient
+	// Payout is the client for interacting with the Payout builders.
+	Payout *PayoutClient
 	// Post is the client for interacting with the Post builders.
 	Post *PostClient
+	// Referral is the client for interacting with the Referral builders.
+	Referral *ReferralClient
 	// Test is the client for interacting with the Test builders.
 	Test *TestClient
+	// Track is the client for interacting with the Track builders.
+	Track *TrackClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -149,8 +159,13 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Campaign = NewCampaignClient(tx.config)
+	tx.CampaignLink = NewCampaignLinkClient(tx.config)
+	tx.Payout = NewPayoutClient(tx.config)
 	tx.Post = NewPostClient(tx.config)
+	tx.Referral = NewReferralClient(tx.config)
 	tx.Test = NewTestClient(tx.config)
+	tx.Track = NewTrackClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 
@@ -161,7 +176,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Post.QueryXXX(), the query will be executed
+// applies a query, for example: Campaign.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.
