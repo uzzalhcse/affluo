@@ -9,7 +9,9 @@ func Recover() fiber.Handler {
 		defer func() {
 			if r := recover(); r != nil {
 				c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"error": "Internal Server Error",
+					"error":   "Internal Server Error",
+					"message": "An unexpected error occurred",
+					"stack":   r,
 				})
 			}
 		}()

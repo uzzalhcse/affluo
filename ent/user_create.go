@@ -77,6 +77,14 @@ func (uc *UserCreate) SetRole(u user.Role) *UserCreate {
 	return uc
 }
 
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (uc *UserCreate) SetNillableRole(u *user.Role) *UserCreate {
+	if u != nil {
+		uc.SetRole(*u)
+	}
+	return uc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (uc *UserCreate) SetCreatedAt(t time.Time) *UserCreate {
 	uc.mutation.SetCreatedAt(t)
@@ -115,6 +123,48 @@ func (uc *UserCreate) SetIsActive(b bool) *UserCreate {
 func (uc *UserCreate) SetNillableIsActive(b *bool) *UserCreate {
 	if b != nil {
 		uc.SetIsActive(*b)
+	}
+	return uc
+}
+
+// SetLastLogin sets the "last_login" field.
+func (uc *UserCreate) SetLastLogin(t time.Time) *UserCreate {
+	uc.mutation.SetLastLogin(t)
+	return uc
+}
+
+// SetNillableLastLogin sets the "last_login" field if the given value is not nil.
+func (uc *UserCreate) SetNillableLastLogin(t *time.Time) *UserCreate {
+	if t != nil {
+		uc.SetLastLogin(*t)
+	}
+	return uc
+}
+
+// SetResetToken sets the "reset_token" field.
+func (uc *UserCreate) SetResetToken(s string) *UserCreate {
+	uc.mutation.SetResetToken(s)
+	return uc
+}
+
+// SetNillableResetToken sets the "reset_token" field if the given value is not nil.
+func (uc *UserCreate) SetNillableResetToken(s *string) *UserCreate {
+	if s != nil {
+		uc.SetResetToken(*s)
+	}
+	return uc
+}
+
+// SetResetTokenExpiresAt sets the "reset_token_expires_at" field.
+func (uc *UserCreate) SetResetTokenExpiresAt(t time.Time) *UserCreate {
+	uc.mutation.SetResetTokenExpiresAt(t)
+	return uc
+}
+
+// SetNillableResetTokenExpiresAt sets the "reset_token_expires_at" field if the given value is not nil.
+func (uc *UserCreate) SetNillableResetTokenExpiresAt(t *time.Time) *UserCreate {
+	if t != nil {
+		uc.SetResetTokenExpiresAt(*t)
 	}
 	return uc
 }
@@ -235,6 +285,10 @@ func (uc *UserCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (uc *UserCreate) defaults() {
+	if _, ok := uc.mutation.Role(); !ok {
+		v := user.DefaultRole
+		uc.mutation.SetRole(v)
+	}
 	if _, ok := uc.mutation.CreatedAt(); !ok {
 		v := user.DefaultCreatedAt()
 		uc.mutation.SetCreatedAt(v)
@@ -256,6 +310,11 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.Email(); !ok {
 		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
+	}
+	if v, ok := uc.mutation.Email(); ok {
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
+		}
 	}
 	if _, ok := uc.mutation.PasswordHash(); !ok {
 		return &ValidationError{Name: "password_hash", err: errors.New(`ent: missing required field "User.password_hash"`)}
@@ -349,6 +408,18 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.IsActive(); ok {
 		_spec.SetField(user.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
+	}
+	if value, ok := uc.mutation.LastLogin(); ok {
+		_spec.SetField(user.FieldLastLogin, field.TypeTime, value)
+		_node.LastLogin = value
+	}
+	if value, ok := uc.mutation.ResetToken(); ok {
+		_spec.SetField(user.FieldResetToken, field.TypeString, value)
+		_node.ResetToken = value
+	}
+	if value, ok := uc.mutation.ResetTokenExpiresAt(); ok {
+		_spec.SetField(user.FieldResetTokenExpiresAt, field.TypeTime, value)
+		_node.ResetTokenExpiresAt = value
 	}
 	if nodes := uc.mutation.CampaignsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

@@ -33,6 +33,12 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
+	// FieldLastLogin holds the string denoting the last_login field in the database.
+	FieldLastLogin = "last_login"
+	// FieldResetToken holds the string denoting the reset_token field in the database.
+	FieldResetToken = "reset_token"
+	// FieldResetTokenExpiresAt holds the string denoting the reset_token_expires_at field in the database.
+	FieldResetTokenExpiresAt = "reset_token_expires_at"
 	// EdgeCampaigns holds the string denoting the campaigns edge name in mutations.
 	EdgeCampaigns = "campaigns"
 	// EdgeReferrals holds the string denoting the referrals edge name in mutations.
@@ -94,6 +100,9 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldIsActive,
+	FieldLastLogin,
+	FieldResetToken,
+	FieldResetTokenExpiresAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -107,6 +116,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	EmailValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -121,6 +132,9 @@ var (
 
 // Role defines the type for the "role" enum field.
 type Role string
+
+// RoleAffiliate is the default value of the Role enum.
+const DefaultRole = RoleAffiliate
 
 // Role values.
 const (
@@ -194,6 +208,21 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByIsActive orders the results by the is_active field.
 func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+}
+
+// ByLastLogin orders the results by the last_login field.
+func ByLastLogin(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastLogin, opts...).ToFunc()
+}
+
+// ByResetToken orders the results by the reset_token field.
+func ByResetToken(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResetToken, opts...).ToFunc()
+}
+
+// ByResetTokenExpiresAt orders the results by the reset_token_expires_at field.
+func ByResetTokenExpiresAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResetTokenExpiresAt, opts...).ToFunc()
 }
 
 // ByCampaignsCount orders the results by campaigns count.

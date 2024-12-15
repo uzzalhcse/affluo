@@ -18,12 +18,15 @@ import (
 )
 
 type Application struct {
-	Config   *config.Config
-	DB       *ent.Client
-	Redis    *redis.Client
-	App      *fiber.App
-	Services *service.Container
-	Handlers *handler.Container
+	Config     *config.Config
+	DB         *ent.Client
+	Redis      *redis.Client
+	App        *fiber.App
+	Services   *service.Container
+	Handlers   *handler.Container
+	Middleware struct {
+		Auth *middleware.AuthMiddleware
+	}
 }
 
 func NewApplication() (*Application, error) {
@@ -44,6 +47,8 @@ func NewApplication() (*Application, error) {
 	services := service.NewContainer(dbClient, redisClient)
 	handlers := handler.NewContainer(services)
 
+	// Initialize authentication middleware
+	authMiddleware := middleware.NewAuthMiddleware(services.Auth)
 	// Initialize Fiber app
 	fiberApp := fiber.New()
 	setupMiddleware(fiberApp)
@@ -55,6 +60,11 @@ func NewApplication() (*Application, error) {
 		App:      fiberApp,
 		Services: services,
 		Handlers: handlers,
+		Middleware: struct {
+			Auth *middleware.AuthMiddleware
+		}{
+			Auth: authMiddleware,
+		},
 	}
 
 	application.SetupRoutes()
@@ -94,6 +104,8 @@ func (a *Application) StartBackgroundJobs() {
 func setupMiddleware(app *fiber.App) {
 	app.Use(middleware.Recover())
 	app.Use(middleware.Logger())
+	// Add CORS middleware
+	app.Use(middleware.ConfigureCORS())
 }
 
 func setupDatabase(databaseURL string) (*ent.Client, error) {

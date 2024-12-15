@@ -22,7 +22,7 @@ type User struct {
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
 	// PasswordHash holds the value of the "password_hash" field.
-	PasswordHash string `json:"password_hash,omitempty"`
+	PasswordHash string `json:"-"`
 	// FirstName holds the value of the "first_name" field.
 	FirstName string `json:"first_name,omitempty"`
 	// LastName holds the value of the "last_name" field.
@@ -35,6 +35,12 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// IsActive holds the value of the "is_active" field.
 	IsActive bool `json:"is_active,omitempty"`
+	// LastLogin holds the value of the "last_login" field.
+	LastLogin time.Time `json:"last_login,omitempty"`
+	// ResetToken holds the value of the "reset_token" field.
+	ResetToken string `json:"reset_token,omitempty"`
+	// ResetTokenExpiresAt holds the value of the "reset_token_expires_at" field.
+	ResetTokenExpiresAt time.Time `json:"reset_token_expires_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -112,9 +118,9 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldUsername, user.FieldEmail, user.FieldPasswordHash, user.FieldFirstName, user.FieldLastName, user.FieldRole:
+		case user.FieldUsername, user.FieldEmail, user.FieldPasswordHash, user.FieldFirstName, user.FieldLastName, user.FieldRole, user.FieldResetToken:
 			values[i] = new(sql.NullString)
-		case user.FieldCreatedAt, user.FieldUpdatedAt:
+		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldLastLogin, user.FieldResetTokenExpiresAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -191,6 +197,24 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.IsActive = value.Bool
 			}
+		case user.FieldLastLogin:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_login", values[i])
+			} else if value.Valid {
+				u.LastLogin = value.Time
+			}
+		case user.FieldResetToken:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field reset_token", values[i])
+			} else if value.Valid {
+				u.ResetToken = value.String
+			}
+		case user.FieldResetTokenExpiresAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field reset_token_expires_at", values[i])
+			} else if value.Valid {
+				u.ResetTokenExpiresAt = value.Time
+			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
 		}
@@ -258,8 +282,7 @@ func (u *User) String() string {
 	builder.WriteString("email=")
 	builder.WriteString(u.Email)
 	builder.WriteString(", ")
-	builder.WriteString("password_hash=")
-	builder.WriteString(u.PasswordHash)
+	builder.WriteString("password_hash=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("first_name=")
 	builder.WriteString(u.FirstName)
@@ -278,6 +301,15 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", u.IsActive))
+	builder.WriteString(", ")
+	builder.WriteString("last_login=")
+	builder.WriteString(u.LastLogin.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("reset_token=")
+	builder.WriteString(u.ResetToken)
+	builder.WriteString(", ")
+	builder.WriteString("reset_token_expires_at=")
+	builder.WriteString(u.ResetTokenExpiresAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -163,6 +163,66 @@ func (uu *UserUpdate) SetNillableIsActive(b *bool) *UserUpdate {
 	return uu
 }
 
+// SetLastLogin sets the "last_login" field.
+func (uu *UserUpdate) SetLastLogin(t time.Time) *UserUpdate {
+	uu.mutation.SetLastLogin(t)
+	return uu
+}
+
+// SetNillableLastLogin sets the "last_login" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableLastLogin(t *time.Time) *UserUpdate {
+	if t != nil {
+		uu.SetLastLogin(*t)
+	}
+	return uu
+}
+
+// ClearLastLogin clears the value of the "last_login" field.
+func (uu *UserUpdate) ClearLastLogin() *UserUpdate {
+	uu.mutation.ClearLastLogin()
+	return uu
+}
+
+// SetResetToken sets the "reset_token" field.
+func (uu *UserUpdate) SetResetToken(s string) *UserUpdate {
+	uu.mutation.SetResetToken(s)
+	return uu
+}
+
+// SetNillableResetToken sets the "reset_token" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableResetToken(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetResetToken(*s)
+	}
+	return uu
+}
+
+// ClearResetToken clears the value of the "reset_token" field.
+func (uu *UserUpdate) ClearResetToken() *UserUpdate {
+	uu.mutation.ClearResetToken()
+	return uu
+}
+
+// SetResetTokenExpiresAt sets the "reset_token_expires_at" field.
+func (uu *UserUpdate) SetResetTokenExpiresAt(t time.Time) *UserUpdate {
+	uu.mutation.SetResetTokenExpiresAt(t)
+	return uu
+}
+
+// SetNillableResetTokenExpiresAt sets the "reset_token_expires_at" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableResetTokenExpiresAt(t *time.Time) *UserUpdate {
+	if t != nil {
+		uu.SetResetTokenExpiresAt(*t)
+	}
+	return uu
+}
+
+// ClearResetTokenExpiresAt clears the value of the "reset_token_expires_at" field.
+func (uu *UserUpdate) ClearResetTokenExpiresAt() *UserUpdate {
+	uu.mutation.ClearResetTokenExpiresAt()
+	return uu
+}
+
 // AddCampaignIDs adds the "campaigns" edge to the Campaign entity by IDs.
 func (uu *UserUpdate) AddCampaignIDs(ids ...int64) *UserUpdate {
 	uu.mutation.AddCampaignIDs(ids...)
@@ -386,6 +446,11 @@ func (uu *UserUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uu *UserUpdate) check() error {
+	if v, ok := uu.mutation.Email(); ok {
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
+		}
+	}
 	if v, ok := uu.mutation.Role(); ok {
 		if err := user.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "User.role": %w`, err)}
@@ -438,6 +503,24 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.IsActive(); ok {
 		_spec.SetField(user.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := uu.mutation.LastLogin(); ok {
+		_spec.SetField(user.FieldLastLogin, field.TypeTime, value)
+	}
+	if uu.mutation.LastLoginCleared() {
+		_spec.ClearField(user.FieldLastLogin, field.TypeTime)
+	}
+	if value, ok := uu.mutation.ResetToken(); ok {
+		_spec.SetField(user.FieldResetToken, field.TypeString, value)
+	}
+	if uu.mutation.ResetTokenCleared() {
+		_spec.ClearField(user.FieldResetToken, field.TypeString)
+	}
+	if value, ok := uu.mutation.ResetTokenExpiresAt(); ok {
+		_spec.SetField(user.FieldResetTokenExpiresAt, field.TypeTime, value)
+	}
+	if uu.mutation.ResetTokenExpiresAtCleared() {
+		_spec.ClearField(user.FieldResetTokenExpiresAt, field.TypeTime)
 	}
 	if uu.mutation.CampaignsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -814,6 +897,66 @@ func (uuo *UserUpdateOne) SetNillableIsActive(b *bool) *UserUpdateOne {
 	return uuo
 }
 
+// SetLastLogin sets the "last_login" field.
+func (uuo *UserUpdateOne) SetLastLogin(t time.Time) *UserUpdateOne {
+	uuo.mutation.SetLastLogin(t)
+	return uuo
+}
+
+// SetNillableLastLogin sets the "last_login" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableLastLogin(t *time.Time) *UserUpdateOne {
+	if t != nil {
+		uuo.SetLastLogin(*t)
+	}
+	return uuo
+}
+
+// ClearLastLogin clears the value of the "last_login" field.
+func (uuo *UserUpdateOne) ClearLastLogin() *UserUpdateOne {
+	uuo.mutation.ClearLastLogin()
+	return uuo
+}
+
+// SetResetToken sets the "reset_token" field.
+func (uuo *UserUpdateOne) SetResetToken(s string) *UserUpdateOne {
+	uuo.mutation.SetResetToken(s)
+	return uuo
+}
+
+// SetNillableResetToken sets the "reset_token" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableResetToken(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetResetToken(*s)
+	}
+	return uuo
+}
+
+// ClearResetToken clears the value of the "reset_token" field.
+func (uuo *UserUpdateOne) ClearResetToken() *UserUpdateOne {
+	uuo.mutation.ClearResetToken()
+	return uuo
+}
+
+// SetResetTokenExpiresAt sets the "reset_token_expires_at" field.
+func (uuo *UserUpdateOne) SetResetTokenExpiresAt(t time.Time) *UserUpdateOne {
+	uuo.mutation.SetResetTokenExpiresAt(t)
+	return uuo
+}
+
+// SetNillableResetTokenExpiresAt sets the "reset_token_expires_at" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableResetTokenExpiresAt(t *time.Time) *UserUpdateOne {
+	if t != nil {
+		uuo.SetResetTokenExpiresAt(*t)
+	}
+	return uuo
+}
+
+// ClearResetTokenExpiresAt clears the value of the "reset_token_expires_at" field.
+func (uuo *UserUpdateOne) ClearResetTokenExpiresAt() *UserUpdateOne {
+	uuo.mutation.ClearResetTokenExpiresAt()
+	return uuo
+}
+
 // AddCampaignIDs adds the "campaigns" edge to the Campaign entity by IDs.
 func (uuo *UserUpdateOne) AddCampaignIDs(ids ...int64) *UserUpdateOne {
 	uuo.mutation.AddCampaignIDs(ids...)
@@ -1050,6 +1193,11 @@ func (uuo *UserUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uuo *UserUpdateOne) check() error {
+	if v, ok := uuo.mutation.Email(); ok {
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
+		}
+	}
 	if v, ok := uuo.mutation.Role(); ok {
 		if err := user.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "User.role": %w`, err)}
@@ -1119,6 +1267,24 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.IsActive(); ok {
 		_spec.SetField(user.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := uuo.mutation.LastLogin(); ok {
+		_spec.SetField(user.FieldLastLogin, field.TypeTime, value)
+	}
+	if uuo.mutation.LastLoginCleared() {
+		_spec.ClearField(user.FieldLastLogin, field.TypeTime)
+	}
+	if value, ok := uuo.mutation.ResetToken(); ok {
+		_spec.SetField(user.FieldResetToken, field.TypeString, value)
+	}
+	if uuo.mutation.ResetTokenCleared() {
+		_spec.ClearField(user.FieldResetToken, field.TypeString)
+	}
+	if value, ok := uuo.mutation.ResetTokenExpiresAt(); ok {
+		_spec.SetField(user.FieldResetTokenExpiresAt, field.TypeTime, value)
+	}
+	if uuo.mutation.ResetTokenExpiresAtCleared() {
+		_spec.ClearField(user.FieldResetTokenExpiresAt, field.TypeTime)
 	}
 	if uuo.mutation.CampaignsCleared() {
 		edge := &sqlgraph.EdgeSpec{

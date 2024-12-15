@@ -1,17 +1,24 @@
+// internal/handler/container.go
 package handler
 
-import "affluo/internal/service"
+import (
+	"affluo/internal/service"
+)
 
 type Container struct {
-	Tracking *TrackingHandler
 	User     *UserHandler
 	Campaign *CampaignHandler
+	Tracking *TrackingHandler
+	Post     *PostHandler
+	Auth     *AuthHandler // Add Auth Handler
 }
 
 func NewContainer(services *service.Container) *Container {
 	return &Container{
-		Tracking: NewTrackingHandler(services.Tracking),
 		User:     NewUserHandler(services.User),
 		Campaign: NewCampaignHandler(services.Campaign),
+		Tracking: NewTrackingHandler(services.Tracking),
+		//Post:       NewPostHandler(services.Post),
+		Auth: NewAuthHandler(services.Auth), // Initialize Auth Handler
 	}
 }
