@@ -8,11 +8,17 @@ func (a *Application) SetupRoutes() {
 	tracking.Get("/script/:campaign_id", a.Handlers.Tracking.GenerateTrackingScript)
 
 	campaigns := a.App.Group("/api/campaigns")
-	campaigns.Post("/", a.Handlers.Campaign.CreateCampaign)
-	campaigns.Get("/", a.Handlers.Campaign.ListCampaigns)
-	campaigns.Get("/:id", a.Handlers.Campaign.GetCampaign)
-	campaigns.Put("/:id", a.Handlers.Campaign.UpdateCampaign)
-	campaigns.Delete("/:id", a.Handlers.Campaign.DeleteCampaign)
+	campaigns.Use(a.Middleware.Auth.Authenticate())
+	// Standard CRUD Operations
+	campaigns.Post("/", a.Handlers.Campaign.CreateCampaign)      // Create a new campaign
+	campaigns.Get("/", a.Handlers.Campaign.ListCampaigns)        // List all campaigns with optional filtering
+	campaigns.Get("/:id", a.Handlers.Campaign.GetCampaign)       // Retrieve a specific campaign
+	campaigns.Put("/:id", a.Handlers.Campaign.UpdateCampaign)    // Update an existing campaign
+	campaigns.Delete("/:id", a.Handlers.Campaign.DeleteCampaign) // Soft delete a campaign
+
+	// Additional Performance and Tracking Endpoints
+	campaigns.Get("/:id/performance", a.Handlers.Campaign.GetCampaignPerformance)  // Get detailed performance metrics
+	campaigns.Post("/:id/tracking-link", a.Handlers.Campaign.GenerateTrackingLink) // Generate a unique tracking link
 
 	users := a.App.Group("/api/users")
 	users.Post("/", a.Handlers.User.CreateUser)
@@ -30,9 +36,21 @@ func (a *Application) SetupRoutes() {
 	protectedAuth := auth.Use(a.Middleware.Auth.Authenticate())
 	protectedAuth.Get("/profile", a.Handlers.Auth.Profile)
 
-	// Example of protected routes with role-based access
-	//protectedCampaigns := a.App.Group("/api/campaigns")
-	//protectedCampaigns.Use(a.Middleware.Auth.Authenticate("admin", "manager"))
-	//protectedCampaigns.Post("/", a.Handlers.Campaign.CreateCampaign)
-	//protectedCampaigns.Delete("/:id", a.Handlers.Campaign.DeleteCampaign)
+	// Banner routes
+	bannerGroup := a.App.Group("/api/banners")
+	{
+		bannerGroup.Post("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.CreateBanner)
+		bannerGroup.Get("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetAllBanners)
+		bannerGroup.Get("/:id", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetBanner)
+		bannerGroup.Post("/:id/creatives", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.CreateBannerCreative)
+		bannerGroup.Get("/:id/creatives", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetBannerCreatives)
+	}
+	// Creative routes
+	creativeGroup := a.App.Group("/api/creatives")
+	{
+		creativeGroup.Get("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetAllBannerCreatives)
+		creativeGroup.Post("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.CreateBannerCreative)
+		creativeGroup.Get("/:id/creatives", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetBannerCreatives)
+	}
+
 }

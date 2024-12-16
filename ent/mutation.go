@@ -3,12 +3,15 @@
 package ent
 
 import (
+	"affluo/ent/banner"
+	"affluo/ent/bannercreative"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/payout"
 	"affluo/ent/post"
 	"affluo/ent/predicate"
 	"affluo/ent/referral"
+	"affluo/ent/schema"
 	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
@@ -30,47 +33,1813 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeCampaign     = "Campaign"
-	TypeCampaignLink = "CampaignLink"
-	TypePayout       = "Payout"
-	TypePost         = "Post"
-	TypeReferral     = "Referral"
-	TypeTest         = "Test"
-	TypeTrack        = "Track"
-	TypeUser         = "User"
+	TypeBanner         = "Banner"
+	TypeBannerCreative = "BannerCreative"
+	TypeCampaign       = "Campaign"
+	TypeCampaignLink   = "CampaignLink"
+	TypePayout         = "Payout"
+	TypePost           = "Post"
+	TypeReferral       = "Referral"
+	TypeTest           = "Test"
+	TypeTrack          = "Track"
+	TypeUser           = "User"
 )
+
+// BannerMutation represents an operation that mutates the Banner nodes in the graph.
+type BannerMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *int64
+	name                    *string
+	description             *string
+	_type                   *banner.Type
+	click_url               *string
+	size                    *string
+	status                  *banner.Status
+	allowed_countries       *[]string
+	appendallowed_countries []string
+	created_at              *time.Time
+	updated_at              *time.Time
+	clearedFields           map[string]struct{}
+	campaigns               map[int64]struct{}
+	removedcampaigns        map[int64]struct{}
+	clearedcampaigns        bool
+	creatives               map[int64]struct{}
+	removedcreatives        map[int64]struct{}
+	clearedcreatives        bool
+	done                    bool
+	oldValue                func(context.Context) (*Banner, error)
+	predicates              []predicate.Banner
+}
+
+var _ ent.Mutation = (*BannerMutation)(nil)
+
+// bannerOption allows management of the mutation configuration using functional options.
+type bannerOption func(*BannerMutation)
+
+// newBannerMutation creates new mutation for the Banner entity.
+func newBannerMutation(c config, op Op, opts ...bannerOption) *BannerMutation {
+	m := &BannerMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBanner,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBannerID sets the ID field of the mutation.
+func withBannerID(id int64) bannerOption {
+	return func(m *BannerMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Banner
+		)
+		m.oldValue = func(ctx context.Context) (*Banner, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Banner.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBanner sets the old Banner of the mutation.
+func withBanner(node *Banner) bannerOption {
+	return func(m *BannerMutation) {
+		m.oldValue = func(context.Context) (*Banner, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BannerMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BannerMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Banner entities.
+func (m *BannerMutation) SetID(id int64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BannerMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BannerMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Banner.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *BannerMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *BannerMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Banner entity.
+// If the Banner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *BannerMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *BannerMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *BannerMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Banner entity.
+// If the Banner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *BannerMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[banner.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *BannerMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[banner.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *BannerMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, banner.FieldDescription)
+}
+
+// SetType sets the "type" field.
+func (m *BannerMutation) SetType(b banner.Type) {
+	m._type = &b
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *BannerMutation) GetType() (r banner.Type, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the Banner entity.
+// If the Banner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerMutation) OldType(ctx context.Context) (v banner.Type, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *BannerMutation) ResetType() {
+	m._type = nil
+}
+
+// SetClickURL sets the "click_url" field.
+func (m *BannerMutation) SetClickURL(s string) {
+	m.click_url = &s
+}
+
+// ClickURL returns the value of the "click_url" field in the mutation.
+func (m *BannerMutation) ClickURL() (r string, exists bool) {
+	v := m.click_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClickURL returns the old "click_url" field's value of the Banner entity.
+// If the Banner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerMutation) OldClickURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClickURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClickURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClickURL: %w", err)
+	}
+	return oldValue.ClickURL, nil
+}
+
+// ClearClickURL clears the value of the "click_url" field.
+func (m *BannerMutation) ClearClickURL() {
+	m.click_url = nil
+	m.clearedFields[banner.FieldClickURL] = struct{}{}
+}
+
+// ClickURLCleared returns if the "click_url" field was cleared in this mutation.
+func (m *BannerMutation) ClickURLCleared() bool {
+	_, ok := m.clearedFields[banner.FieldClickURL]
+	return ok
+}
+
+// ResetClickURL resets all changes to the "click_url" field.
+func (m *BannerMutation) ResetClickURL() {
+	m.click_url = nil
+	delete(m.clearedFields, banner.FieldClickURL)
+}
+
+// SetSize sets the "size" field.
+func (m *BannerMutation) SetSize(s string) {
+	m.size = &s
+}
+
+// Size returns the value of the "size" field in the mutation.
+func (m *BannerMutation) Size() (r string, exists bool) {
+	v := m.size
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSize returns the old "size" field's value of the Banner entity.
+// If the Banner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerMutation) OldSize(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSize is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSize requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSize: %w", err)
+	}
+	return oldValue.Size, nil
+}
+
+// ResetSize resets all changes to the "size" field.
+func (m *BannerMutation) ResetSize() {
+	m.size = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *BannerMutation) SetStatus(b banner.Status) {
+	m.status = &b
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *BannerMutation) Status() (r banner.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Banner entity.
+// If the Banner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerMutation) OldStatus(ctx context.Context) (v banner.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *BannerMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetAllowedCountries sets the "allowed_countries" field.
+func (m *BannerMutation) SetAllowedCountries(s []string) {
+	m.allowed_countries = &s
+	m.appendallowed_countries = nil
+}
+
+// AllowedCountries returns the value of the "allowed_countries" field in the mutation.
+func (m *BannerMutation) AllowedCountries() (r []string, exists bool) {
+	v := m.allowed_countries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAllowedCountries returns the old "allowed_countries" field's value of the Banner entity.
+// If the Banner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerMutation) OldAllowedCountries(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAllowedCountries is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAllowedCountries requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAllowedCountries: %w", err)
+	}
+	return oldValue.AllowedCountries, nil
+}
+
+// AppendAllowedCountries adds s to the "allowed_countries" field.
+func (m *BannerMutation) AppendAllowedCountries(s []string) {
+	m.appendallowed_countries = append(m.appendallowed_countries, s...)
+}
+
+// AppendedAllowedCountries returns the list of values that were appended to the "allowed_countries" field in this mutation.
+func (m *BannerMutation) AppendedAllowedCountries() ([]string, bool) {
+	if len(m.appendallowed_countries) == 0 {
+		return nil, false
+	}
+	return m.appendallowed_countries, true
+}
+
+// ClearAllowedCountries clears the value of the "allowed_countries" field.
+func (m *BannerMutation) ClearAllowedCountries() {
+	m.allowed_countries = nil
+	m.appendallowed_countries = nil
+	m.clearedFields[banner.FieldAllowedCountries] = struct{}{}
+}
+
+// AllowedCountriesCleared returns if the "allowed_countries" field was cleared in this mutation.
+func (m *BannerMutation) AllowedCountriesCleared() bool {
+	_, ok := m.clearedFields[banner.FieldAllowedCountries]
+	return ok
+}
+
+// ResetAllowedCountries resets all changes to the "allowed_countries" field.
+func (m *BannerMutation) ResetAllowedCountries() {
+	m.allowed_countries = nil
+	m.appendallowed_countries = nil
+	delete(m.clearedFields, banner.FieldAllowedCountries)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BannerMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BannerMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Banner entity.
+// If the Banner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BannerMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BannerMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BannerMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Banner entity.
+// If the Banner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BannerMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// AddCampaignIDs adds the "campaigns" edge to the Campaign entity by ids.
+func (m *BannerMutation) AddCampaignIDs(ids ...int64) {
+	if m.campaigns == nil {
+		m.campaigns = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.campaigns[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCampaigns clears the "campaigns" edge to the Campaign entity.
+func (m *BannerMutation) ClearCampaigns() {
+	m.clearedcampaigns = true
+}
+
+// CampaignsCleared reports if the "campaigns" edge to the Campaign entity was cleared.
+func (m *BannerMutation) CampaignsCleared() bool {
+	return m.clearedcampaigns
+}
+
+// RemoveCampaignIDs removes the "campaigns" edge to the Campaign entity by IDs.
+func (m *BannerMutation) RemoveCampaignIDs(ids ...int64) {
+	if m.removedcampaigns == nil {
+		m.removedcampaigns = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.campaigns, ids[i])
+		m.removedcampaigns[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCampaigns returns the removed IDs of the "campaigns" edge to the Campaign entity.
+func (m *BannerMutation) RemovedCampaignsIDs() (ids []int64) {
+	for id := range m.removedcampaigns {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CampaignsIDs returns the "campaigns" edge IDs in the mutation.
+func (m *BannerMutation) CampaignsIDs() (ids []int64) {
+	for id := range m.campaigns {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCampaigns resets all changes to the "campaigns" edge.
+func (m *BannerMutation) ResetCampaigns() {
+	m.campaigns = nil
+	m.clearedcampaigns = false
+	m.removedcampaigns = nil
+}
+
+// AddCreativeIDs adds the "creatives" edge to the BannerCreative entity by ids.
+func (m *BannerMutation) AddCreativeIDs(ids ...int64) {
+	if m.creatives == nil {
+		m.creatives = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.creatives[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCreatives clears the "creatives" edge to the BannerCreative entity.
+func (m *BannerMutation) ClearCreatives() {
+	m.clearedcreatives = true
+}
+
+// CreativesCleared reports if the "creatives" edge to the BannerCreative entity was cleared.
+func (m *BannerMutation) CreativesCleared() bool {
+	return m.clearedcreatives
+}
+
+// RemoveCreativeIDs removes the "creatives" edge to the BannerCreative entity by IDs.
+func (m *BannerMutation) RemoveCreativeIDs(ids ...int64) {
+	if m.removedcreatives == nil {
+		m.removedcreatives = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.creatives, ids[i])
+		m.removedcreatives[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCreatives returns the removed IDs of the "creatives" edge to the BannerCreative entity.
+func (m *BannerMutation) RemovedCreativesIDs() (ids []int64) {
+	for id := range m.removedcreatives {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CreativesIDs returns the "creatives" edge IDs in the mutation.
+func (m *BannerMutation) CreativesIDs() (ids []int64) {
+	for id := range m.creatives {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCreatives resets all changes to the "creatives" edge.
+func (m *BannerMutation) ResetCreatives() {
+	m.creatives = nil
+	m.clearedcreatives = false
+	m.removedcreatives = nil
+}
+
+// Where appends a list predicates to the BannerMutation builder.
+func (m *BannerMutation) Where(ps ...predicate.Banner) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BannerMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BannerMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Banner, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BannerMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BannerMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Banner).
+func (m *BannerMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BannerMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.name != nil {
+		fields = append(fields, banner.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, banner.FieldDescription)
+	}
+	if m._type != nil {
+		fields = append(fields, banner.FieldType)
+	}
+	if m.click_url != nil {
+		fields = append(fields, banner.FieldClickURL)
+	}
+	if m.size != nil {
+		fields = append(fields, banner.FieldSize)
+	}
+	if m.status != nil {
+		fields = append(fields, banner.FieldStatus)
+	}
+	if m.allowed_countries != nil {
+		fields = append(fields, banner.FieldAllowedCountries)
+	}
+	if m.created_at != nil {
+		fields = append(fields, banner.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, banner.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BannerMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case banner.FieldName:
+		return m.Name()
+	case banner.FieldDescription:
+		return m.Description()
+	case banner.FieldType:
+		return m.GetType()
+	case banner.FieldClickURL:
+		return m.ClickURL()
+	case banner.FieldSize:
+		return m.Size()
+	case banner.FieldStatus:
+		return m.Status()
+	case banner.FieldAllowedCountries:
+		return m.AllowedCountries()
+	case banner.FieldCreatedAt:
+		return m.CreatedAt()
+	case banner.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BannerMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case banner.FieldName:
+		return m.OldName(ctx)
+	case banner.FieldDescription:
+		return m.OldDescription(ctx)
+	case banner.FieldType:
+		return m.OldType(ctx)
+	case banner.FieldClickURL:
+		return m.OldClickURL(ctx)
+	case banner.FieldSize:
+		return m.OldSize(ctx)
+	case banner.FieldStatus:
+		return m.OldStatus(ctx)
+	case banner.FieldAllowedCountries:
+		return m.OldAllowedCountries(ctx)
+	case banner.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case banner.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Banner field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BannerMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case banner.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case banner.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case banner.FieldType:
+		v, ok := value.(banner.Type)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
+	case banner.FieldClickURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClickURL(v)
+		return nil
+	case banner.FieldSize:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSize(v)
+		return nil
+	case banner.FieldStatus:
+		v, ok := value.(banner.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case banner.FieldAllowedCountries:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAllowedCountries(v)
+		return nil
+	case banner.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case banner.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Banner field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BannerMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BannerMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BannerMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Banner numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BannerMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(banner.FieldDescription) {
+		fields = append(fields, banner.FieldDescription)
+	}
+	if m.FieldCleared(banner.FieldClickURL) {
+		fields = append(fields, banner.FieldClickURL)
+	}
+	if m.FieldCleared(banner.FieldAllowedCountries) {
+		fields = append(fields, banner.FieldAllowedCountries)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BannerMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BannerMutation) ClearField(name string) error {
+	switch name {
+	case banner.FieldDescription:
+		m.ClearDescription()
+		return nil
+	case banner.FieldClickURL:
+		m.ClearClickURL()
+		return nil
+	case banner.FieldAllowedCountries:
+		m.ClearAllowedCountries()
+		return nil
+	}
+	return fmt.Errorf("unknown Banner nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BannerMutation) ResetField(name string) error {
+	switch name {
+	case banner.FieldName:
+		m.ResetName()
+		return nil
+	case banner.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case banner.FieldType:
+		m.ResetType()
+		return nil
+	case banner.FieldClickURL:
+		m.ResetClickURL()
+		return nil
+	case banner.FieldSize:
+		m.ResetSize()
+		return nil
+	case banner.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case banner.FieldAllowedCountries:
+		m.ResetAllowedCountries()
+		return nil
+	case banner.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case banner.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Banner field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BannerMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.campaigns != nil {
+		edges = append(edges, banner.EdgeCampaigns)
+	}
+	if m.creatives != nil {
+		edges = append(edges, banner.EdgeCreatives)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BannerMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case banner.EdgeCampaigns:
+		ids := make([]ent.Value, 0, len(m.campaigns))
+		for id := range m.campaigns {
+			ids = append(ids, id)
+		}
+		return ids
+	case banner.EdgeCreatives:
+		ids := make([]ent.Value, 0, len(m.creatives))
+		for id := range m.creatives {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BannerMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedcampaigns != nil {
+		edges = append(edges, banner.EdgeCampaigns)
+	}
+	if m.removedcreatives != nil {
+		edges = append(edges, banner.EdgeCreatives)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BannerMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case banner.EdgeCampaigns:
+		ids := make([]ent.Value, 0, len(m.removedcampaigns))
+		for id := range m.removedcampaigns {
+			ids = append(ids, id)
+		}
+		return ids
+	case banner.EdgeCreatives:
+		ids := make([]ent.Value, 0, len(m.removedcreatives))
+		for id := range m.removedcreatives {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BannerMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedcampaigns {
+		edges = append(edges, banner.EdgeCampaigns)
+	}
+	if m.clearedcreatives {
+		edges = append(edges, banner.EdgeCreatives)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BannerMutation) EdgeCleared(name string) bool {
+	switch name {
+	case banner.EdgeCampaigns:
+		return m.clearedcampaigns
+	case banner.EdgeCreatives:
+		return m.clearedcreatives
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BannerMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Banner unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BannerMutation) ResetEdge(name string) error {
+	switch name {
+	case banner.EdgeCampaigns:
+		m.ResetCampaigns()
+		return nil
+	case banner.EdgeCreatives:
+		m.ResetCreatives()
+		return nil
+	}
+	return fmt.Errorf("unknown Banner edge %s", name)
+}
+
+// BannerCreativeMutation represents an operation that mutates the BannerCreative nodes in the graph.
+type BannerCreativeMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int64
+	name          *string
+	image_url     *string
+	size          *string
+	enabled       *bool
+	created_at    *time.Time
+	updated_at    *time.Time
+	clearedFields map[string]struct{}
+	banner        *int64
+	clearedbanner bool
+	done          bool
+	oldValue      func(context.Context) (*BannerCreative, error)
+	predicates    []predicate.BannerCreative
+}
+
+var _ ent.Mutation = (*BannerCreativeMutation)(nil)
+
+// bannercreativeOption allows management of the mutation configuration using functional options.
+type bannercreativeOption func(*BannerCreativeMutation)
+
+// newBannerCreativeMutation creates new mutation for the BannerCreative entity.
+func newBannerCreativeMutation(c config, op Op, opts ...bannercreativeOption) *BannerCreativeMutation {
+	m := &BannerCreativeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBannerCreative,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBannerCreativeID sets the ID field of the mutation.
+func withBannerCreativeID(id int64) bannercreativeOption {
+	return func(m *BannerCreativeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BannerCreative
+		)
+		m.oldValue = func(ctx context.Context) (*BannerCreative, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BannerCreative.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBannerCreative sets the old BannerCreative of the mutation.
+func withBannerCreative(node *BannerCreative) bannercreativeOption {
+	return func(m *BannerCreativeMutation) {
+		m.oldValue = func(context.Context) (*BannerCreative, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BannerCreativeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BannerCreativeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BannerCreative entities.
+func (m *BannerCreativeMutation) SetID(id int64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BannerCreativeMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BannerCreativeMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BannerCreative.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *BannerCreativeMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *BannerCreativeMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the BannerCreative entity.
+// If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerCreativeMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ClearName clears the value of the "name" field.
+func (m *BannerCreativeMutation) ClearName() {
+	m.name = nil
+	m.clearedFields[bannercreative.FieldName] = struct{}{}
+}
+
+// NameCleared returns if the "name" field was cleared in this mutation.
+func (m *BannerCreativeMutation) NameCleared() bool {
+	_, ok := m.clearedFields[bannercreative.FieldName]
+	return ok
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *BannerCreativeMutation) ResetName() {
+	m.name = nil
+	delete(m.clearedFields, bannercreative.FieldName)
+}
+
+// SetImageURL sets the "image_url" field.
+func (m *BannerCreativeMutation) SetImageURL(s string) {
+	m.image_url = &s
+}
+
+// ImageURL returns the value of the "image_url" field in the mutation.
+func (m *BannerCreativeMutation) ImageURL() (r string, exists bool) {
+	v := m.image_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImageURL returns the old "image_url" field's value of the BannerCreative entity.
+// If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerCreativeMutation) OldImageURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImageURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImageURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImageURL: %w", err)
+	}
+	return oldValue.ImageURL, nil
+}
+
+// ClearImageURL clears the value of the "image_url" field.
+func (m *BannerCreativeMutation) ClearImageURL() {
+	m.image_url = nil
+	m.clearedFields[bannercreative.FieldImageURL] = struct{}{}
+}
+
+// ImageURLCleared returns if the "image_url" field was cleared in this mutation.
+func (m *BannerCreativeMutation) ImageURLCleared() bool {
+	_, ok := m.clearedFields[bannercreative.FieldImageURL]
+	return ok
+}
+
+// ResetImageURL resets all changes to the "image_url" field.
+func (m *BannerCreativeMutation) ResetImageURL() {
+	m.image_url = nil
+	delete(m.clearedFields, bannercreative.FieldImageURL)
+}
+
+// SetSize sets the "size" field.
+func (m *BannerCreativeMutation) SetSize(s string) {
+	m.size = &s
+}
+
+// Size returns the value of the "size" field in the mutation.
+func (m *BannerCreativeMutation) Size() (r string, exists bool) {
+	v := m.size
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSize returns the old "size" field's value of the BannerCreative entity.
+// If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerCreativeMutation) OldSize(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSize is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSize requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSize: %w", err)
+	}
+	return oldValue.Size, nil
+}
+
+// ClearSize clears the value of the "size" field.
+func (m *BannerCreativeMutation) ClearSize() {
+	m.size = nil
+	m.clearedFields[bannercreative.FieldSize] = struct{}{}
+}
+
+// SizeCleared returns if the "size" field was cleared in this mutation.
+func (m *BannerCreativeMutation) SizeCleared() bool {
+	_, ok := m.clearedFields[bannercreative.FieldSize]
+	return ok
+}
+
+// ResetSize resets all changes to the "size" field.
+func (m *BannerCreativeMutation) ResetSize() {
+	m.size = nil
+	delete(m.clearedFields, bannercreative.FieldSize)
+}
+
+// SetEnabled sets the "enabled" field.
+func (m *BannerCreativeMutation) SetEnabled(b bool) {
+	m.enabled = &b
+}
+
+// Enabled returns the value of the "enabled" field in the mutation.
+func (m *BannerCreativeMutation) Enabled() (r bool, exists bool) {
+	v := m.enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnabled returns the old "enabled" field's value of the BannerCreative entity.
+// If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerCreativeMutation) OldEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnabled: %w", err)
+	}
+	return oldValue.Enabled, nil
+}
+
+// ResetEnabled resets all changes to the "enabled" field.
+func (m *BannerCreativeMutation) ResetEnabled() {
+	m.enabled = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BannerCreativeMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BannerCreativeMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BannerCreative entity.
+// If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerCreativeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BannerCreativeMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BannerCreativeMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BannerCreativeMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BannerCreative entity.
+// If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerCreativeMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BannerCreativeMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetBannerID sets the "banner" edge to the Banner entity by id.
+func (m *BannerCreativeMutation) SetBannerID(id int64) {
+	m.banner = &id
+}
+
+// ClearBanner clears the "banner" edge to the Banner entity.
+func (m *BannerCreativeMutation) ClearBanner() {
+	m.clearedbanner = true
+}
+
+// BannerCleared reports if the "banner" edge to the Banner entity was cleared.
+func (m *BannerCreativeMutation) BannerCleared() bool {
+	return m.clearedbanner
+}
+
+// BannerID returns the "banner" edge ID in the mutation.
+func (m *BannerCreativeMutation) BannerID() (id int64, exists bool) {
+	if m.banner != nil {
+		return *m.banner, true
+	}
+	return
+}
+
+// BannerIDs returns the "banner" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// BannerID instead. It exists only for internal usage by the builders.
+func (m *BannerCreativeMutation) BannerIDs() (ids []int64) {
+	if id := m.banner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetBanner resets all changes to the "banner" edge.
+func (m *BannerCreativeMutation) ResetBanner() {
+	m.banner = nil
+	m.clearedbanner = false
+}
+
+// Where appends a list predicates to the BannerCreativeMutation builder.
+func (m *BannerCreativeMutation) Where(ps ...predicate.BannerCreative) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BannerCreativeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BannerCreativeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BannerCreative, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BannerCreativeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BannerCreativeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BannerCreative).
+func (m *BannerCreativeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BannerCreativeMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.name != nil {
+		fields = append(fields, bannercreative.FieldName)
+	}
+	if m.image_url != nil {
+		fields = append(fields, bannercreative.FieldImageURL)
+	}
+	if m.size != nil {
+		fields = append(fields, bannercreative.FieldSize)
+	}
+	if m.enabled != nil {
+		fields = append(fields, bannercreative.FieldEnabled)
+	}
+	if m.created_at != nil {
+		fields = append(fields, bannercreative.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, bannercreative.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BannerCreativeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case bannercreative.FieldName:
+		return m.Name()
+	case bannercreative.FieldImageURL:
+		return m.ImageURL()
+	case bannercreative.FieldSize:
+		return m.Size()
+	case bannercreative.FieldEnabled:
+		return m.Enabled()
+	case bannercreative.FieldCreatedAt:
+		return m.CreatedAt()
+	case bannercreative.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BannerCreativeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case bannercreative.FieldName:
+		return m.OldName(ctx)
+	case bannercreative.FieldImageURL:
+		return m.OldImageURL(ctx)
+	case bannercreative.FieldSize:
+		return m.OldSize(ctx)
+	case bannercreative.FieldEnabled:
+		return m.OldEnabled(ctx)
+	case bannercreative.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case bannercreative.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown BannerCreative field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BannerCreativeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case bannercreative.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case bannercreative.FieldImageURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImageURL(v)
+		return nil
+	case bannercreative.FieldSize:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSize(v)
+		return nil
+	case bannercreative.FieldEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnabled(v)
+		return nil
+	case bannercreative.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case bannercreative.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BannerCreative field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BannerCreativeMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BannerCreativeMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BannerCreativeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown BannerCreative numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BannerCreativeMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(bannercreative.FieldName) {
+		fields = append(fields, bannercreative.FieldName)
+	}
+	if m.FieldCleared(bannercreative.FieldImageURL) {
+		fields = append(fields, bannercreative.FieldImageURL)
+	}
+	if m.FieldCleared(bannercreative.FieldSize) {
+		fields = append(fields, bannercreative.FieldSize)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BannerCreativeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BannerCreativeMutation) ClearField(name string) error {
+	switch name {
+	case bannercreative.FieldName:
+		m.ClearName()
+		return nil
+	case bannercreative.FieldImageURL:
+		m.ClearImageURL()
+		return nil
+	case bannercreative.FieldSize:
+		m.ClearSize()
+		return nil
+	}
+	return fmt.Errorf("unknown BannerCreative nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BannerCreativeMutation) ResetField(name string) error {
+	switch name {
+	case bannercreative.FieldName:
+		m.ResetName()
+		return nil
+	case bannercreative.FieldImageURL:
+		m.ResetImageURL()
+		return nil
+	case bannercreative.FieldSize:
+		m.ResetSize()
+		return nil
+	case bannercreative.FieldEnabled:
+		m.ResetEnabled()
+		return nil
+	case bannercreative.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case bannercreative.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown BannerCreative field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BannerCreativeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.banner != nil {
+		edges = append(edges, bannercreative.EdgeBanner)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BannerCreativeMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case bannercreative.EdgeBanner:
+		if id := m.banner; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BannerCreativeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BannerCreativeMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BannerCreativeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedbanner {
+		edges = append(edges, bannercreative.EdgeBanner)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BannerCreativeMutation) EdgeCleared(name string) bool {
+	switch name {
+	case bannercreative.EdgeBanner:
+		return m.clearedbanner
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BannerCreativeMutation) ClearEdge(name string) error {
+	switch name {
+	case bannercreative.EdgeBanner:
+		m.ClearBanner()
+		return nil
+	}
+	return fmt.Errorf("unknown BannerCreative unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BannerCreativeMutation) ResetEdge(name string) error {
+	switch name {
+	case bannercreative.EdgeBanner:
+		m.ResetBanner()
+		return nil
+	}
+	return fmt.Errorf("unknown BannerCreative edge %s", name)
+}
 
 // CampaignMutation represents an operation that mutates the Campaign nodes in the graph.
 type CampaignMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int64
-	name             *string
-	description      *string
-	_type            *campaign.Type
-	payout_rate      *float64
-	addpayout_rate   *float64
-	start_date       *time.Time
-	end_date         *time.Time
-	status           *campaign.Status
-	tracking_url     *string
-	unique_code      *string
-	clearedFields    map[string]struct{}
-	owner            *int64
-	clearedowner     bool
-	links            map[int64]struct{}
-	removedlinks     map[int64]struct{}
-	clearedlinks     bool
-	tracks           map[int64]struct{}
-	removedtracks    map[int64]struct{}
-	clearedtracks    bool
-	referrals        map[int64]struct{}
-	removedreferrals map[int64]struct{}
-	clearedreferrals bool
-	done             bool
-	oldValue         func(context.Context) (*Campaign, error)
-	predicates       []predicate.Campaign
+	op                      Op
+	typ                     string
+	id                      *int64
+	name                    *string
+	description             *string
+	unique_code             *string
+	_type                   *campaign.Type
+	commission_type         *campaign.CommissionType
+	base_commission_rate    *float64
+	addbase_commission_rate *float64
+	commission_tiers        *[]schema.CommissionTier
+	appendcommission_tiers  []schema.CommissionTier
+	target_geography        *string
+	target_demographics     *map[string]interface{}
+	start_date              *time.Time
+	end_date                *time.Time
+	status                  *campaign.Status
+	tracking_url            *string
+	total_clicks            *int
+	addtotal_clicks         *int
+	total_conversions       *int
+	addtotal_conversions    *int
+	total_revenue           *float64
+	addtotal_revenue        *float64
+	conversion_rate         *float64
+	addconversion_rate      *float64
+	created_at              *time.Time
+	updated_at              *time.Time
+	clearedFields           map[string]struct{}
+	owner                   *int64
+	clearedowner            bool
+	links                   map[int64]struct{}
+	removedlinks            map[int64]struct{}
+	clearedlinks            bool
+	tracks                  map[int64]struct{}
+	removedtracks           map[int64]struct{}
+	clearedtracks           bool
+	referrals               map[int64]struct{}
+	removedreferrals        map[int64]struct{}
+	clearedreferrals        bool
+	banners                 map[int64]struct{}
+	removedbanners          map[int64]struct{}
+	clearedbanners          bool
+	done                    bool
+	oldValue                func(context.Context) (*Campaign, error)
+	predicates              []predicate.Campaign
 }
 
 var _ ent.Mutation = (*CampaignMutation)(nil)
@@ -262,6 +2031,42 @@ func (m *CampaignMutation) ResetDescription() {
 	delete(m.clearedFields, campaign.FieldDescription)
 }
 
+// SetUniqueCode sets the "unique_code" field.
+func (m *CampaignMutation) SetUniqueCode(s string) {
+	m.unique_code = &s
+}
+
+// UniqueCode returns the value of the "unique_code" field in the mutation.
+func (m *CampaignMutation) UniqueCode() (r string, exists bool) {
+	v := m.unique_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUniqueCode returns the old "unique_code" field's value of the Campaign entity.
+// If the Campaign object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CampaignMutation) OldUniqueCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUniqueCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUniqueCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUniqueCode: %w", err)
+	}
+	return oldValue.UniqueCode, nil
+}
+
+// ResetUniqueCode resets all changes to the "unique_code" field.
+func (m *CampaignMutation) ResetUniqueCode() {
+	m.unique_code = nil
+}
+
 // SetType sets the "type" field.
 func (m *CampaignMutation) SetType(c campaign.Type) {
 	m._type = &c
@@ -298,60 +2103,259 @@ func (m *CampaignMutation) ResetType() {
 	m._type = nil
 }
 
-// SetPayoutRate sets the "payout_rate" field.
-func (m *CampaignMutation) SetPayoutRate(f float64) {
-	m.payout_rate = &f
-	m.addpayout_rate = nil
+// SetCommissionType sets the "commission_type" field.
+func (m *CampaignMutation) SetCommissionType(ct campaign.CommissionType) {
+	m.commission_type = &ct
 }
 
-// PayoutRate returns the value of the "payout_rate" field in the mutation.
-func (m *CampaignMutation) PayoutRate() (r float64, exists bool) {
-	v := m.payout_rate
+// CommissionType returns the value of the "commission_type" field in the mutation.
+func (m *CampaignMutation) CommissionType() (r campaign.CommissionType, exists bool) {
+	v := m.commission_type
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldPayoutRate returns the old "payout_rate" field's value of the Campaign entity.
+// OldCommissionType returns the old "commission_type" field's value of the Campaign entity.
 // If the Campaign object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CampaignMutation) OldPayoutRate(ctx context.Context) (v float64, err error) {
+func (m *CampaignMutation) OldCommissionType(ctx context.Context) (v campaign.CommissionType, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldPayoutRate is only allowed on UpdateOne operations")
+		return v, errors.New("OldCommissionType is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldPayoutRate requires an ID field in the mutation")
+		return v, errors.New("OldCommissionType requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPayoutRate: %w", err)
+		return v, fmt.Errorf("querying old value for OldCommissionType: %w", err)
 	}
-	return oldValue.PayoutRate, nil
+	return oldValue.CommissionType, nil
 }
 
-// AddPayoutRate adds f to the "payout_rate" field.
-func (m *CampaignMutation) AddPayoutRate(f float64) {
-	if m.addpayout_rate != nil {
-		*m.addpayout_rate += f
-	} else {
-		m.addpayout_rate = &f
-	}
+// ResetCommissionType resets all changes to the "commission_type" field.
+func (m *CampaignMutation) ResetCommissionType() {
+	m.commission_type = nil
 }
 
-// AddedPayoutRate returns the value that was added to the "payout_rate" field in this mutation.
-func (m *CampaignMutation) AddedPayoutRate() (r float64, exists bool) {
-	v := m.addpayout_rate
+// SetBaseCommissionRate sets the "base_commission_rate" field.
+func (m *CampaignMutation) SetBaseCommissionRate(f float64) {
+	m.base_commission_rate = &f
+	m.addbase_commission_rate = nil
+}
+
+// BaseCommissionRate returns the value of the "base_commission_rate" field in the mutation.
+func (m *CampaignMutation) BaseCommissionRate() (r float64, exists bool) {
+	v := m.base_commission_rate
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetPayoutRate resets all changes to the "payout_rate" field.
-func (m *CampaignMutation) ResetPayoutRate() {
-	m.payout_rate = nil
-	m.addpayout_rate = nil
+// OldBaseCommissionRate returns the old "base_commission_rate" field's value of the Campaign entity.
+// If the Campaign object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CampaignMutation) OldBaseCommissionRate(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBaseCommissionRate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBaseCommissionRate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBaseCommissionRate: %w", err)
+	}
+	return oldValue.BaseCommissionRate, nil
+}
+
+// AddBaseCommissionRate adds f to the "base_commission_rate" field.
+func (m *CampaignMutation) AddBaseCommissionRate(f float64) {
+	if m.addbase_commission_rate != nil {
+		*m.addbase_commission_rate += f
+	} else {
+		m.addbase_commission_rate = &f
+	}
+}
+
+// AddedBaseCommissionRate returns the value that was added to the "base_commission_rate" field in this mutation.
+func (m *CampaignMutation) AddedBaseCommissionRate() (r float64, exists bool) {
+	v := m.addbase_commission_rate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetBaseCommissionRate resets all changes to the "base_commission_rate" field.
+func (m *CampaignMutation) ResetBaseCommissionRate() {
+	m.base_commission_rate = nil
+	m.addbase_commission_rate = nil
+}
+
+// SetCommissionTiers sets the "commission_tiers" field.
+func (m *CampaignMutation) SetCommissionTiers(st []schema.CommissionTier) {
+	m.commission_tiers = &st
+	m.appendcommission_tiers = nil
+}
+
+// CommissionTiers returns the value of the "commission_tiers" field in the mutation.
+func (m *CampaignMutation) CommissionTiers() (r []schema.CommissionTier, exists bool) {
+	v := m.commission_tiers
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCommissionTiers returns the old "commission_tiers" field's value of the Campaign entity.
+// If the Campaign object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CampaignMutation) OldCommissionTiers(ctx context.Context) (v []schema.CommissionTier, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCommissionTiers is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCommissionTiers requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCommissionTiers: %w", err)
+	}
+	return oldValue.CommissionTiers, nil
+}
+
+// AppendCommissionTiers adds st to the "commission_tiers" field.
+func (m *CampaignMutation) AppendCommissionTiers(st []schema.CommissionTier) {
+	m.appendcommission_tiers = append(m.appendcommission_tiers, st...)
+}
+
+// AppendedCommissionTiers returns the list of values that were appended to the "commission_tiers" field in this mutation.
+func (m *CampaignMutation) AppendedCommissionTiers() ([]schema.CommissionTier, bool) {
+	if len(m.appendcommission_tiers) == 0 {
+		return nil, false
+	}
+	return m.appendcommission_tiers, true
+}
+
+// ClearCommissionTiers clears the value of the "commission_tiers" field.
+func (m *CampaignMutation) ClearCommissionTiers() {
+	m.commission_tiers = nil
+	m.appendcommission_tiers = nil
+	m.clearedFields[campaign.FieldCommissionTiers] = struct{}{}
+}
+
+// CommissionTiersCleared returns if the "commission_tiers" field was cleared in this mutation.
+func (m *CampaignMutation) CommissionTiersCleared() bool {
+	_, ok := m.clearedFields[campaign.FieldCommissionTiers]
+	return ok
+}
+
+// ResetCommissionTiers resets all changes to the "commission_tiers" field.
+func (m *CampaignMutation) ResetCommissionTiers() {
+	m.commission_tiers = nil
+	m.appendcommission_tiers = nil
+	delete(m.clearedFields, campaign.FieldCommissionTiers)
+}
+
+// SetTargetGeography sets the "target_geography" field.
+func (m *CampaignMutation) SetTargetGeography(s string) {
+	m.target_geography = &s
+}
+
+// TargetGeography returns the value of the "target_geography" field in the mutation.
+func (m *CampaignMutation) TargetGeography() (r string, exists bool) {
+	v := m.target_geography
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetGeography returns the old "target_geography" field's value of the Campaign entity.
+// If the Campaign object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CampaignMutation) OldTargetGeography(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetGeography is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetGeography requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetGeography: %w", err)
+	}
+	return oldValue.TargetGeography, nil
+}
+
+// ClearTargetGeography clears the value of the "target_geography" field.
+func (m *CampaignMutation) ClearTargetGeography() {
+	m.target_geography = nil
+	m.clearedFields[campaign.FieldTargetGeography] = struct{}{}
+}
+
+// TargetGeographyCleared returns if the "target_geography" field was cleared in this mutation.
+func (m *CampaignMutation) TargetGeographyCleared() bool {
+	_, ok := m.clearedFields[campaign.FieldTargetGeography]
+	return ok
+}
+
+// ResetTargetGeography resets all changes to the "target_geography" field.
+func (m *CampaignMutation) ResetTargetGeography() {
+	m.target_geography = nil
+	delete(m.clearedFields, campaign.FieldTargetGeography)
+}
+
+// SetTargetDemographics sets the "target_demographics" field.
+func (m *CampaignMutation) SetTargetDemographics(value map[string]interface{}) {
+	m.target_demographics = &value
+}
+
+// TargetDemographics returns the value of the "target_demographics" field in the mutation.
+func (m *CampaignMutation) TargetDemographics() (r map[string]interface{}, exists bool) {
+	v := m.target_demographics
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetDemographics returns the old "target_demographics" field's value of the Campaign entity.
+// If the Campaign object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CampaignMutation) OldTargetDemographics(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetDemographics is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetDemographics requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetDemographics: %w", err)
+	}
+	return oldValue.TargetDemographics, nil
+}
+
+// ClearTargetDemographics clears the value of the "target_demographics" field.
+func (m *CampaignMutation) ClearTargetDemographics() {
+	m.target_demographics = nil
+	m.clearedFields[campaign.FieldTargetDemographics] = struct{}{}
+}
+
+// TargetDemographicsCleared returns if the "target_demographics" field was cleared in this mutation.
+func (m *CampaignMutation) TargetDemographicsCleared() bool {
+	_, ok := m.clearedFields[campaign.FieldTargetDemographics]
+	return ok
+}
+
+// ResetTargetDemographics resets all changes to the "target_demographics" field.
+func (m *CampaignMutation) ResetTargetDemographics() {
+	m.target_demographics = nil
+	delete(m.clearedFields, campaign.FieldTargetDemographics)
 }
 
 // SetStartDate sets the "start_date" field.
@@ -506,45 +2510,318 @@ func (m *CampaignMutation) OldTrackingURL(ctx context.Context) (v string, err er
 	return oldValue.TrackingURL, nil
 }
 
+// ClearTrackingURL clears the value of the "tracking_url" field.
+func (m *CampaignMutation) ClearTrackingURL() {
+	m.tracking_url = nil
+	m.clearedFields[campaign.FieldTrackingURL] = struct{}{}
+}
+
+// TrackingURLCleared returns if the "tracking_url" field was cleared in this mutation.
+func (m *CampaignMutation) TrackingURLCleared() bool {
+	_, ok := m.clearedFields[campaign.FieldTrackingURL]
+	return ok
+}
+
 // ResetTrackingURL resets all changes to the "tracking_url" field.
 func (m *CampaignMutation) ResetTrackingURL() {
 	m.tracking_url = nil
+	delete(m.clearedFields, campaign.FieldTrackingURL)
 }
 
-// SetUniqueCode sets the "unique_code" field.
-func (m *CampaignMutation) SetUniqueCode(s string) {
-	m.unique_code = &s
+// SetTotalClicks sets the "total_clicks" field.
+func (m *CampaignMutation) SetTotalClicks(i int) {
+	m.total_clicks = &i
+	m.addtotal_clicks = nil
 }
 
-// UniqueCode returns the value of the "unique_code" field in the mutation.
-func (m *CampaignMutation) UniqueCode() (r string, exists bool) {
-	v := m.unique_code
+// TotalClicks returns the value of the "total_clicks" field in the mutation.
+func (m *CampaignMutation) TotalClicks() (r int, exists bool) {
+	v := m.total_clicks
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldUniqueCode returns the old "unique_code" field's value of the Campaign entity.
+// OldTotalClicks returns the old "total_clicks" field's value of the Campaign entity.
 // If the Campaign object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CampaignMutation) OldUniqueCode(ctx context.Context) (v string, err error) {
+func (m *CampaignMutation) OldTotalClicks(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldUniqueCode is only allowed on UpdateOne operations")
+		return v, errors.New("OldTotalClicks is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldUniqueCode requires an ID field in the mutation")
+		return v, errors.New("OldTotalClicks requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUniqueCode: %w", err)
+		return v, fmt.Errorf("querying old value for OldTotalClicks: %w", err)
 	}
-	return oldValue.UniqueCode, nil
+	return oldValue.TotalClicks, nil
 }
 
-// ResetUniqueCode resets all changes to the "unique_code" field.
-func (m *CampaignMutation) ResetUniqueCode() {
-	m.unique_code = nil
+// AddTotalClicks adds i to the "total_clicks" field.
+func (m *CampaignMutation) AddTotalClicks(i int) {
+	if m.addtotal_clicks != nil {
+		*m.addtotal_clicks += i
+	} else {
+		m.addtotal_clicks = &i
+	}
+}
+
+// AddedTotalClicks returns the value that was added to the "total_clicks" field in this mutation.
+func (m *CampaignMutation) AddedTotalClicks() (r int, exists bool) {
+	v := m.addtotal_clicks
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTotalClicks resets all changes to the "total_clicks" field.
+func (m *CampaignMutation) ResetTotalClicks() {
+	m.total_clicks = nil
+	m.addtotal_clicks = nil
+}
+
+// SetTotalConversions sets the "total_conversions" field.
+func (m *CampaignMutation) SetTotalConversions(i int) {
+	m.total_conversions = &i
+	m.addtotal_conversions = nil
+}
+
+// TotalConversions returns the value of the "total_conversions" field in the mutation.
+func (m *CampaignMutation) TotalConversions() (r int, exists bool) {
+	v := m.total_conversions
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalConversions returns the old "total_conversions" field's value of the Campaign entity.
+// If the Campaign object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CampaignMutation) OldTotalConversions(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalConversions is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalConversions requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalConversions: %w", err)
+	}
+	return oldValue.TotalConversions, nil
+}
+
+// AddTotalConversions adds i to the "total_conversions" field.
+func (m *CampaignMutation) AddTotalConversions(i int) {
+	if m.addtotal_conversions != nil {
+		*m.addtotal_conversions += i
+	} else {
+		m.addtotal_conversions = &i
+	}
+}
+
+// AddedTotalConversions returns the value that was added to the "total_conversions" field in this mutation.
+func (m *CampaignMutation) AddedTotalConversions() (r int, exists bool) {
+	v := m.addtotal_conversions
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTotalConversions resets all changes to the "total_conversions" field.
+func (m *CampaignMutation) ResetTotalConversions() {
+	m.total_conversions = nil
+	m.addtotal_conversions = nil
+}
+
+// SetTotalRevenue sets the "total_revenue" field.
+func (m *CampaignMutation) SetTotalRevenue(f float64) {
+	m.total_revenue = &f
+	m.addtotal_revenue = nil
+}
+
+// TotalRevenue returns the value of the "total_revenue" field in the mutation.
+func (m *CampaignMutation) TotalRevenue() (r float64, exists bool) {
+	v := m.total_revenue
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalRevenue returns the old "total_revenue" field's value of the Campaign entity.
+// If the Campaign object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CampaignMutation) OldTotalRevenue(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalRevenue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalRevenue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalRevenue: %w", err)
+	}
+	return oldValue.TotalRevenue, nil
+}
+
+// AddTotalRevenue adds f to the "total_revenue" field.
+func (m *CampaignMutation) AddTotalRevenue(f float64) {
+	if m.addtotal_revenue != nil {
+		*m.addtotal_revenue += f
+	} else {
+		m.addtotal_revenue = &f
+	}
+}
+
+// AddedTotalRevenue returns the value that was added to the "total_revenue" field in this mutation.
+func (m *CampaignMutation) AddedTotalRevenue() (r float64, exists bool) {
+	v := m.addtotal_revenue
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTotalRevenue resets all changes to the "total_revenue" field.
+func (m *CampaignMutation) ResetTotalRevenue() {
+	m.total_revenue = nil
+	m.addtotal_revenue = nil
+}
+
+// SetConversionRate sets the "conversion_rate" field.
+func (m *CampaignMutation) SetConversionRate(f float64) {
+	m.conversion_rate = &f
+	m.addconversion_rate = nil
+}
+
+// ConversionRate returns the value of the "conversion_rate" field in the mutation.
+func (m *CampaignMutation) ConversionRate() (r float64, exists bool) {
+	v := m.conversion_rate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConversionRate returns the old "conversion_rate" field's value of the Campaign entity.
+// If the Campaign object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CampaignMutation) OldConversionRate(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConversionRate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConversionRate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConversionRate: %w", err)
+	}
+	return oldValue.ConversionRate, nil
+}
+
+// AddConversionRate adds f to the "conversion_rate" field.
+func (m *CampaignMutation) AddConversionRate(f float64) {
+	if m.addconversion_rate != nil {
+		*m.addconversion_rate += f
+	} else {
+		m.addconversion_rate = &f
+	}
+}
+
+// AddedConversionRate returns the value that was added to the "conversion_rate" field in this mutation.
+func (m *CampaignMutation) AddedConversionRate() (r float64, exists bool) {
+	v := m.addconversion_rate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConversionRate resets all changes to the "conversion_rate" field.
+func (m *CampaignMutation) ResetConversionRate() {
+	m.conversion_rate = nil
+	m.addconversion_rate = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *CampaignMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *CampaignMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Campaign entity.
+// If the Campaign object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CampaignMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *CampaignMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *CampaignMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *CampaignMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Campaign entity.
+// If the Campaign object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CampaignMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *CampaignMutation) ResetUpdatedAt() {
+	m.updated_at = nil
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by id.
@@ -748,6 +3025,60 @@ func (m *CampaignMutation) ResetReferrals() {
 	m.removedreferrals = nil
 }
 
+// AddBannerIDs adds the "banners" edge to the Banner entity by ids.
+func (m *CampaignMutation) AddBannerIDs(ids ...int64) {
+	if m.banners == nil {
+		m.banners = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.banners[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBanners clears the "banners" edge to the Banner entity.
+func (m *CampaignMutation) ClearBanners() {
+	m.clearedbanners = true
+}
+
+// BannersCleared reports if the "banners" edge to the Banner entity was cleared.
+func (m *CampaignMutation) BannersCleared() bool {
+	return m.clearedbanners
+}
+
+// RemoveBannerIDs removes the "banners" edge to the Banner entity by IDs.
+func (m *CampaignMutation) RemoveBannerIDs(ids ...int64) {
+	if m.removedbanners == nil {
+		m.removedbanners = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.banners, ids[i])
+		m.removedbanners[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBanners returns the removed IDs of the "banners" edge to the Banner entity.
+func (m *CampaignMutation) RemovedBannersIDs() (ids []int64) {
+	for id := range m.removedbanners {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BannersIDs returns the "banners" edge IDs in the mutation.
+func (m *CampaignMutation) BannersIDs() (ids []int64) {
+	for id := range m.banners {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBanners resets all changes to the "banners" edge.
+func (m *CampaignMutation) ResetBanners() {
+	m.banners = nil
+	m.clearedbanners = false
+	m.removedbanners = nil
+}
+
 // Where appends a list predicates to the CampaignMutation builder.
 func (m *CampaignMutation) Where(ps ...predicate.Campaign) {
 	m.predicates = append(m.predicates, ps...)
@@ -782,18 +3113,33 @@ func (m *CampaignMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CampaignMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 19)
 	if m.name != nil {
 		fields = append(fields, campaign.FieldName)
 	}
 	if m.description != nil {
 		fields = append(fields, campaign.FieldDescription)
 	}
+	if m.unique_code != nil {
+		fields = append(fields, campaign.FieldUniqueCode)
+	}
 	if m._type != nil {
 		fields = append(fields, campaign.FieldType)
 	}
-	if m.payout_rate != nil {
-		fields = append(fields, campaign.FieldPayoutRate)
+	if m.commission_type != nil {
+		fields = append(fields, campaign.FieldCommissionType)
+	}
+	if m.base_commission_rate != nil {
+		fields = append(fields, campaign.FieldBaseCommissionRate)
+	}
+	if m.commission_tiers != nil {
+		fields = append(fields, campaign.FieldCommissionTiers)
+	}
+	if m.target_geography != nil {
+		fields = append(fields, campaign.FieldTargetGeography)
+	}
+	if m.target_demographics != nil {
+		fields = append(fields, campaign.FieldTargetDemographics)
 	}
 	if m.start_date != nil {
 		fields = append(fields, campaign.FieldStartDate)
@@ -807,8 +3153,23 @@ func (m *CampaignMutation) Fields() []string {
 	if m.tracking_url != nil {
 		fields = append(fields, campaign.FieldTrackingURL)
 	}
-	if m.unique_code != nil {
-		fields = append(fields, campaign.FieldUniqueCode)
+	if m.total_clicks != nil {
+		fields = append(fields, campaign.FieldTotalClicks)
+	}
+	if m.total_conversions != nil {
+		fields = append(fields, campaign.FieldTotalConversions)
+	}
+	if m.total_revenue != nil {
+		fields = append(fields, campaign.FieldTotalRevenue)
+	}
+	if m.conversion_rate != nil {
+		fields = append(fields, campaign.FieldConversionRate)
+	}
+	if m.created_at != nil {
+		fields = append(fields, campaign.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, campaign.FieldUpdatedAt)
 	}
 	return fields
 }
@@ -822,10 +3183,20 @@ func (m *CampaignMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case campaign.FieldDescription:
 		return m.Description()
+	case campaign.FieldUniqueCode:
+		return m.UniqueCode()
 	case campaign.FieldType:
 		return m.GetType()
-	case campaign.FieldPayoutRate:
-		return m.PayoutRate()
+	case campaign.FieldCommissionType:
+		return m.CommissionType()
+	case campaign.FieldBaseCommissionRate:
+		return m.BaseCommissionRate()
+	case campaign.FieldCommissionTiers:
+		return m.CommissionTiers()
+	case campaign.FieldTargetGeography:
+		return m.TargetGeography()
+	case campaign.FieldTargetDemographics:
+		return m.TargetDemographics()
 	case campaign.FieldStartDate:
 		return m.StartDate()
 	case campaign.FieldEndDate:
@@ -834,8 +3205,18 @@ func (m *CampaignMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case campaign.FieldTrackingURL:
 		return m.TrackingURL()
-	case campaign.FieldUniqueCode:
-		return m.UniqueCode()
+	case campaign.FieldTotalClicks:
+		return m.TotalClicks()
+	case campaign.FieldTotalConversions:
+		return m.TotalConversions()
+	case campaign.FieldTotalRevenue:
+		return m.TotalRevenue()
+	case campaign.FieldConversionRate:
+		return m.ConversionRate()
+	case campaign.FieldCreatedAt:
+		return m.CreatedAt()
+	case campaign.FieldUpdatedAt:
+		return m.UpdatedAt()
 	}
 	return nil, false
 }
@@ -849,10 +3230,20 @@ func (m *CampaignMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldName(ctx)
 	case campaign.FieldDescription:
 		return m.OldDescription(ctx)
+	case campaign.FieldUniqueCode:
+		return m.OldUniqueCode(ctx)
 	case campaign.FieldType:
 		return m.OldType(ctx)
-	case campaign.FieldPayoutRate:
-		return m.OldPayoutRate(ctx)
+	case campaign.FieldCommissionType:
+		return m.OldCommissionType(ctx)
+	case campaign.FieldBaseCommissionRate:
+		return m.OldBaseCommissionRate(ctx)
+	case campaign.FieldCommissionTiers:
+		return m.OldCommissionTiers(ctx)
+	case campaign.FieldTargetGeography:
+		return m.OldTargetGeography(ctx)
+	case campaign.FieldTargetDemographics:
+		return m.OldTargetDemographics(ctx)
 	case campaign.FieldStartDate:
 		return m.OldStartDate(ctx)
 	case campaign.FieldEndDate:
@@ -861,8 +3252,18 @@ func (m *CampaignMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldStatus(ctx)
 	case campaign.FieldTrackingURL:
 		return m.OldTrackingURL(ctx)
-	case campaign.FieldUniqueCode:
-		return m.OldUniqueCode(ctx)
+	case campaign.FieldTotalClicks:
+		return m.OldTotalClicks(ctx)
+	case campaign.FieldTotalConversions:
+		return m.OldTotalConversions(ctx)
+	case campaign.FieldTotalRevenue:
+		return m.OldTotalRevenue(ctx)
+	case campaign.FieldConversionRate:
+		return m.OldConversionRate(ctx)
+	case campaign.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case campaign.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Campaign field %s", name)
 }
@@ -886,6 +3287,13 @@ func (m *CampaignMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDescription(v)
 		return nil
+	case campaign.FieldUniqueCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUniqueCode(v)
+		return nil
 	case campaign.FieldType:
 		v, ok := value.(campaign.Type)
 		if !ok {
@@ -893,12 +3301,40 @@ func (m *CampaignMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetType(v)
 		return nil
-	case campaign.FieldPayoutRate:
+	case campaign.FieldCommissionType:
+		v, ok := value.(campaign.CommissionType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCommissionType(v)
+		return nil
+	case campaign.FieldBaseCommissionRate:
 		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetPayoutRate(v)
+		m.SetBaseCommissionRate(v)
+		return nil
+	case campaign.FieldCommissionTiers:
+		v, ok := value.([]schema.CommissionTier)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCommissionTiers(v)
+		return nil
+	case campaign.FieldTargetGeography:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetGeography(v)
+		return nil
+	case campaign.FieldTargetDemographics:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetDemographics(v)
 		return nil
 	case campaign.FieldStartDate:
 		v, ok := value.(time.Time)
@@ -928,12 +3364,47 @@ func (m *CampaignMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetTrackingURL(v)
 		return nil
-	case campaign.FieldUniqueCode:
-		v, ok := value.(string)
+	case campaign.FieldTotalClicks:
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetUniqueCode(v)
+		m.SetTotalClicks(v)
+		return nil
+	case campaign.FieldTotalConversions:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalConversions(v)
+		return nil
+	case campaign.FieldTotalRevenue:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalRevenue(v)
+		return nil
+	case campaign.FieldConversionRate:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConversionRate(v)
+		return nil
+	case campaign.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case campaign.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Campaign field %s", name)
@@ -943,8 +3414,20 @@ func (m *CampaignMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *CampaignMutation) AddedFields() []string {
 	var fields []string
-	if m.addpayout_rate != nil {
-		fields = append(fields, campaign.FieldPayoutRate)
+	if m.addbase_commission_rate != nil {
+		fields = append(fields, campaign.FieldBaseCommissionRate)
+	}
+	if m.addtotal_clicks != nil {
+		fields = append(fields, campaign.FieldTotalClicks)
+	}
+	if m.addtotal_conversions != nil {
+		fields = append(fields, campaign.FieldTotalConversions)
+	}
+	if m.addtotal_revenue != nil {
+		fields = append(fields, campaign.FieldTotalRevenue)
+	}
+	if m.addconversion_rate != nil {
+		fields = append(fields, campaign.FieldConversionRate)
 	}
 	return fields
 }
@@ -954,8 +3437,16 @@ func (m *CampaignMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *CampaignMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case campaign.FieldPayoutRate:
-		return m.AddedPayoutRate()
+	case campaign.FieldBaseCommissionRate:
+		return m.AddedBaseCommissionRate()
+	case campaign.FieldTotalClicks:
+		return m.AddedTotalClicks()
+	case campaign.FieldTotalConversions:
+		return m.AddedTotalConversions()
+	case campaign.FieldTotalRevenue:
+		return m.AddedTotalRevenue()
+	case campaign.FieldConversionRate:
+		return m.AddedConversionRate()
 	}
 	return nil, false
 }
@@ -965,12 +3456,40 @@ func (m *CampaignMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *CampaignMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case campaign.FieldPayoutRate:
+	case campaign.FieldBaseCommissionRate:
 		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.AddPayoutRate(v)
+		m.AddBaseCommissionRate(v)
+		return nil
+	case campaign.FieldTotalClicks:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalClicks(v)
+		return nil
+	case campaign.FieldTotalConversions:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalConversions(v)
+		return nil
+	case campaign.FieldTotalRevenue:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalRevenue(v)
+		return nil
+	case campaign.FieldConversionRate:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConversionRate(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Campaign numeric field %s", name)
@@ -983,8 +3502,20 @@ func (m *CampaignMutation) ClearedFields() []string {
 	if m.FieldCleared(campaign.FieldDescription) {
 		fields = append(fields, campaign.FieldDescription)
 	}
+	if m.FieldCleared(campaign.FieldCommissionTiers) {
+		fields = append(fields, campaign.FieldCommissionTiers)
+	}
+	if m.FieldCleared(campaign.FieldTargetGeography) {
+		fields = append(fields, campaign.FieldTargetGeography)
+	}
+	if m.FieldCleared(campaign.FieldTargetDemographics) {
+		fields = append(fields, campaign.FieldTargetDemographics)
+	}
 	if m.FieldCleared(campaign.FieldEndDate) {
 		fields = append(fields, campaign.FieldEndDate)
+	}
+	if m.FieldCleared(campaign.FieldTrackingURL) {
+		fields = append(fields, campaign.FieldTrackingURL)
 	}
 	return fields
 }
@@ -1003,8 +3534,20 @@ func (m *CampaignMutation) ClearField(name string) error {
 	case campaign.FieldDescription:
 		m.ClearDescription()
 		return nil
+	case campaign.FieldCommissionTiers:
+		m.ClearCommissionTiers()
+		return nil
+	case campaign.FieldTargetGeography:
+		m.ClearTargetGeography()
+		return nil
+	case campaign.FieldTargetDemographics:
+		m.ClearTargetDemographics()
+		return nil
 	case campaign.FieldEndDate:
 		m.ClearEndDate()
+		return nil
+	case campaign.FieldTrackingURL:
+		m.ClearTrackingURL()
 		return nil
 	}
 	return fmt.Errorf("unknown Campaign nullable field %s", name)
@@ -1020,11 +3563,26 @@ func (m *CampaignMutation) ResetField(name string) error {
 	case campaign.FieldDescription:
 		m.ResetDescription()
 		return nil
+	case campaign.FieldUniqueCode:
+		m.ResetUniqueCode()
+		return nil
 	case campaign.FieldType:
 		m.ResetType()
 		return nil
-	case campaign.FieldPayoutRate:
-		m.ResetPayoutRate()
+	case campaign.FieldCommissionType:
+		m.ResetCommissionType()
+		return nil
+	case campaign.FieldBaseCommissionRate:
+		m.ResetBaseCommissionRate()
+		return nil
+	case campaign.FieldCommissionTiers:
+		m.ResetCommissionTiers()
+		return nil
+	case campaign.FieldTargetGeography:
+		m.ResetTargetGeography()
+		return nil
+	case campaign.FieldTargetDemographics:
+		m.ResetTargetDemographics()
 		return nil
 	case campaign.FieldStartDate:
 		m.ResetStartDate()
@@ -1038,8 +3596,23 @@ func (m *CampaignMutation) ResetField(name string) error {
 	case campaign.FieldTrackingURL:
 		m.ResetTrackingURL()
 		return nil
-	case campaign.FieldUniqueCode:
-		m.ResetUniqueCode()
+	case campaign.FieldTotalClicks:
+		m.ResetTotalClicks()
+		return nil
+	case campaign.FieldTotalConversions:
+		m.ResetTotalConversions()
+		return nil
+	case campaign.FieldTotalRevenue:
+		m.ResetTotalRevenue()
+		return nil
+	case campaign.FieldConversionRate:
+		m.ResetConversionRate()
+		return nil
+	case campaign.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case campaign.FieldUpdatedAt:
+		m.ResetUpdatedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Campaign field %s", name)
@@ -1047,7 +3620,7 @@ func (m *CampaignMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *CampaignMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.owner != nil {
 		edges = append(edges, campaign.EdgeOwner)
 	}
@@ -1059,6 +3632,9 @@ func (m *CampaignMutation) AddedEdges() []string {
 	}
 	if m.referrals != nil {
 		edges = append(edges, campaign.EdgeReferrals)
+	}
+	if m.banners != nil {
+		edges = append(edges, campaign.EdgeBanners)
 	}
 	return edges
 }
@@ -1089,13 +3665,19 @@ func (m *CampaignMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case campaign.EdgeBanners:
+		ids := make([]ent.Value, 0, len(m.banners))
+		for id := range m.banners {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CampaignMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedlinks != nil {
 		edges = append(edges, campaign.EdgeLinks)
 	}
@@ -1104,6 +3686,9 @@ func (m *CampaignMutation) RemovedEdges() []string {
 	}
 	if m.removedreferrals != nil {
 		edges = append(edges, campaign.EdgeReferrals)
+	}
+	if m.removedbanners != nil {
+		edges = append(edges, campaign.EdgeBanners)
 	}
 	return edges
 }
@@ -1130,13 +3715,19 @@ func (m *CampaignMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case campaign.EdgeBanners:
+		ids := make([]ent.Value, 0, len(m.removedbanners))
+		for id := range m.removedbanners {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *CampaignMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedowner {
 		edges = append(edges, campaign.EdgeOwner)
 	}
@@ -1148,6 +3739,9 @@ func (m *CampaignMutation) ClearedEdges() []string {
 	}
 	if m.clearedreferrals {
 		edges = append(edges, campaign.EdgeReferrals)
+	}
+	if m.clearedbanners {
+		edges = append(edges, campaign.EdgeBanners)
 	}
 	return edges
 }
@@ -1164,6 +3758,8 @@ func (m *CampaignMutation) EdgeCleared(name string) bool {
 		return m.clearedtracks
 	case campaign.EdgeReferrals:
 		return m.clearedreferrals
+	case campaign.EdgeBanners:
+		return m.clearedbanners
 	}
 	return false
 }
@@ -1194,6 +3790,9 @@ func (m *CampaignMutation) ResetEdge(name string) error {
 		return nil
 	case campaign.EdgeReferrals:
 		m.ResetReferrals()
+		return nil
+	case campaign.EdgeBanners:
+		m.ResetBanners()
 		return nil
 	}
 	return fmt.Errorf("unknown Campaign edge %s", name)

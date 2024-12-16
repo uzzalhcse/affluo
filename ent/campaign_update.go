@@ -3,10 +3,12 @@
 package ent
 
 import (
+	"affluo/ent/banner"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/predicate"
 	"affluo/ent/referral"
+	"affluo/ent/schema"
 	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
@@ -16,6 +18,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -66,6 +69,20 @@ func (cu *CampaignUpdate) ClearDescription() *CampaignUpdate {
 	return cu
 }
 
+// SetUniqueCode sets the "unique_code" field.
+func (cu *CampaignUpdate) SetUniqueCode(s string) *CampaignUpdate {
+	cu.mutation.SetUniqueCode(s)
+	return cu
+}
+
+// SetNillableUniqueCode sets the "unique_code" field if the given value is not nil.
+func (cu *CampaignUpdate) SetNillableUniqueCode(s *string) *CampaignUpdate {
+	if s != nil {
+		cu.SetUniqueCode(*s)
+	}
+	return cu
+}
+
 // SetType sets the "type" field.
 func (cu *CampaignUpdate) SetType(c campaign.Type) *CampaignUpdate {
 	cu.mutation.SetType(c)
@@ -80,24 +97,88 @@ func (cu *CampaignUpdate) SetNillableType(c *campaign.Type) *CampaignUpdate {
 	return cu
 }
 
-// SetPayoutRate sets the "payout_rate" field.
-func (cu *CampaignUpdate) SetPayoutRate(f float64) *CampaignUpdate {
-	cu.mutation.ResetPayoutRate()
-	cu.mutation.SetPayoutRate(f)
+// SetCommissionType sets the "commission_type" field.
+func (cu *CampaignUpdate) SetCommissionType(ct campaign.CommissionType) *CampaignUpdate {
+	cu.mutation.SetCommissionType(ct)
 	return cu
 }
 
-// SetNillablePayoutRate sets the "payout_rate" field if the given value is not nil.
-func (cu *CampaignUpdate) SetNillablePayoutRate(f *float64) *CampaignUpdate {
-	if f != nil {
-		cu.SetPayoutRate(*f)
+// SetNillableCommissionType sets the "commission_type" field if the given value is not nil.
+func (cu *CampaignUpdate) SetNillableCommissionType(ct *campaign.CommissionType) *CampaignUpdate {
+	if ct != nil {
+		cu.SetCommissionType(*ct)
 	}
 	return cu
 }
 
-// AddPayoutRate adds f to the "payout_rate" field.
-func (cu *CampaignUpdate) AddPayoutRate(f float64) *CampaignUpdate {
-	cu.mutation.AddPayoutRate(f)
+// SetBaseCommissionRate sets the "base_commission_rate" field.
+func (cu *CampaignUpdate) SetBaseCommissionRate(f float64) *CampaignUpdate {
+	cu.mutation.ResetBaseCommissionRate()
+	cu.mutation.SetBaseCommissionRate(f)
+	return cu
+}
+
+// SetNillableBaseCommissionRate sets the "base_commission_rate" field if the given value is not nil.
+func (cu *CampaignUpdate) SetNillableBaseCommissionRate(f *float64) *CampaignUpdate {
+	if f != nil {
+		cu.SetBaseCommissionRate(*f)
+	}
+	return cu
+}
+
+// AddBaseCommissionRate adds f to the "base_commission_rate" field.
+func (cu *CampaignUpdate) AddBaseCommissionRate(f float64) *CampaignUpdate {
+	cu.mutation.AddBaseCommissionRate(f)
+	return cu
+}
+
+// SetCommissionTiers sets the "commission_tiers" field.
+func (cu *CampaignUpdate) SetCommissionTiers(st []schema.CommissionTier) *CampaignUpdate {
+	cu.mutation.SetCommissionTiers(st)
+	return cu
+}
+
+// AppendCommissionTiers appends st to the "commission_tiers" field.
+func (cu *CampaignUpdate) AppendCommissionTiers(st []schema.CommissionTier) *CampaignUpdate {
+	cu.mutation.AppendCommissionTiers(st)
+	return cu
+}
+
+// ClearCommissionTiers clears the value of the "commission_tiers" field.
+func (cu *CampaignUpdate) ClearCommissionTiers() *CampaignUpdate {
+	cu.mutation.ClearCommissionTiers()
+	return cu
+}
+
+// SetTargetGeography sets the "target_geography" field.
+func (cu *CampaignUpdate) SetTargetGeography(s string) *CampaignUpdate {
+	cu.mutation.SetTargetGeography(s)
+	return cu
+}
+
+// SetNillableTargetGeography sets the "target_geography" field if the given value is not nil.
+func (cu *CampaignUpdate) SetNillableTargetGeography(s *string) *CampaignUpdate {
+	if s != nil {
+		cu.SetTargetGeography(*s)
+	}
+	return cu
+}
+
+// ClearTargetGeography clears the value of the "target_geography" field.
+func (cu *CampaignUpdate) ClearTargetGeography() *CampaignUpdate {
+	cu.mutation.ClearTargetGeography()
+	return cu
+}
+
+// SetTargetDemographics sets the "target_demographics" field.
+func (cu *CampaignUpdate) SetTargetDemographics(m map[string]interface{}) *CampaignUpdate {
+	cu.mutation.SetTargetDemographics(m)
+	return cu
+}
+
+// ClearTargetDemographics clears the value of the "target_demographics" field.
+func (cu *CampaignUpdate) ClearTargetDemographics() *CampaignUpdate {
+	cu.mutation.ClearTargetDemographics()
 	return cu
 }
 
@@ -163,17 +244,99 @@ func (cu *CampaignUpdate) SetNillableTrackingURL(s *string) *CampaignUpdate {
 	return cu
 }
 
-// SetUniqueCode sets the "unique_code" field.
-func (cu *CampaignUpdate) SetUniqueCode(s string) *CampaignUpdate {
-	cu.mutation.SetUniqueCode(s)
+// ClearTrackingURL clears the value of the "tracking_url" field.
+func (cu *CampaignUpdate) ClearTrackingURL() *CampaignUpdate {
+	cu.mutation.ClearTrackingURL()
 	return cu
 }
 
-// SetNillableUniqueCode sets the "unique_code" field if the given value is not nil.
-func (cu *CampaignUpdate) SetNillableUniqueCode(s *string) *CampaignUpdate {
-	if s != nil {
-		cu.SetUniqueCode(*s)
+// SetTotalClicks sets the "total_clicks" field.
+func (cu *CampaignUpdate) SetTotalClicks(i int) *CampaignUpdate {
+	cu.mutation.ResetTotalClicks()
+	cu.mutation.SetTotalClicks(i)
+	return cu
+}
+
+// SetNillableTotalClicks sets the "total_clicks" field if the given value is not nil.
+func (cu *CampaignUpdate) SetNillableTotalClicks(i *int) *CampaignUpdate {
+	if i != nil {
+		cu.SetTotalClicks(*i)
 	}
+	return cu
+}
+
+// AddTotalClicks adds i to the "total_clicks" field.
+func (cu *CampaignUpdate) AddTotalClicks(i int) *CampaignUpdate {
+	cu.mutation.AddTotalClicks(i)
+	return cu
+}
+
+// SetTotalConversions sets the "total_conversions" field.
+func (cu *CampaignUpdate) SetTotalConversions(i int) *CampaignUpdate {
+	cu.mutation.ResetTotalConversions()
+	cu.mutation.SetTotalConversions(i)
+	return cu
+}
+
+// SetNillableTotalConversions sets the "total_conversions" field if the given value is not nil.
+func (cu *CampaignUpdate) SetNillableTotalConversions(i *int) *CampaignUpdate {
+	if i != nil {
+		cu.SetTotalConversions(*i)
+	}
+	return cu
+}
+
+// AddTotalConversions adds i to the "total_conversions" field.
+func (cu *CampaignUpdate) AddTotalConversions(i int) *CampaignUpdate {
+	cu.mutation.AddTotalConversions(i)
+	return cu
+}
+
+// SetTotalRevenue sets the "total_revenue" field.
+func (cu *CampaignUpdate) SetTotalRevenue(f float64) *CampaignUpdate {
+	cu.mutation.ResetTotalRevenue()
+	cu.mutation.SetTotalRevenue(f)
+	return cu
+}
+
+// SetNillableTotalRevenue sets the "total_revenue" field if the given value is not nil.
+func (cu *CampaignUpdate) SetNillableTotalRevenue(f *float64) *CampaignUpdate {
+	if f != nil {
+		cu.SetTotalRevenue(*f)
+	}
+	return cu
+}
+
+// AddTotalRevenue adds f to the "total_revenue" field.
+func (cu *CampaignUpdate) AddTotalRevenue(f float64) *CampaignUpdate {
+	cu.mutation.AddTotalRevenue(f)
+	return cu
+}
+
+// SetConversionRate sets the "conversion_rate" field.
+func (cu *CampaignUpdate) SetConversionRate(f float64) *CampaignUpdate {
+	cu.mutation.ResetConversionRate()
+	cu.mutation.SetConversionRate(f)
+	return cu
+}
+
+// SetNillableConversionRate sets the "conversion_rate" field if the given value is not nil.
+func (cu *CampaignUpdate) SetNillableConversionRate(f *float64) *CampaignUpdate {
+	if f != nil {
+		cu.SetConversionRate(*f)
+	}
+	return cu
+}
+
+// AddConversionRate adds f to the "conversion_rate" field.
+func (cu *CampaignUpdate) AddConversionRate(f float64) *CampaignUpdate {
+	cu.mutation.AddConversionRate(f)
+	return cu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (cu *CampaignUpdate) SetUpdatedAt(t time.Time) *CampaignUpdate {
+	cu.mutation.SetUpdatedAt(t)
 	return cu
 }
 
@@ -239,6 +402,21 @@ func (cu *CampaignUpdate) AddReferrals(r ...*Referral) *CampaignUpdate {
 		ids[i] = r[i].ID
 	}
 	return cu.AddReferralIDs(ids...)
+}
+
+// AddBannerIDs adds the "banners" edge to the Banner entity by IDs.
+func (cu *CampaignUpdate) AddBannerIDs(ids ...int64) *CampaignUpdate {
+	cu.mutation.AddBannerIDs(ids...)
+	return cu
+}
+
+// AddBanners adds the "banners" edges to the Banner entity.
+func (cu *CampaignUpdate) AddBanners(b ...*Banner) *CampaignUpdate {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return cu.AddBannerIDs(ids...)
 }
 
 // Mutation returns the CampaignMutation object of the builder.
@@ -315,8 +493,30 @@ func (cu *CampaignUpdate) RemoveReferrals(r ...*Referral) *CampaignUpdate {
 	return cu.RemoveReferralIDs(ids...)
 }
 
+// ClearBanners clears all "banners" edges to the Banner entity.
+func (cu *CampaignUpdate) ClearBanners() *CampaignUpdate {
+	cu.mutation.ClearBanners()
+	return cu
+}
+
+// RemoveBannerIDs removes the "banners" edge to Banner entities by IDs.
+func (cu *CampaignUpdate) RemoveBannerIDs(ids ...int64) *CampaignUpdate {
+	cu.mutation.RemoveBannerIDs(ids...)
+	return cu
+}
+
+// RemoveBanners removes "banners" edges to Banner entities.
+func (cu *CampaignUpdate) RemoveBanners(b ...*Banner) *CampaignUpdate {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return cu.RemoveBannerIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (cu *CampaignUpdate) Save(ctx context.Context) (int, error) {
+	cu.defaults()
 	return withHooks(ctx, cu.sqlSave, cu.mutation, cu.hooks)
 }
 
@@ -342,6 +542,14 @@ func (cu *CampaignUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cu *CampaignUpdate) defaults() {
+	if _, ok := cu.mutation.UpdatedAt(); !ok {
+		v := campaign.UpdateDefaultUpdatedAt()
+		cu.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (cu *CampaignUpdate) check() error {
 	if v, ok := cu.mutation.Name(); ok {
@@ -352,6 +560,11 @@ func (cu *CampaignUpdate) check() error {
 	if v, ok := cu.mutation.GetType(); ok {
 		if err := campaign.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Campaign.type": %w`, err)}
+		}
+	}
+	if v, ok := cu.mutation.CommissionType(); ok {
+		if err := campaign.CommissionTypeValidator(v); err != nil {
+			return &ValidationError{Name: "commission_type", err: fmt.Errorf(`ent: validator failed for field "Campaign.commission_type": %w`, err)}
 		}
 	}
 	if v, ok := cu.mutation.Status(); ok {
@@ -383,14 +596,43 @@ func (cu *CampaignUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if cu.mutation.DescriptionCleared() {
 		_spec.ClearField(campaign.FieldDescription, field.TypeString)
 	}
+	if value, ok := cu.mutation.UniqueCode(); ok {
+		_spec.SetField(campaign.FieldUniqueCode, field.TypeString, value)
+	}
 	if value, ok := cu.mutation.GetType(); ok {
 		_spec.SetField(campaign.FieldType, field.TypeEnum, value)
 	}
-	if value, ok := cu.mutation.PayoutRate(); ok {
-		_spec.SetField(campaign.FieldPayoutRate, field.TypeFloat64, value)
+	if value, ok := cu.mutation.CommissionType(); ok {
+		_spec.SetField(campaign.FieldCommissionType, field.TypeEnum, value)
 	}
-	if value, ok := cu.mutation.AddedPayoutRate(); ok {
-		_spec.AddField(campaign.FieldPayoutRate, field.TypeFloat64, value)
+	if value, ok := cu.mutation.BaseCommissionRate(); ok {
+		_spec.SetField(campaign.FieldBaseCommissionRate, field.TypeFloat64, value)
+	}
+	if value, ok := cu.mutation.AddedBaseCommissionRate(); ok {
+		_spec.AddField(campaign.FieldBaseCommissionRate, field.TypeFloat64, value)
+	}
+	if value, ok := cu.mutation.CommissionTiers(); ok {
+		_spec.SetField(campaign.FieldCommissionTiers, field.TypeJSON, value)
+	}
+	if value, ok := cu.mutation.AppendedCommissionTiers(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, campaign.FieldCommissionTiers, value)
+		})
+	}
+	if cu.mutation.CommissionTiersCleared() {
+		_spec.ClearField(campaign.FieldCommissionTiers, field.TypeJSON)
+	}
+	if value, ok := cu.mutation.TargetGeography(); ok {
+		_spec.SetField(campaign.FieldTargetGeography, field.TypeString, value)
+	}
+	if cu.mutation.TargetGeographyCleared() {
+		_spec.ClearField(campaign.FieldTargetGeography, field.TypeString)
+	}
+	if value, ok := cu.mutation.TargetDemographics(); ok {
+		_spec.SetField(campaign.FieldTargetDemographics, field.TypeJSON, value)
+	}
+	if cu.mutation.TargetDemographicsCleared() {
+		_spec.ClearField(campaign.FieldTargetDemographics, field.TypeJSON)
 	}
 	if value, ok := cu.mutation.StartDate(); ok {
 		_spec.SetField(campaign.FieldStartDate, field.TypeTime, value)
@@ -407,8 +649,35 @@ func (cu *CampaignUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := cu.mutation.TrackingURL(); ok {
 		_spec.SetField(campaign.FieldTrackingURL, field.TypeString, value)
 	}
-	if value, ok := cu.mutation.UniqueCode(); ok {
-		_spec.SetField(campaign.FieldUniqueCode, field.TypeString, value)
+	if cu.mutation.TrackingURLCleared() {
+		_spec.ClearField(campaign.FieldTrackingURL, field.TypeString)
+	}
+	if value, ok := cu.mutation.TotalClicks(); ok {
+		_spec.SetField(campaign.FieldTotalClicks, field.TypeInt, value)
+	}
+	if value, ok := cu.mutation.AddedTotalClicks(); ok {
+		_spec.AddField(campaign.FieldTotalClicks, field.TypeInt, value)
+	}
+	if value, ok := cu.mutation.TotalConversions(); ok {
+		_spec.SetField(campaign.FieldTotalConversions, field.TypeInt, value)
+	}
+	if value, ok := cu.mutation.AddedTotalConversions(); ok {
+		_spec.AddField(campaign.FieldTotalConversions, field.TypeInt, value)
+	}
+	if value, ok := cu.mutation.TotalRevenue(); ok {
+		_spec.SetField(campaign.FieldTotalRevenue, field.TypeFloat64, value)
+	}
+	if value, ok := cu.mutation.AddedTotalRevenue(); ok {
+		_spec.AddField(campaign.FieldTotalRevenue, field.TypeFloat64, value)
+	}
+	if value, ok := cu.mutation.ConversionRate(); ok {
+		_spec.SetField(campaign.FieldConversionRate, field.TypeFloat64, value)
+	}
+	if value, ok := cu.mutation.AddedConversionRate(); ok {
+		_spec.AddField(campaign.FieldConversionRate, field.TypeFloat64, value)
+	}
+	if value, ok := cu.mutation.UpdatedAt(); ok {
+		_spec.SetField(campaign.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if cu.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -574,6 +843,51 @@ func (cu *CampaignUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if cu.mutation.BannersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   campaign.BannersTable,
+			Columns: campaign.BannersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.RemovedBannersIDs(); len(nodes) > 0 && !cu.mutation.BannersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   campaign.BannersTable,
+			Columns: campaign.BannersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.BannersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   campaign.BannersTable,
+			Columns: campaign.BannersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{campaign.Label}
@@ -628,6 +942,20 @@ func (cuo *CampaignUpdateOne) ClearDescription() *CampaignUpdateOne {
 	return cuo
 }
 
+// SetUniqueCode sets the "unique_code" field.
+func (cuo *CampaignUpdateOne) SetUniqueCode(s string) *CampaignUpdateOne {
+	cuo.mutation.SetUniqueCode(s)
+	return cuo
+}
+
+// SetNillableUniqueCode sets the "unique_code" field if the given value is not nil.
+func (cuo *CampaignUpdateOne) SetNillableUniqueCode(s *string) *CampaignUpdateOne {
+	if s != nil {
+		cuo.SetUniqueCode(*s)
+	}
+	return cuo
+}
+
 // SetType sets the "type" field.
 func (cuo *CampaignUpdateOne) SetType(c campaign.Type) *CampaignUpdateOne {
 	cuo.mutation.SetType(c)
@@ -642,24 +970,88 @@ func (cuo *CampaignUpdateOne) SetNillableType(c *campaign.Type) *CampaignUpdateO
 	return cuo
 }
 
-// SetPayoutRate sets the "payout_rate" field.
-func (cuo *CampaignUpdateOne) SetPayoutRate(f float64) *CampaignUpdateOne {
-	cuo.mutation.ResetPayoutRate()
-	cuo.mutation.SetPayoutRate(f)
+// SetCommissionType sets the "commission_type" field.
+func (cuo *CampaignUpdateOne) SetCommissionType(ct campaign.CommissionType) *CampaignUpdateOne {
+	cuo.mutation.SetCommissionType(ct)
 	return cuo
 }
 
-// SetNillablePayoutRate sets the "payout_rate" field if the given value is not nil.
-func (cuo *CampaignUpdateOne) SetNillablePayoutRate(f *float64) *CampaignUpdateOne {
-	if f != nil {
-		cuo.SetPayoutRate(*f)
+// SetNillableCommissionType sets the "commission_type" field if the given value is not nil.
+func (cuo *CampaignUpdateOne) SetNillableCommissionType(ct *campaign.CommissionType) *CampaignUpdateOne {
+	if ct != nil {
+		cuo.SetCommissionType(*ct)
 	}
 	return cuo
 }
 
-// AddPayoutRate adds f to the "payout_rate" field.
-func (cuo *CampaignUpdateOne) AddPayoutRate(f float64) *CampaignUpdateOne {
-	cuo.mutation.AddPayoutRate(f)
+// SetBaseCommissionRate sets the "base_commission_rate" field.
+func (cuo *CampaignUpdateOne) SetBaseCommissionRate(f float64) *CampaignUpdateOne {
+	cuo.mutation.ResetBaseCommissionRate()
+	cuo.mutation.SetBaseCommissionRate(f)
+	return cuo
+}
+
+// SetNillableBaseCommissionRate sets the "base_commission_rate" field if the given value is not nil.
+func (cuo *CampaignUpdateOne) SetNillableBaseCommissionRate(f *float64) *CampaignUpdateOne {
+	if f != nil {
+		cuo.SetBaseCommissionRate(*f)
+	}
+	return cuo
+}
+
+// AddBaseCommissionRate adds f to the "base_commission_rate" field.
+func (cuo *CampaignUpdateOne) AddBaseCommissionRate(f float64) *CampaignUpdateOne {
+	cuo.mutation.AddBaseCommissionRate(f)
+	return cuo
+}
+
+// SetCommissionTiers sets the "commission_tiers" field.
+func (cuo *CampaignUpdateOne) SetCommissionTiers(st []schema.CommissionTier) *CampaignUpdateOne {
+	cuo.mutation.SetCommissionTiers(st)
+	return cuo
+}
+
+// AppendCommissionTiers appends st to the "commission_tiers" field.
+func (cuo *CampaignUpdateOne) AppendCommissionTiers(st []schema.CommissionTier) *CampaignUpdateOne {
+	cuo.mutation.AppendCommissionTiers(st)
+	return cuo
+}
+
+// ClearCommissionTiers clears the value of the "commission_tiers" field.
+func (cuo *CampaignUpdateOne) ClearCommissionTiers() *CampaignUpdateOne {
+	cuo.mutation.ClearCommissionTiers()
+	return cuo
+}
+
+// SetTargetGeography sets the "target_geography" field.
+func (cuo *CampaignUpdateOne) SetTargetGeography(s string) *CampaignUpdateOne {
+	cuo.mutation.SetTargetGeography(s)
+	return cuo
+}
+
+// SetNillableTargetGeography sets the "target_geography" field if the given value is not nil.
+func (cuo *CampaignUpdateOne) SetNillableTargetGeography(s *string) *CampaignUpdateOne {
+	if s != nil {
+		cuo.SetTargetGeography(*s)
+	}
+	return cuo
+}
+
+// ClearTargetGeography clears the value of the "target_geography" field.
+func (cuo *CampaignUpdateOne) ClearTargetGeography() *CampaignUpdateOne {
+	cuo.mutation.ClearTargetGeography()
+	return cuo
+}
+
+// SetTargetDemographics sets the "target_demographics" field.
+func (cuo *CampaignUpdateOne) SetTargetDemographics(m map[string]interface{}) *CampaignUpdateOne {
+	cuo.mutation.SetTargetDemographics(m)
+	return cuo
+}
+
+// ClearTargetDemographics clears the value of the "target_demographics" field.
+func (cuo *CampaignUpdateOne) ClearTargetDemographics() *CampaignUpdateOne {
+	cuo.mutation.ClearTargetDemographics()
 	return cuo
 }
 
@@ -725,17 +1117,99 @@ func (cuo *CampaignUpdateOne) SetNillableTrackingURL(s *string) *CampaignUpdateO
 	return cuo
 }
 
-// SetUniqueCode sets the "unique_code" field.
-func (cuo *CampaignUpdateOne) SetUniqueCode(s string) *CampaignUpdateOne {
-	cuo.mutation.SetUniqueCode(s)
+// ClearTrackingURL clears the value of the "tracking_url" field.
+func (cuo *CampaignUpdateOne) ClearTrackingURL() *CampaignUpdateOne {
+	cuo.mutation.ClearTrackingURL()
 	return cuo
 }
 
-// SetNillableUniqueCode sets the "unique_code" field if the given value is not nil.
-func (cuo *CampaignUpdateOne) SetNillableUniqueCode(s *string) *CampaignUpdateOne {
-	if s != nil {
-		cuo.SetUniqueCode(*s)
+// SetTotalClicks sets the "total_clicks" field.
+func (cuo *CampaignUpdateOne) SetTotalClicks(i int) *CampaignUpdateOne {
+	cuo.mutation.ResetTotalClicks()
+	cuo.mutation.SetTotalClicks(i)
+	return cuo
+}
+
+// SetNillableTotalClicks sets the "total_clicks" field if the given value is not nil.
+func (cuo *CampaignUpdateOne) SetNillableTotalClicks(i *int) *CampaignUpdateOne {
+	if i != nil {
+		cuo.SetTotalClicks(*i)
 	}
+	return cuo
+}
+
+// AddTotalClicks adds i to the "total_clicks" field.
+func (cuo *CampaignUpdateOne) AddTotalClicks(i int) *CampaignUpdateOne {
+	cuo.mutation.AddTotalClicks(i)
+	return cuo
+}
+
+// SetTotalConversions sets the "total_conversions" field.
+func (cuo *CampaignUpdateOne) SetTotalConversions(i int) *CampaignUpdateOne {
+	cuo.mutation.ResetTotalConversions()
+	cuo.mutation.SetTotalConversions(i)
+	return cuo
+}
+
+// SetNillableTotalConversions sets the "total_conversions" field if the given value is not nil.
+func (cuo *CampaignUpdateOne) SetNillableTotalConversions(i *int) *CampaignUpdateOne {
+	if i != nil {
+		cuo.SetTotalConversions(*i)
+	}
+	return cuo
+}
+
+// AddTotalConversions adds i to the "total_conversions" field.
+func (cuo *CampaignUpdateOne) AddTotalConversions(i int) *CampaignUpdateOne {
+	cuo.mutation.AddTotalConversions(i)
+	return cuo
+}
+
+// SetTotalRevenue sets the "total_revenue" field.
+func (cuo *CampaignUpdateOne) SetTotalRevenue(f float64) *CampaignUpdateOne {
+	cuo.mutation.ResetTotalRevenue()
+	cuo.mutation.SetTotalRevenue(f)
+	return cuo
+}
+
+// SetNillableTotalRevenue sets the "total_revenue" field if the given value is not nil.
+func (cuo *CampaignUpdateOne) SetNillableTotalRevenue(f *float64) *CampaignUpdateOne {
+	if f != nil {
+		cuo.SetTotalRevenue(*f)
+	}
+	return cuo
+}
+
+// AddTotalRevenue adds f to the "total_revenue" field.
+func (cuo *CampaignUpdateOne) AddTotalRevenue(f float64) *CampaignUpdateOne {
+	cuo.mutation.AddTotalRevenue(f)
+	return cuo
+}
+
+// SetConversionRate sets the "conversion_rate" field.
+func (cuo *CampaignUpdateOne) SetConversionRate(f float64) *CampaignUpdateOne {
+	cuo.mutation.ResetConversionRate()
+	cuo.mutation.SetConversionRate(f)
+	return cuo
+}
+
+// SetNillableConversionRate sets the "conversion_rate" field if the given value is not nil.
+func (cuo *CampaignUpdateOne) SetNillableConversionRate(f *float64) *CampaignUpdateOne {
+	if f != nil {
+		cuo.SetConversionRate(*f)
+	}
+	return cuo
+}
+
+// AddConversionRate adds f to the "conversion_rate" field.
+func (cuo *CampaignUpdateOne) AddConversionRate(f float64) *CampaignUpdateOne {
+	cuo.mutation.AddConversionRate(f)
+	return cuo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (cuo *CampaignUpdateOne) SetUpdatedAt(t time.Time) *CampaignUpdateOne {
+	cuo.mutation.SetUpdatedAt(t)
 	return cuo
 }
 
@@ -801,6 +1275,21 @@ func (cuo *CampaignUpdateOne) AddReferrals(r ...*Referral) *CampaignUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return cuo.AddReferralIDs(ids...)
+}
+
+// AddBannerIDs adds the "banners" edge to the Banner entity by IDs.
+func (cuo *CampaignUpdateOne) AddBannerIDs(ids ...int64) *CampaignUpdateOne {
+	cuo.mutation.AddBannerIDs(ids...)
+	return cuo
+}
+
+// AddBanners adds the "banners" edges to the Banner entity.
+func (cuo *CampaignUpdateOne) AddBanners(b ...*Banner) *CampaignUpdateOne {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return cuo.AddBannerIDs(ids...)
 }
 
 // Mutation returns the CampaignMutation object of the builder.
@@ -877,6 +1366,27 @@ func (cuo *CampaignUpdateOne) RemoveReferrals(r ...*Referral) *CampaignUpdateOne
 	return cuo.RemoveReferralIDs(ids...)
 }
 
+// ClearBanners clears all "banners" edges to the Banner entity.
+func (cuo *CampaignUpdateOne) ClearBanners() *CampaignUpdateOne {
+	cuo.mutation.ClearBanners()
+	return cuo
+}
+
+// RemoveBannerIDs removes the "banners" edge to Banner entities by IDs.
+func (cuo *CampaignUpdateOne) RemoveBannerIDs(ids ...int64) *CampaignUpdateOne {
+	cuo.mutation.RemoveBannerIDs(ids...)
+	return cuo
+}
+
+// RemoveBanners removes "banners" edges to Banner entities.
+func (cuo *CampaignUpdateOne) RemoveBanners(b ...*Banner) *CampaignUpdateOne {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return cuo.RemoveBannerIDs(ids...)
+}
+
 // Where appends a list predicates to the CampaignUpdate builder.
 func (cuo *CampaignUpdateOne) Where(ps ...predicate.Campaign) *CampaignUpdateOne {
 	cuo.mutation.Where(ps...)
@@ -892,6 +1402,7 @@ func (cuo *CampaignUpdateOne) Select(field string, fields ...string) *CampaignUp
 
 // Save executes the query and returns the updated Campaign entity.
 func (cuo *CampaignUpdateOne) Save(ctx context.Context) (*Campaign, error) {
+	cuo.defaults()
 	return withHooks(ctx, cuo.sqlSave, cuo.mutation, cuo.hooks)
 }
 
@@ -917,6 +1428,14 @@ func (cuo *CampaignUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cuo *CampaignUpdateOne) defaults() {
+	if _, ok := cuo.mutation.UpdatedAt(); !ok {
+		v := campaign.UpdateDefaultUpdatedAt()
+		cuo.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (cuo *CampaignUpdateOne) check() error {
 	if v, ok := cuo.mutation.Name(); ok {
@@ -927,6 +1446,11 @@ func (cuo *CampaignUpdateOne) check() error {
 	if v, ok := cuo.mutation.GetType(); ok {
 		if err := campaign.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Campaign.type": %w`, err)}
+		}
+	}
+	if v, ok := cuo.mutation.CommissionType(); ok {
+		if err := campaign.CommissionTypeValidator(v); err != nil {
+			return &ValidationError{Name: "commission_type", err: fmt.Errorf(`ent: validator failed for field "Campaign.commission_type": %w`, err)}
 		}
 	}
 	if v, ok := cuo.mutation.Status(); ok {
@@ -975,14 +1499,43 @@ func (cuo *CampaignUpdateOne) sqlSave(ctx context.Context) (_node *Campaign, err
 	if cuo.mutation.DescriptionCleared() {
 		_spec.ClearField(campaign.FieldDescription, field.TypeString)
 	}
+	if value, ok := cuo.mutation.UniqueCode(); ok {
+		_spec.SetField(campaign.FieldUniqueCode, field.TypeString, value)
+	}
 	if value, ok := cuo.mutation.GetType(); ok {
 		_spec.SetField(campaign.FieldType, field.TypeEnum, value)
 	}
-	if value, ok := cuo.mutation.PayoutRate(); ok {
-		_spec.SetField(campaign.FieldPayoutRate, field.TypeFloat64, value)
+	if value, ok := cuo.mutation.CommissionType(); ok {
+		_spec.SetField(campaign.FieldCommissionType, field.TypeEnum, value)
 	}
-	if value, ok := cuo.mutation.AddedPayoutRate(); ok {
-		_spec.AddField(campaign.FieldPayoutRate, field.TypeFloat64, value)
+	if value, ok := cuo.mutation.BaseCommissionRate(); ok {
+		_spec.SetField(campaign.FieldBaseCommissionRate, field.TypeFloat64, value)
+	}
+	if value, ok := cuo.mutation.AddedBaseCommissionRate(); ok {
+		_spec.AddField(campaign.FieldBaseCommissionRate, field.TypeFloat64, value)
+	}
+	if value, ok := cuo.mutation.CommissionTiers(); ok {
+		_spec.SetField(campaign.FieldCommissionTiers, field.TypeJSON, value)
+	}
+	if value, ok := cuo.mutation.AppendedCommissionTiers(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, campaign.FieldCommissionTiers, value)
+		})
+	}
+	if cuo.mutation.CommissionTiersCleared() {
+		_spec.ClearField(campaign.FieldCommissionTiers, field.TypeJSON)
+	}
+	if value, ok := cuo.mutation.TargetGeography(); ok {
+		_spec.SetField(campaign.FieldTargetGeography, field.TypeString, value)
+	}
+	if cuo.mutation.TargetGeographyCleared() {
+		_spec.ClearField(campaign.FieldTargetGeography, field.TypeString)
+	}
+	if value, ok := cuo.mutation.TargetDemographics(); ok {
+		_spec.SetField(campaign.FieldTargetDemographics, field.TypeJSON, value)
+	}
+	if cuo.mutation.TargetDemographicsCleared() {
+		_spec.ClearField(campaign.FieldTargetDemographics, field.TypeJSON)
 	}
 	if value, ok := cuo.mutation.StartDate(); ok {
 		_spec.SetField(campaign.FieldStartDate, field.TypeTime, value)
@@ -999,8 +1552,35 @@ func (cuo *CampaignUpdateOne) sqlSave(ctx context.Context) (_node *Campaign, err
 	if value, ok := cuo.mutation.TrackingURL(); ok {
 		_spec.SetField(campaign.FieldTrackingURL, field.TypeString, value)
 	}
-	if value, ok := cuo.mutation.UniqueCode(); ok {
-		_spec.SetField(campaign.FieldUniqueCode, field.TypeString, value)
+	if cuo.mutation.TrackingURLCleared() {
+		_spec.ClearField(campaign.FieldTrackingURL, field.TypeString)
+	}
+	if value, ok := cuo.mutation.TotalClicks(); ok {
+		_spec.SetField(campaign.FieldTotalClicks, field.TypeInt, value)
+	}
+	if value, ok := cuo.mutation.AddedTotalClicks(); ok {
+		_spec.AddField(campaign.FieldTotalClicks, field.TypeInt, value)
+	}
+	if value, ok := cuo.mutation.TotalConversions(); ok {
+		_spec.SetField(campaign.FieldTotalConversions, field.TypeInt, value)
+	}
+	if value, ok := cuo.mutation.AddedTotalConversions(); ok {
+		_spec.AddField(campaign.FieldTotalConversions, field.TypeInt, value)
+	}
+	if value, ok := cuo.mutation.TotalRevenue(); ok {
+		_spec.SetField(campaign.FieldTotalRevenue, field.TypeFloat64, value)
+	}
+	if value, ok := cuo.mutation.AddedTotalRevenue(); ok {
+		_spec.AddField(campaign.FieldTotalRevenue, field.TypeFloat64, value)
+	}
+	if value, ok := cuo.mutation.ConversionRate(); ok {
+		_spec.SetField(campaign.FieldConversionRate, field.TypeFloat64, value)
+	}
+	if value, ok := cuo.mutation.AddedConversionRate(); ok {
+		_spec.AddField(campaign.FieldConversionRate, field.TypeFloat64, value)
+	}
+	if value, ok := cuo.mutation.UpdatedAt(); ok {
+		_spec.SetField(campaign.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if cuo.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1159,6 +1739,51 @@ func (cuo *CampaignUpdateOne) sqlSave(ctx context.Context) (_node *Campaign, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cuo.mutation.BannersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   campaign.BannersTable,
+			Columns: campaign.BannersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.RemovedBannersIDs(); len(nodes) > 0 && !cuo.mutation.BannersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   campaign.BannersTable,
+			Columns: campaign.BannersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.BannersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   campaign.BannersTable,
+			Columns: campaign.BannersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

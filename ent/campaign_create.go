@@ -3,9 +3,11 @@
 package ent
 
 import (
+	"affluo/ent/banner"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/referral"
+	"affluo/ent/schema"
 	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
@@ -44,15 +46,77 @@ func (cc *CampaignCreate) SetNillableDescription(s *string) *CampaignCreate {
 	return cc
 }
 
+// SetUniqueCode sets the "unique_code" field.
+func (cc *CampaignCreate) SetUniqueCode(s string) *CampaignCreate {
+	cc.mutation.SetUniqueCode(s)
+	return cc
+}
+
 // SetType sets the "type" field.
 func (cc *CampaignCreate) SetType(c campaign.Type) *CampaignCreate {
 	cc.mutation.SetType(c)
 	return cc
 }
 
-// SetPayoutRate sets the "payout_rate" field.
-func (cc *CampaignCreate) SetPayoutRate(f float64) *CampaignCreate {
-	cc.mutation.SetPayoutRate(f)
+// SetNillableType sets the "type" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableType(c *campaign.Type) *CampaignCreate {
+	if c != nil {
+		cc.SetType(*c)
+	}
+	return cc
+}
+
+// SetCommissionType sets the "commission_type" field.
+func (cc *CampaignCreate) SetCommissionType(ct campaign.CommissionType) *CampaignCreate {
+	cc.mutation.SetCommissionType(ct)
+	return cc
+}
+
+// SetNillableCommissionType sets the "commission_type" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableCommissionType(ct *campaign.CommissionType) *CampaignCreate {
+	if ct != nil {
+		cc.SetCommissionType(*ct)
+	}
+	return cc
+}
+
+// SetBaseCommissionRate sets the "base_commission_rate" field.
+func (cc *CampaignCreate) SetBaseCommissionRate(f float64) *CampaignCreate {
+	cc.mutation.SetBaseCommissionRate(f)
+	return cc
+}
+
+// SetNillableBaseCommissionRate sets the "base_commission_rate" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableBaseCommissionRate(f *float64) *CampaignCreate {
+	if f != nil {
+		cc.SetBaseCommissionRate(*f)
+	}
+	return cc
+}
+
+// SetCommissionTiers sets the "commission_tiers" field.
+func (cc *CampaignCreate) SetCommissionTiers(st []schema.CommissionTier) *CampaignCreate {
+	cc.mutation.SetCommissionTiers(st)
+	return cc
+}
+
+// SetTargetGeography sets the "target_geography" field.
+func (cc *CampaignCreate) SetTargetGeography(s string) *CampaignCreate {
+	cc.mutation.SetTargetGeography(s)
+	return cc
+}
+
+// SetNillableTargetGeography sets the "target_geography" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableTargetGeography(s *string) *CampaignCreate {
+	if s != nil {
+		cc.SetTargetGeography(*s)
+	}
+	return cc
+}
+
+// SetTargetDemographics sets the "target_demographics" field.
+func (cc *CampaignCreate) SetTargetDemographics(m map[string]interface{}) *CampaignCreate {
+	cc.mutation.SetTargetDemographics(m)
 	return cc
 }
 
@@ -82,15 +146,109 @@ func (cc *CampaignCreate) SetStatus(c campaign.Status) *CampaignCreate {
 	return cc
 }
 
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableStatus(c *campaign.Status) *CampaignCreate {
+	if c != nil {
+		cc.SetStatus(*c)
+	}
+	return cc
+}
+
 // SetTrackingURL sets the "tracking_url" field.
 func (cc *CampaignCreate) SetTrackingURL(s string) *CampaignCreate {
 	cc.mutation.SetTrackingURL(s)
 	return cc
 }
 
-// SetUniqueCode sets the "unique_code" field.
-func (cc *CampaignCreate) SetUniqueCode(s string) *CampaignCreate {
-	cc.mutation.SetUniqueCode(s)
+// SetNillableTrackingURL sets the "tracking_url" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableTrackingURL(s *string) *CampaignCreate {
+	if s != nil {
+		cc.SetTrackingURL(*s)
+	}
+	return cc
+}
+
+// SetTotalClicks sets the "total_clicks" field.
+func (cc *CampaignCreate) SetTotalClicks(i int) *CampaignCreate {
+	cc.mutation.SetTotalClicks(i)
+	return cc
+}
+
+// SetNillableTotalClicks sets the "total_clicks" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableTotalClicks(i *int) *CampaignCreate {
+	if i != nil {
+		cc.SetTotalClicks(*i)
+	}
+	return cc
+}
+
+// SetTotalConversions sets the "total_conversions" field.
+func (cc *CampaignCreate) SetTotalConversions(i int) *CampaignCreate {
+	cc.mutation.SetTotalConversions(i)
+	return cc
+}
+
+// SetNillableTotalConversions sets the "total_conversions" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableTotalConversions(i *int) *CampaignCreate {
+	if i != nil {
+		cc.SetTotalConversions(*i)
+	}
+	return cc
+}
+
+// SetTotalRevenue sets the "total_revenue" field.
+func (cc *CampaignCreate) SetTotalRevenue(f float64) *CampaignCreate {
+	cc.mutation.SetTotalRevenue(f)
+	return cc
+}
+
+// SetNillableTotalRevenue sets the "total_revenue" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableTotalRevenue(f *float64) *CampaignCreate {
+	if f != nil {
+		cc.SetTotalRevenue(*f)
+	}
+	return cc
+}
+
+// SetConversionRate sets the "conversion_rate" field.
+func (cc *CampaignCreate) SetConversionRate(f float64) *CampaignCreate {
+	cc.mutation.SetConversionRate(f)
+	return cc
+}
+
+// SetNillableConversionRate sets the "conversion_rate" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableConversionRate(f *float64) *CampaignCreate {
+	if f != nil {
+		cc.SetConversionRate(*f)
+	}
+	return cc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (cc *CampaignCreate) SetCreatedAt(t time.Time) *CampaignCreate {
+	cc.mutation.SetCreatedAt(t)
+	return cc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableCreatedAt(t *time.Time) *CampaignCreate {
+	if t != nil {
+		cc.SetCreatedAt(*t)
+	}
+	return cc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (cc *CampaignCreate) SetUpdatedAt(t time.Time) *CampaignCreate {
+	cc.mutation.SetUpdatedAt(t)
+	return cc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (cc *CampaignCreate) SetNillableUpdatedAt(t *time.Time) *CampaignCreate {
+	if t != nil {
+		cc.SetUpdatedAt(*t)
+	}
 	return cc
 }
 
@@ -164,6 +322,21 @@ func (cc *CampaignCreate) AddReferrals(r ...*Referral) *CampaignCreate {
 	return cc.AddReferralIDs(ids...)
 }
 
+// AddBannerIDs adds the "banners" edge to the Banner entity by IDs.
+func (cc *CampaignCreate) AddBannerIDs(ids ...int64) *CampaignCreate {
+	cc.mutation.AddBannerIDs(ids...)
+	return cc
+}
+
+// AddBanners adds the "banners" edges to the Banner entity.
+func (cc *CampaignCreate) AddBanners(b ...*Banner) *CampaignCreate {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return cc.AddBannerIDs(ids...)
+}
+
 // Mutation returns the CampaignMutation object of the builder.
 func (cc *CampaignCreate) Mutation() *CampaignMutation {
 	return cc.mutation
@@ -171,6 +344,7 @@ func (cc *CampaignCreate) Mutation() *CampaignMutation {
 
 // Save creates the Campaign in the database.
 func (cc *CampaignCreate) Save(ctx context.Context) (*Campaign, error) {
+	cc.defaults()
 	return withHooks(ctx, cc.sqlSave, cc.mutation, cc.hooks)
 }
 
@@ -196,6 +370,50 @@ func (cc *CampaignCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cc *CampaignCreate) defaults() {
+	if _, ok := cc.mutation.GetType(); !ok {
+		v := campaign.DefaultType
+		cc.mutation.SetType(v)
+	}
+	if _, ok := cc.mutation.CommissionType(); !ok {
+		v := campaign.DefaultCommissionType
+		cc.mutation.SetCommissionType(v)
+	}
+	if _, ok := cc.mutation.BaseCommissionRate(); !ok {
+		v := campaign.DefaultBaseCommissionRate
+		cc.mutation.SetBaseCommissionRate(v)
+	}
+	if _, ok := cc.mutation.Status(); !ok {
+		v := campaign.DefaultStatus
+		cc.mutation.SetStatus(v)
+	}
+	if _, ok := cc.mutation.TotalClicks(); !ok {
+		v := campaign.DefaultTotalClicks
+		cc.mutation.SetTotalClicks(v)
+	}
+	if _, ok := cc.mutation.TotalConversions(); !ok {
+		v := campaign.DefaultTotalConversions
+		cc.mutation.SetTotalConversions(v)
+	}
+	if _, ok := cc.mutation.TotalRevenue(); !ok {
+		v := campaign.DefaultTotalRevenue
+		cc.mutation.SetTotalRevenue(v)
+	}
+	if _, ok := cc.mutation.ConversionRate(); !ok {
+		v := campaign.DefaultConversionRate
+		cc.mutation.SetConversionRate(v)
+	}
+	if _, ok := cc.mutation.CreatedAt(); !ok {
+		v := campaign.DefaultCreatedAt()
+		cc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := cc.mutation.UpdatedAt(); !ok {
+		v := campaign.DefaultUpdatedAt()
+		cc.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (cc *CampaignCreate) check() error {
 	if _, ok := cc.mutation.Name(); !ok {
@@ -206,6 +424,9 @@ func (cc *CampaignCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Campaign.name": %w`, err)}
 		}
 	}
+	if _, ok := cc.mutation.UniqueCode(); !ok {
+		return &ValidationError{Name: "unique_code", err: errors.New(`ent: missing required field "Campaign.unique_code"`)}
+	}
 	if _, ok := cc.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Campaign.type"`)}
 	}
@@ -214,8 +435,16 @@ func (cc *CampaignCreate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Campaign.type": %w`, err)}
 		}
 	}
-	if _, ok := cc.mutation.PayoutRate(); !ok {
-		return &ValidationError{Name: "payout_rate", err: errors.New(`ent: missing required field "Campaign.payout_rate"`)}
+	if _, ok := cc.mutation.CommissionType(); !ok {
+		return &ValidationError{Name: "commission_type", err: errors.New(`ent: missing required field "Campaign.commission_type"`)}
+	}
+	if v, ok := cc.mutation.CommissionType(); ok {
+		if err := campaign.CommissionTypeValidator(v); err != nil {
+			return &ValidationError{Name: "commission_type", err: fmt.Errorf(`ent: validator failed for field "Campaign.commission_type": %w`, err)}
+		}
+	}
+	if _, ok := cc.mutation.BaseCommissionRate(); !ok {
+		return &ValidationError{Name: "base_commission_rate", err: errors.New(`ent: missing required field "Campaign.base_commission_rate"`)}
 	}
 	if _, ok := cc.mutation.StartDate(); !ok {
 		return &ValidationError{Name: "start_date", err: errors.New(`ent: missing required field "Campaign.start_date"`)}
@@ -228,11 +457,23 @@ func (cc *CampaignCreate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Campaign.status": %w`, err)}
 		}
 	}
-	if _, ok := cc.mutation.TrackingURL(); !ok {
-		return &ValidationError{Name: "tracking_url", err: errors.New(`ent: missing required field "Campaign.tracking_url"`)}
+	if _, ok := cc.mutation.TotalClicks(); !ok {
+		return &ValidationError{Name: "total_clicks", err: errors.New(`ent: missing required field "Campaign.total_clicks"`)}
 	}
-	if _, ok := cc.mutation.UniqueCode(); !ok {
-		return &ValidationError{Name: "unique_code", err: errors.New(`ent: missing required field "Campaign.unique_code"`)}
+	if _, ok := cc.mutation.TotalConversions(); !ok {
+		return &ValidationError{Name: "total_conversions", err: errors.New(`ent: missing required field "Campaign.total_conversions"`)}
+	}
+	if _, ok := cc.mutation.TotalRevenue(); !ok {
+		return &ValidationError{Name: "total_revenue", err: errors.New(`ent: missing required field "Campaign.total_revenue"`)}
+	}
+	if _, ok := cc.mutation.ConversionRate(); !ok {
+		return &ValidationError{Name: "conversion_rate", err: errors.New(`ent: missing required field "Campaign.conversion_rate"`)}
+	}
+	if _, ok := cc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Campaign.created_at"`)}
+	}
+	if _, ok := cc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Campaign.updated_at"`)}
 	}
 	if v, ok := cc.mutation.ID(); ok {
 		if err := campaign.IDValidator(v); err != nil {
@@ -279,13 +520,33 @@ func (cc *CampaignCreate) createSpec() (*Campaign, *sqlgraph.CreateSpec) {
 		_spec.SetField(campaign.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
+	if value, ok := cc.mutation.UniqueCode(); ok {
+		_spec.SetField(campaign.FieldUniqueCode, field.TypeString, value)
+		_node.UniqueCode = value
+	}
 	if value, ok := cc.mutation.GetType(); ok {
 		_spec.SetField(campaign.FieldType, field.TypeEnum, value)
 		_node.Type = value
 	}
-	if value, ok := cc.mutation.PayoutRate(); ok {
-		_spec.SetField(campaign.FieldPayoutRate, field.TypeFloat64, value)
-		_node.PayoutRate = value
+	if value, ok := cc.mutation.CommissionType(); ok {
+		_spec.SetField(campaign.FieldCommissionType, field.TypeEnum, value)
+		_node.CommissionType = value
+	}
+	if value, ok := cc.mutation.BaseCommissionRate(); ok {
+		_spec.SetField(campaign.FieldBaseCommissionRate, field.TypeFloat64, value)
+		_node.BaseCommissionRate = value
+	}
+	if value, ok := cc.mutation.CommissionTiers(); ok {
+		_spec.SetField(campaign.FieldCommissionTiers, field.TypeJSON, value)
+		_node.CommissionTiers = value
+	}
+	if value, ok := cc.mutation.TargetGeography(); ok {
+		_spec.SetField(campaign.FieldTargetGeography, field.TypeString, value)
+		_node.TargetGeography = value
+	}
+	if value, ok := cc.mutation.TargetDemographics(); ok {
+		_spec.SetField(campaign.FieldTargetDemographics, field.TypeJSON, value)
+		_node.TargetDemographics = value
 	}
 	if value, ok := cc.mutation.StartDate(); ok {
 		_spec.SetField(campaign.FieldStartDate, field.TypeTime, value)
@@ -303,9 +564,29 @@ func (cc *CampaignCreate) createSpec() (*Campaign, *sqlgraph.CreateSpec) {
 		_spec.SetField(campaign.FieldTrackingURL, field.TypeString, value)
 		_node.TrackingURL = value
 	}
-	if value, ok := cc.mutation.UniqueCode(); ok {
-		_spec.SetField(campaign.FieldUniqueCode, field.TypeString, value)
-		_node.UniqueCode = value
+	if value, ok := cc.mutation.TotalClicks(); ok {
+		_spec.SetField(campaign.FieldTotalClicks, field.TypeInt, value)
+		_node.TotalClicks = value
+	}
+	if value, ok := cc.mutation.TotalConversions(); ok {
+		_spec.SetField(campaign.FieldTotalConversions, field.TypeInt, value)
+		_node.TotalConversions = value
+	}
+	if value, ok := cc.mutation.TotalRevenue(); ok {
+		_spec.SetField(campaign.FieldTotalRevenue, field.TypeFloat64, value)
+		_node.TotalRevenue = value
+	}
+	if value, ok := cc.mutation.ConversionRate(); ok {
+		_spec.SetField(campaign.FieldConversionRate, field.TypeFloat64, value)
+		_node.ConversionRate = value
+	}
+	if value, ok := cc.mutation.CreatedAt(); ok {
+		_spec.SetField(campaign.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if value, ok := cc.mutation.UpdatedAt(); ok {
+		_spec.SetField(campaign.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
 	}
 	if nodes := cc.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -372,6 +653,22 @@ func (cc *CampaignCreate) createSpec() (*Campaign, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := cc.mutation.BannersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   campaign.BannersTable,
+			Columns: campaign.BannersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -393,6 +690,7 @@ func (ccb *CampaignCreateBulk) Save(ctx context.Context) ([]*Campaign, error) {
 	for i := range ccb.builders {
 		func(i int, root context.Context) {
 			builder := ccb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*CampaignMutation)
 				if !ok {

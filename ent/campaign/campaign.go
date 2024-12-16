@@ -4,6 +4,7 @@ package campaign
 
 import (
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -18,10 +19,20 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldUniqueCode holds the string denoting the unique_code field in the database.
+	FieldUniqueCode = "unique_code"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
-	// FieldPayoutRate holds the string denoting the payout_rate field in the database.
-	FieldPayoutRate = "payout_rate"
+	// FieldCommissionType holds the string denoting the commission_type field in the database.
+	FieldCommissionType = "commission_type"
+	// FieldBaseCommissionRate holds the string denoting the base_commission_rate field in the database.
+	FieldBaseCommissionRate = "base_commission_rate"
+	// FieldCommissionTiers holds the string denoting the commission_tiers field in the database.
+	FieldCommissionTiers = "commission_tiers"
+	// FieldTargetGeography holds the string denoting the target_geography field in the database.
+	FieldTargetGeography = "target_geography"
+	// FieldTargetDemographics holds the string denoting the target_demographics field in the database.
+	FieldTargetDemographics = "target_demographics"
 	// FieldStartDate holds the string denoting the start_date field in the database.
 	FieldStartDate = "start_date"
 	// FieldEndDate holds the string denoting the end_date field in the database.
@@ -30,8 +41,18 @@ const (
 	FieldStatus = "status"
 	// FieldTrackingURL holds the string denoting the tracking_url field in the database.
 	FieldTrackingURL = "tracking_url"
-	// FieldUniqueCode holds the string denoting the unique_code field in the database.
-	FieldUniqueCode = "unique_code"
+	// FieldTotalClicks holds the string denoting the total_clicks field in the database.
+	FieldTotalClicks = "total_clicks"
+	// FieldTotalConversions holds the string denoting the total_conversions field in the database.
+	FieldTotalConversions = "total_conversions"
+	// FieldTotalRevenue holds the string denoting the total_revenue field in the database.
+	FieldTotalRevenue = "total_revenue"
+	// FieldConversionRate holds the string denoting the conversion_rate field in the database.
+	FieldConversionRate = "conversion_rate"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
 	// EdgeLinks holds the string denoting the links edge name in mutations.
@@ -40,6 +61,8 @@ const (
 	EdgeTracks = "tracks"
 	// EdgeReferrals holds the string denoting the referrals edge name in mutations.
 	EdgeReferrals = "referrals"
+	// EdgeBanners holds the string denoting the banners edge name in mutations.
+	EdgeBanners = "banners"
 	// Table holds the table name of the campaign in the database.
 	Table = "campaigns"
 	// OwnerTable is the table that holds the owner relation/edge.
@@ -70,6 +93,11 @@ const (
 	ReferralsInverseTable = "referrals"
 	// ReferralsColumn is the table column denoting the referrals relation/edge.
 	ReferralsColumn = "campaign_referrals"
+	// BannersTable is the table that holds the banners relation/edge. The primary key declared below.
+	BannersTable = "campaign_banners"
+	// BannersInverseTable is the table name for the Banner entity.
+	// It exists in this package in order to avoid circular dependency with the "banner" package.
+	BannersInverseTable = "banners"
 )
 
 // Columns holds all SQL columns for campaign fields.
@@ -77,13 +105,23 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 	FieldDescription,
+	FieldUniqueCode,
 	FieldType,
-	FieldPayoutRate,
+	FieldCommissionType,
+	FieldBaseCommissionRate,
+	FieldCommissionTiers,
+	FieldTargetGeography,
+	FieldTargetDemographics,
 	FieldStartDate,
 	FieldEndDate,
 	FieldStatus,
 	FieldTrackingURL,
-	FieldUniqueCode,
+	FieldTotalClicks,
+	FieldTotalConversions,
+	FieldTotalRevenue,
+	FieldConversionRate,
+	FieldCreatedAt,
+	FieldUpdatedAt,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "campaigns"
@@ -91,6 +129,12 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"user_campaigns",
 }
+
+var (
+	// BannersPrimaryKey and BannersColumn2 are the table columns denoting the
+	// primary key for the banners relation (M2M).
+	BannersPrimaryKey = []string{"campaign_id", "banner_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -110,6 +154,22 @@ func ValidColumn(column string) bool {
 var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DefaultBaseCommissionRate holds the default value on creation for the "base_commission_rate" field.
+	DefaultBaseCommissionRate float64
+	// DefaultTotalClicks holds the default value on creation for the "total_clicks" field.
+	DefaultTotalClicks int
+	// DefaultTotalConversions holds the default value on creation for the "total_conversions" field.
+	DefaultTotalConversions int
+	// DefaultTotalRevenue holds the default value on creation for the "total_revenue" field.
+	DefaultTotalRevenue float64
+	// DefaultConversionRate holds the default value on creation for the "conversion_rate" field.
+	DefaultConversionRate float64
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 	// IDValidator is a validator for the "id" field. It is called by the builders before save.
 	IDValidator func(int64) error
 )
@@ -117,12 +177,15 @@ var (
 // Type defines the type for the "type" enum field.
 type Type string
 
+// TypeSale is the default value of the Type enum.
+const DefaultType = TypeSale
+
 // Type values.
 const (
-	TypeCpc      Type = "cpc"
-	TypeCpa      Type = "cpa"
-	TypeCpm      Type = "cpm"
-	TypeRevShare Type = "rev_share"
+	TypeSale         Type = "sale"
+	TypeLead         Type = "lead"
+	TypeClick        Type = "click"
+	TypeSubscription Type = "subscription"
 )
 
 func (_type Type) String() string {
@@ -132,18 +195,49 @@ func (_type Type) String() string {
 // TypeValidator is a validator for the "type" field enum values. It is called by the builders before save.
 func TypeValidator(_type Type) error {
 	switch _type {
-	case TypeCpc, TypeCpa, TypeCpm, TypeRevShare:
+	case TypeSale, TypeLead, TypeClick, TypeSubscription:
 		return nil
 	default:
 		return fmt.Errorf("campaign: invalid enum value for type field: %q", _type)
 	}
 }
 
+// CommissionType defines the type for the "commission_type" enum field.
+type CommissionType string
+
+// CommissionTypePercentage is the default value of the CommissionType enum.
+const DefaultCommissionType = CommissionTypePercentage
+
+// CommissionType values.
+const (
+	CommissionTypeFlatRate   CommissionType = "flat_rate"
+	CommissionTypePercentage CommissionType = "percentage"
+	CommissionTypeTiered     CommissionType = "tiered"
+)
+
+func (ct CommissionType) String() string {
+	return string(ct)
+}
+
+// CommissionTypeValidator is a validator for the "commission_type" field enum values. It is called by the builders before save.
+func CommissionTypeValidator(ct CommissionType) error {
+	switch ct {
+	case CommissionTypeFlatRate, CommissionTypePercentage, CommissionTypeTiered:
+		return nil
+	default:
+		return fmt.Errorf("campaign: invalid enum value for commission_type field: %q", ct)
+	}
+}
+
 // Status defines the type for the "status" enum field.
 type Status string
 
+// StatusDraft is the default value of the Status enum.
+const DefaultStatus = StatusDraft
+
 // Status values.
 const (
+	StatusDraft     Status = "draft"
 	StatusActive    Status = "active"
 	StatusPaused    Status = "paused"
 	StatusCompleted Status = "completed"
@@ -156,7 +250,7 @@ func (s Status) String() string {
 // StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
 func StatusValidator(s Status) error {
 	switch s {
-	case StatusActive, StatusPaused, StatusCompleted:
+	case StatusDraft, StatusActive, StatusPaused, StatusCompleted:
 		return nil
 	default:
 		return fmt.Errorf("campaign: invalid enum value for status field: %q", s)
@@ -181,14 +275,29 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
+// ByUniqueCode orders the results by the unique_code field.
+func ByUniqueCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUniqueCode, opts...).ToFunc()
+}
+
 // ByType orders the results by the type field.
 func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
-// ByPayoutRate orders the results by the payout_rate field.
-func ByPayoutRate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPayoutRate, opts...).ToFunc()
+// ByCommissionType orders the results by the commission_type field.
+func ByCommissionType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCommissionType, opts...).ToFunc()
+}
+
+// ByBaseCommissionRate orders the results by the base_commission_rate field.
+func ByBaseCommissionRate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBaseCommissionRate, opts...).ToFunc()
+}
+
+// ByTargetGeography orders the results by the target_geography field.
+func ByTargetGeography(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTargetGeography, opts...).ToFunc()
 }
 
 // ByStartDate orders the results by the start_date field.
@@ -211,9 +320,34 @@ func ByTrackingURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTrackingURL, opts...).ToFunc()
 }
 
-// ByUniqueCode orders the results by the unique_code field.
-func ByUniqueCode(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUniqueCode, opts...).ToFunc()
+// ByTotalClicks orders the results by the total_clicks field.
+func ByTotalClicks(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTotalClicks, opts...).ToFunc()
+}
+
+// ByTotalConversions orders the results by the total_conversions field.
+func ByTotalConversions(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTotalConversions, opts...).ToFunc()
+}
+
+// ByTotalRevenue orders the results by the total_revenue field.
+func ByTotalRevenue(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTotalRevenue, opts...).ToFunc()
+}
+
+// ByConversionRate orders the results by the conversion_rate field.
+func ByConversionRate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldConversionRate, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
 // ByOwnerField orders the results by owner field.
@@ -264,6 +398,20 @@ func ByReferrals(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newReferralsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByBannersCount orders the results by banners count.
+func ByBannersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBannersStep(), opts...)
+	}
+}
+
+// ByBanners orders the results by banners terms.
+func ByBanners(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBannersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOwnerStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -290,5 +438,12 @@ func newReferralsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ReferralsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ReferralsTable, ReferralsColumn),
+	)
+}
+func newBannersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BannersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, BannersTable, BannersPrimaryKey...),
 	)
 }

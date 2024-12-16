@@ -3,6 +3,7 @@ package handler
 import (
 	"affluo/internal/dto"
 	"affluo/internal/service"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -29,9 +30,19 @@ func (h *CampaignHandler) CreateCampaign(c *fiber.Ctx) error {
 			"error": "Invalid request payload",
 		})
 	}
+	userIDValue := c.Locals("user_id")
+	var userID int64
 
+	switch v := userIDValue.(type) {
+	case float64:
+		userID = int64(v)
+	case int64:
+		userID = v
+	default:
+		return Unauthorized(c, "Invalid user ID type", fmt.Errorf("unexpected user ID type: %T", userIDValue))
+	}
 	// Create campaign
-	campaign, err := h.campaignService.CreateCampaign(c.Context(), &req)
+	campaign, err := h.campaignService.CreateCampaign(c.Context(), &req, userID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
@@ -104,12 +115,12 @@ func (h *CampaignHandler) ListCampaigns(c *fiber.Ctx) error {
 	// List campaigns
 	campaigns, err := h.campaignService.ListCampaigns(c.Context(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to retrieve campaigns",
-		})
+		return Error(c, "Failed to retrieve campaigns", err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(campaigns)
+	return Success(c, fiber.Map{
+		"items": campaigns,
+	})
 }
 
 // DeleteCampaign soft deletes a campaign
@@ -146,4 +157,44 @@ func parseQueryDate(dateStr string) time.Time {
 	}
 
 	return date
+}
+func (h *CampaignHandler) GenerateTrackingLink(c *fiber.Ctx) error {
+	campaignID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid campaign ID",
+		})
+	}
+
+	// Generate unique tracking link with UTM parameters
+	trackingLink, err := h.campaignService.GenerateUniqueTrackingLink(c.Context(), campaignID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to generate tracking link",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"tracking_link": trackingLink,
+	})
+}
+
+// New method for retrieving campaign performance
+func (h *CampaignHandler) GetCampaignPerformance(c *fiber.Ctx) error {
+	campaignID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid campaign ID",
+		})
+	}
+
+	// Retrieve performance metrics
+	performance, err := h.campaignService.GetCampaignPerformance(c.Context(), campaignID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to retrieve campaign performance",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(performance)
 }

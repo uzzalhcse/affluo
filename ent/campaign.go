@@ -4,7 +4,9 @@ package ent
 
 import (
 	"affluo/ent/campaign"
+	"affluo/ent/schema"
 	"affluo/ent/user"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -22,10 +24,20 @@ type Campaign struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// UniqueCode holds the value of the "unique_code" field.
+	UniqueCode string `json:"unique_code,omitempty"`
 	// Type holds the value of the "type" field.
 	Type campaign.Type `json:"type,omitempty"`
-	// PayoutRate holds the value of the "payout_rate" field.
-	PayoutRate float64 `json:"payout_rate,omitempty"`
+	// CommissionType holds the value of the "commission_type" field.
+	CommissionType campaign.CommissionType `json:"commission_type,omitempty"`
+	// BaseCommissionRate holds the value of the "base_commission_rate" field.
+	BaseCommissionRate float64 `json:"base_commission_rate,omitempty"`
+	// CommissionTiers holds the value of the "commission_tiers" field.
+	CommissionTiers []schema.CommissionTier `json:"commission_tiers,omitempty"`
+	// TargetGeography holds the value of the "target_geography" field.
+	TargetGeography string `json:"target_geography,omitempty"`
+	// TargetDemographics holds the value of the "target_demographics" field.
+	TargetDemographics map[string]interface{} `json:"target_demographics,omitempty"`
 	// StartDate holds the value of the "start_date" field.
 	StartDate time.Time `json:"start_date,omitempty"`
 	// EndDate holds the value of the "end_date" field.
@@ -34,8 +46,18 @@ type Campaign struct {
 	Status campaign.Status `json:"status,omitempty"`
 	// TrackingURL holds the value of the "tracking_url" field.
 	TrackingURL string `json:"tracking_url,omitempty"`
-	// UniqueCode holds the value of the "unique_code" field.
-	UniqueCode string `json:"unique_code,omitempty"`
+	// TotalClicks holds the value of the "total_clicks" field.
+	TotalClicks int `json:"total_clicks,omitempty"`
+	// TotalConversions holds the value of the "total_conversions" field.
+	TotalConversions int `json:"total_conversions,omitempty"`
+	// TotalRevenue holds the value of the "total_revenue" field.
+	TotalRevenue float64 `json:"total_revenue,omitempty"`
+	// ConversionRate holds the value of the "conversion_rate" field.
+	ConversionRate float64 `json:"conversion_rate,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the CampaignQuery when eager-loading is set.
 	Edges          CampaignEdges `json:"edges"`
@@ -53,9 +75,11 @@ type CampaignEdges struct {
 	Tracks []*Track `json:"tracks,omitempty"`
 	// Referrals holds the value of the referrals edge.
 	Referrals []*Referral `json:"referrals,omitempty"`
+	// Banners holds the value of the banners edge.
+	Banners []*Banner `json:"banners,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -96,18 +120,29 @@ func (e CampaignEdges) ReferralsOrErr() ([]*Referral, error) {
 	return nil, &NotLoadedError{edge: "referrals"}
 }
 
+// BannersOrErr returns the Banners value or an error if the edge
+// was not loaded in eager-loading.
+func (e CampaignEdges) BannersOrErr() ([]*Banner, error) {
+	if e.loadedTypes[4] {
+		return e.Banners, nil
+	}
+	return nil, &NotLoadedError{edge: "banners"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Campaign) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case campaign.FieldPayoutRate:
+		case campaign.FieldCommissionTiers, campaign.FieldTargetDemographics:
+			values[i] = new([]byte)
+		case campaign.FieldBaseCommissionRate, campaign.FieldTotalRevenue, campaign.FieldConversionRate:
 			values[i] = new(sql.NullFloat64)
-		case campaign.FieldID:
+		case campaign.FieldID, campaign.FieldTotalClicks, campaign.FieldTotalConversions:
 			values[i] = new(sql.NullInt64)
-		case campaign.FieldName, campaign.FieldDescription, campaign.FieldType, campaign.FieldStatus, campaign.FieldTrackingURL, campaign.FieldUniqueCode:
+		case campaign.FieldName, campaign.FieldDescription, campaign.FieldUniqueCode, campaign.FieldType, campaign.FieldCommissionType, campaign.FieldTargetGeography, campaign.FieldStatus, campaign.FieldTrackingURL:
 			values[i] = new(sql.NullString)
-		case campaign.FieldStartDate, campaign.FieldEndDate:
+		case campaign.FieldStartDate, campaign.FieldEndDate, campaign.FieldCreatedAt, campaign.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case campaign.ForeignKeys[0]: // user_campaigns
 			values[i] = new(sql.NullInt64)
@@ -144,17 +179,51 @@ func (c *Campaign) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				c.Description = value.String
 			}
+		case campaign.FieldUniqueCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field unique_code", values[i])
+			} else if value.Valid {
+				c.UniqueCode = value.String
+			}
 		case campaign.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
 				c.Type = campaign.Type(value.String)
 			}
-		case campaign.FieldPayoutRate:
-			if value, ok := values[i].(*sql.NullFloat64); !ok {
-				return fmt.Errorf("unexpected type %T for field payout_rate", values[i])
+		case campaign.FieldCommissionType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field commission_type", values[i])
 			} else if value.Valid {
-				c.PayoutRate = value.Float64
+				c.CommissionType = campaign.CommissionType(value.String)
+			}
+		case campaign.FieldBaseCommissionRate:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field base_commission_rate", values[i])
+			} else if value.Valid {
+				c.BaseCommissionRate = value.Float64
+			}
+		case campaign.FieldCommissionTiers:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field commission_tiers", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &c.CommissionTiers); err != nil {
+					return fmt.Errorf("unmarshal field commission_tiers: %w", err)
+				}
+			}
+		case campaign.FieldTargetGeography:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field target_geography", values[i])
+			} else if value.Valid {
+				c.TargetGeography = value.String
+			}
+		case campaign.FieldTargetDemographics:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field target_demographics", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &c.TargetDemographics); err != nil {
+					return fmt.Errorf("unmarshal field target_demographics: %w", err)
+				}
 			}
 		case campaign.FieldStartDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -180,11 +249,41 @@ func (c *Campaign) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				c.TrackingURL = value.String
 			}
-		case campaign.FieldUniqueCode:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field unique_code", values[i])
+		case campaign.FieldTotalClicks:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field total_clicks", values[i])
 			} else if value.Valid {
-				c.UniqueCode = value.String
+				c.TotalClicks = int(value.Int64)
+			}
+		case campaign.FieldTotalConversions:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field total_conversions", values[i])
+			} else if value.Valid {
+				c.TotalConversions = int(value.Int64)
+			}
+		case campaign.FieldTotalRevenue:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field total_revenue", values[i])
+			} else if value.Valid {
+				c.TotalRevenue = value.Float64
+			}
+		case campaign.FieldConversionRate:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field conversion_rate", values[i])
+			} else if value.Valid {
+				c.ConversionRate = value.Float64
+			}
+		case campaign.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				c.CreatedAt = value.Time
+			}
+		case campaign.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				c.UpdatedAt = value.Time
 			}
 		case campaign.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -226,6 +325,11 @@ func (c *Campaign) QueryReferrals() *ReferralQuery {
 	return NewCampaignClient(c.config).QueryReferrals(c)
 }
 
+// QueryBanners queries the "banners" edge of the Campaign entity.
+func (c *Campaign) QueryBanners() *BannerQuery {
+	return NewCampaignClient(c.config).QueryBanners(c)
+}
+
 // Update returns a builder for updating this Campaign.
 // Note that you need to call Campaign.Unwrap() before calling this method if this Campaign
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -255,11 +359,26 @@ func (c *Campaign) String() string {
 	builder.WriteString("description=")
 	builder.WriteString(c.Description)
 	builder.WriteString(", ")
+	builder.WriteString("unique_code=")
+	builder.WriteString(c.UniqueCode)
+	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(fmt.Sprintf("%v", c.Type))
 	builder.WriteString(", ")
-	builder.WriteString("payout_rate=")
-	builder.WriteString(fmt.Sprintf("%v", c.PayoutRate))
+	builder.WriteString("commission_type=")
+	builder.WriteString(fmt.Sprintf("%v", c.CommissionType))
+	builder.WriteString(", ")
+	builder.WriteString("base_commission_rate=")
+	builder.WriteString(fmt.Sprintf("%v", c.BaseCommissionRate))
+	builder.WriteString(", ")
+	builder.WriteString("commission_tiers=")
+	builder.WriteString(fmt.Sprintf("%v", c.CommissionTiers))
+	builder.WriteString(", ")
+	builder.WriteString("target_geography=")
+	builder.WriteString(c.TargetGeography)
+	builder.WriteString(", ")
+	builder.WriteString("target_demographics=")
+	builder.WriteString(fmt.Sprintf("%v", c.TargetDemographics))
 	builder.WriteString(", ")
 	builder.WriteString("start_date=")
 	builder.WriteString(c.StartDate.Format(time.ANSIC))
@@ -273,8 +392,23 @@ func (c *Campaign) String() string {
 	builder.WriteString("tracking_url=")
 	builder.WriteString(c.TrackingURL)
 	builder.WriteString(", ")
-	builder.WriteString("unique_code=")
-	builder.WriteString(c.UniqueCode)
+	builder.WriteString("total_clicks=")
+	builder.WriteString(fmt.Sprintf("%v", c.TotalClicks))
+	builder.WriteString(", ")
+	builder.WriteString("total_conversions=")
+	builder.WriteString(fmt.Sprintf("%v", c.TotalConversions))
+	builder.WriteString(", ")
+	builder.WriteString("total_revenue=")
+	builder.WriteString(fmt.Sprintf("%v", c.TotalRevenue))
+	builder.WriteString(", ")
+	builder.WriteString("conversion_rate=")
+	builder.WriteString(fmt.Sprintf("%v", c.ConversionRate))
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("updated_at=")
+	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

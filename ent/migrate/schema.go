@@ -8,18 +8,72 @@ import (
 )
 
 var (
-	// CampaignsColumns holds the columns for the "campaigns" table.
-	CampaignsColumns = []*schema.Column{
+	// BannersColumns holds the columns for the "banners" table.
+	BannersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"cpc", "cpa", "cpm", "rev_share"}},
-		{Name: "payout_rate", Type: field.TypeFloat64},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"static", "dynamic"}, Default: "static"},
+		{Name: "click_url", Type: field.TypeString, Nullable: true},
+		{Name: "size", Type: field.TypeString},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "active", "inactive"}, Default: "draft"},
+		{Name: "allowed_countries", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// BannersTable holds the schema information for the "banners" table.
+	BannersTable = &schema.Table{
+		Name:       "banners",
+		Columns:    BannersColumns,
+		PrimaryKey: []*schema.Column{BannersColumns[0]},
+	}
+	// BannerCreativesColumns holds the columns for the "banner_creatives" table.
+	BannerCreativesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "name", Type: field.TypeString, Nullable: true},
+		{Name: "image_url", Type: field.TypeString, Nullable: true},
+		{Name: "size", Type: field.TypeString, Nullable: true},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "banner_creatives", Type: field.TypeInt64, Nullable: true},
+	}
+	// BannerCreativesTable holds the schema information for the "banner_creatives" table.
+	BannerCreativesTable = &schema.Table{
+		Name:       "banner_creatives",
+		Columns:    BannerCreativesColumns,
+		PrimaryKey: []*schema.Column{BannerCreativesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "banner_creatives_banners_creatives",
+				Columns:    []*schema.Column{BannerCreativesColumns[7]},
+				RefColumns: []*schema.Column{BannersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// CampaignsColumns holds the columns for the "campaigns" table.
+	CampaignsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "unique_code", Type: field.TypeString, Unique: true},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"sale", "lead", "click", "subscription"}, Default: "sale"},
+		{Name: "commission_type", Type: field.TypeEnum, Enums: []string{"flat_rate", "percentage", "tiered"}, Default: "percentage"},
+		{Name: "base_commission_rate", Type: field.TypeFloat64, Default: 0},
+		{Name: "commission_tiers", Type: field.TypeJSON, Nullable: true},
+		{Name: "target_geography", Type: field.TypeString, Nullable: true},
+		{Name: "target_demographics", Type: field.TypeJSON, Nullable: true},
 		{Name: "start_date", Type: field.TypeTime},
 		{Name: "end_date", Type: field.TypeTime, Nullable: true},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "paused", "completed"}},
-		{Name: "tracking_url", Type: field.TypeString},
-		{Name: "unique_code", Type: field.TypeString, Unique: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "active", "paused", "completed"}, Default: "draft"},
+		{Name: "tracking_url", Type: field.TypeString, Nullable: true},
+		{Name: "total_clicks", Type: field.TypeInt, Default: 0},
+		{Name: "total_conversions", Type: field.TypeInt, Default: 0},
+		{Name: "total_revenue", Type: field.TypeFloat64, Default: 0},
+		{Name: "conversion_rate", Type: field.TypeFloat64, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "user_campaigns", Type: field.TypeInt64, Nullable: true},
 	}
 	// CampaignsTable holds the schema information for the "campaigns" table.
@@ -30,9 +84,31 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "campaigns_users_campaigns",
-				Columns:    []*schema.Column{CampaignsColumns[10]},
+				Columns:    []*schema.Column{CampaignsColumns[20]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "campaign_name",
+				Unique:  false,
+				Columns: []*schema.Column{CampaignsColumns[1]},
+			},
+			{
+				Name:    "campaign_unique_code",
+				Unique:  false,
+				Columns: []*schema.Column{CampaignsColumns[3]},
+			},
+			{
+				Name:    "campaign_type",
+				Unique:  false,
+				Columns: []*schema.Column{CampaignsColumns[4]},
+			},
+			{
+				Name:    "campaign_status",
+				Unique:  false,
+				Columns: []*schema.Column{CampaignsColumns[12]},
 			},
 		},
 	}
@@ -216,8 +292,35 @@ var (
 			},
 		},
 	}
+	// CampaignBannersColumns holds the columns for the "campaign_banners" table.
+	CampaignBannersColumns = []*schema.Column{
+		{Name: "campaign_id", Type: field.TypeInt64},
+		{Name: "banner_id", Type: field.TypeInt64},
+	}
+	// CampaignBannersTable holds the schema information for the "campaign_banners" table.
+	CampaignBannersTable = &schema.Table{
+		Name:       "campaign_banners",
+		Columns:    CampaignBannersColumns,
+		PrimaryKey: []*schema.Column{CampaignBannersColumns[0], CampaignBannersColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "campaign_banners_campaign_id",
+				Columns:    []*schema.Column{CampaignBannersColumns[0]},
+				RefColumns: []*schema.Column{CampaignsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "campaign_banners_banner_id",
+				Columns:    []*schema.Column{CampaignBannersColumns[1]},
+				RefColumns: []*schema.Column{BannersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		BannersTable,
+		BannerCreativesTable,
 		CampaignsTable,
 		CampaignLinksTable,
 		PayoutsTable,
@@ -226,10 +329,12 @@ var (
 		TestsTable,
 		TracksTable,
 		UsersTable,
+		CampaignBannersTable,
 	}
 )
 
 func init() {
+	BannerCreativesTable.ForeignKeys[0].RefTable = BannersTable
 	CampaignsTable.ForeignKeys[0].RefTable = UsersTable
 	CampaignLinksTable.ForeignKeys[0].RefTable = CampaignsTable
 	PayoutsTable.ForeignKeys[0].RefTable = UsersTable
@@ -239,4 +344,6 @@ func init() {
 	TracksTable.ForeignKeys[0].RefTable = CampaignsTable
 	TracksTable.ForeignKeys[1].RefTable = CampaignLinksTable
 	TracksTable.ForeignKeys[2].RefTable = UsersTable
+	CampaignBannersTable.ForeignKeys[0].RefTable = CampaignsTable
+	CampaignBannersTable.ForeignKeys[1].RefTable = BannersTable
 }

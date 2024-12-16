@@ -6,6 +6,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Banner is the predicate function for banner builders.
+type Banner func(*sql.Selector)
+
+// BannerCreative is the predicate function for bannercreative builders.
+type BannerCreative func(*sql.Selector)
+
 // Campaign is the predicate function for campaign builders.
 type Campaign func(*sql.Selector)
 

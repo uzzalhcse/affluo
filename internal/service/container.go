@@ -14,6 +14,7 @@ type Container struct {
 	Reporting *ReportingService
 	Post      *PostService
 	Auth      *AuthService // Add Auth Service
+	Banner    *BannerService
 }
 
 func NewContainer(client *ent.Client, redisClient *redis.Client) *Container {
@@ -27,5 +28,6 @@ func NewContainer(client *ent.Client, redisClient *redis.Client) *Container {
 		Reporting: NewReportingService(client),
 		Post:      NewPostService(client),
 		Auth:      NewAuthService(client, redisClient, jwtSecretKey), // Initialize Auth Service
+		Banner:    NewBannerService(client),
 	}
 }

@@ -3,6 +3,8 @@
 package ent
 
 import (
+	"affluo/ent/banner"
+	"affluo/ent/bannercreative"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/payout"
@@ -80,14 +82,16 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			campaign.Table:     campaign.ValidColumn,
-			campaignlink.Table: campaignlink.ValidColumn,
-			payout.Table:       payout.ValidColumn,
-			post.Table:         post.ValidColumn,
-			referral.Table:     referral.ValidColumn,
-			test.Table:         test.ValidColumn,
-			track.Table:        track.ValidColumn,
-			user.Table:         user.ValidColumn,
+			banner.Table:         banner.ValidColumn,
+			bannercreative.Table: bannercreative.ValidColumn,
+			campaign.Table:       campaign.ValidColumn,
+			campaignlink.Table:   campaignlink.ValidColumn,
+			payout.Table:         payout.ValidColumn,
+			post.Table:           post.ValidColumn,
+			referral.Table:       referral.ValidColumn,
+			test.Table:           test.ValidColumn,
+			track.Table:          track.ValidColumn,
+			user.Table:           user.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

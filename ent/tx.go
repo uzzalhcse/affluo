@@ -12,6 +12,10 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Banner is the client for interacting with the Banner builders.
+	Banner *BannerClient
+	// BannerCreative is the client for interacting with the BannerCreative builders.
+	BannerCreative *BannerCreativeClient
 	// Campaign is the client for interacting with the Campaign builders.
 	Campaign *CampaignClient
 	// CampaignLink is the client for interacting with the CampaignLink builders.
@@ -159,6 +163,8 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Banner = NewBannerClient(tx.config)
+	tx.BannerCreative = NewBannerCreativeClient(tx.config)
 	tx.Campaign = NewCampaignClient(tx.config)
 	tx.CampaignLink = NewCampaignLinkClient(tx.config)
 	tx.Payout = NewPayoutClient(tx.config)
@@ -176,7 +182,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Campaign.QueryXXX(), the query will be executed
+// applies a query, for example: Banner.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

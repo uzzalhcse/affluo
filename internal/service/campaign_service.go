@@ -1,14 +1,14 @@
 package service
 
 import (
-	"context"
-	"errors"
-	"fmt"
-
 	"affluo/ent"
 	"affluo/ent/campaign"
 	"affluo/internal/dto"
+	"context"
+	"fmt"
 	"github.com/google/uuid"
+	"math/rand"
+	"time"
 )
 
 type CampaignService struct {
@@ -21,118 +21,253 @@ func NewCampaignService(client *ent.Client) *CampaignService {
 	}
 }
 
-// CreateCampaign creates a new marketing campaign
-func (s *CampaignService) CreateCampaign(ctx context.Context, req *dto.CreateCampaignRequest) (*ent.Campaign, error) {
-	// Validate input
-	if err := s.validateCampaignRequest(req); err != nil {
-		return nil, err
-	}
-
-	// Generate unique tracking code
-	uniqueCode := s.generateCampaignCode()
+func (s *CampaignService) CreateCampaign(ctx context.Context, req *dto.CreateCampaignRequest, userID int64) (*dto.CampaignResponse, error) {
+	// Generate unique campaign code
+	uniqueCode := generateUniqueCampaignCode()
 
 	// Create campaign
-	return s.client.Campaign.Create().
+	campaignCreate := s.client.Campaign.Create().
 		SetName(req.Name).
 		SetDescription(req.Description).
 		SetType(campaign.Type(req.Type)).
-		SetPayoutRate(req.PayoutRate).
-		SetStartDate(req.StartDate).
-		SetEndDate(req.EndDate).
-		SetStatus("active").
-		SetTrackingURL(s.generateTrackingURL(uniqueCode)).
+		SetCommissionType(campaign.CommissionType(req.CommissionType)).
+		SetBaseCommissionRate(req.BaseCommissionRate).
 		SetUniqueCode(uniqueCode).
-		Save(ctx)
-}
+		SetStartDate(req.StartDate).
+		SetOwnerID(userID)
 
-// UpdateCampaign updates an existing campaign
-func (s *CampaignService) UpdateCampaign(ctx context.Context, id int64, req *dto.UpdateCampaignRequest) (*ent.Campaign, error) {
-	// Fetch existing campaign
-	_, err := s.client.Campaign.Get(ctx, id)
-	if err != nil {
-		return nil, err
+	// Optional fields
+	if req.EndDate != nil {
+		campaignCreate.SetEndDate(*req.EndDate)
+	}
+	if req.TargetGeography != "" {
+		campaignCreate.SetTargetGeography(req.TargetGeography)
+	}
+	if len(req.TargetDemographics) > 0 {
+		campaignCreate.SetTargetDemographics(req.TargetDemographics)
+	}
+	if len(req.CommissionTiers) > 0 {
+		campaignCreate.SetCommissionTiers(req.CommissionTiers)
+	}
+	if req.TrackingURL != "" {
+		campaignCreate.SetTrackingURL(req.TrackingURL)
 	}
 
-	// Update campaign
+	// Persist campaign
+	newCampaign, err := campaignCreate.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create campaign: %w", err)
+	}
+
+	// Convert to response DTO
+	return s.convertToCampaignResponse(newCampaign), nil
+}
+
+func (s *CampaignService) UpdateCampaign(ctx context.Context, id int64, req *dto.UpdateCampaignRequest) (*dto.CampaignResponse, error) {
+	// Start update builder
 	update := s.client.Campaign.UpdateOneID(id)
 
-	if req.Name != "" {
-		update.SetName(req.Name)
+	// Update optional fields
+	if req.Name != nil {
+		update.SetName(*req.Name)
 	}
-	if req.Description != "" {
-		update.SetDescription(req.Description)
+	if req.Description != nil {
+		update.SetDescription(*req.Description)
 	}
-	if req.Type != "" {
-		update.SetType(campaign.Type(req.Type))
+	if req.Type != nil {
+		update.SetType(campaign.Type(*req.Type))
 	}
-	if req.PayoutRate > 0 {
-		update.SetPayoutRate(req.PayoutRate)
+	if req.CommissionType != nil {
+		update.SetCommissionType(campaign.CommissionType(*req.CommissionType))
 	}
-	if !req.StartDate.IsZero() {
-		update.SetStartDate(req.StartDate)
+	if req.BaseCommissionRate != nil {
+		update.SetBaseCommissionRate(*req.BaseCommissionRate)
 	}
-	if !req.EndDate.IsZero() {
-		update.SetEndDate(req.EndDate)
+	if req.CommissionTiers != nil {
+		update.SetCommissionTiers(*req.CommissionTiers)
 	}
-	if req.Status != "" {
-		update.SetStatus(campaign.Status(req.Status))
+	if req.TargetGeography != nil {
+		update.SetTargetGeography(*req.TargetGeography)
+	}
+	if len(req.TargetDemographics) > 0 {
+		update.SetTargetDemographics(req.TargetDemographics)
+	}
+	if req.StartDate != nil {
+		update.SetStartDate(*req.StartDate)
+	}
+	if req.EndDate != nil {
+		update.SetEndDate(*req.EndDate)
+	}
+	if req.Status != nil {
+		update.SetStatus(campaign.Status(*req.Status))
+	}
+	if req.TrackingURL != nil {
+		update.SetTrackingURL(*req.TrackingURL)
 	}
 
-	return update.Save(ctx)
+	// Save updated campaign
+	updatedCampaign, err := update.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update campaign: %w", err)
+	}
+
+	return s.convertToCampaignResponse(updatedCampaign), nil
 }
 
-// GetCampaign retrieves a campaign by ID
-func (s *CampaignService) GetCampaign(ctx context.Context, id int64) (*ent.Campaign, error) {
-	return s.client.Campaign.Get(ctx, id)
+func (s *CampaignService) GenerateUniqueTrackingLink(ctx context.Context, campaignID int64) (string, error) {
+	// Retrieve campaign
+	campaign, err := s.client.Campaign.Get(ctx, campaignID)
+	if err != nil {
+		return "", fmt.Errorf("campaign not found: %w", err)
+	}
+
+	// Generate unique tracking identifier
+	trackingID := uuid.New().String()
+
+	// Construct tracking URL with UTM parameters
+	baseURL := campaign.TrackingURL
+	if baseURL == "" {
+		baseURL = "https://yourdefaulttrackingdomain.com"
+	}
+
+	trackingLink := fmt.Sprintf("%s?utm_campaign=%s&utm_source=affiliate&utm_medium=referral&track_id=%s",
+		baseURL,
+		campaign.UniqueCode,
+		trackingID,
+	)
+
+	return trackingLink, nil
 }
 
-// ListCampaigns retrieves campaigns with optional filtering
-func (s *CampaignService) ListCampaigns(ctx context.Context, filter *dto.CampaignFilter) ([]*ent.Campaign, error) {
+func (s *CampaignService) GetCampaignPerformance(ctx context.Context, campaignID int64) (*dto.CampaignPerformanceResponse, error) {
+	// Retrieve campaign
+	campaign, err := s.client.Campaign.Get(ctx, campaignID)
+	if err != nil {
+		return nil, fmt.Errorf("campaign not found: %w", err)
+	}
+
+	// Calculate performance metrics
+	conversionRate := 0.0
+	if campaign.TotalClicks > 0 {
+		conversionRate = float64(campaign.TotalConversions) / float64(campaign.TotalClicks) * 100
+	}
+
+	averageCommission := 0.0
+	if campaign.TotalConversions > 0 {
+		averageCommission = campaign.TotalRevenue / float64(campaign.TotalConversions)
+	}
+
+	return &dto.CampaignPerformanceResponse{
+		CampaignID:        campaign.ID,
+		TotalClicks:       campaign.TotalClicks,
+		TotalConversions:  campaign.TotalConversions,
+		TotalRevenue:      campaign.TotalRevenue,
+		ConversionRate:    conversionRate,
+		AverageCommission: averageCommission,
+	}, nil
+}
+
+// Helper function to generate unique campaign code
+func generateUniqueCampaignCode() string {
+	rand.Seed(time.Now().UnixNano())
+
+	// Generate a random string of 8 characters
+	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	b := make([]rune, 8)
+	for i := range b {
+		b[i] = chars[rand.Intn(len(chars))]
+	}
+
+	return string(b)
+}
+
+// Helper function to convert Ent Campaign to Response DTO
+func (s *CampaignService) convertToCampaignResponse(c *ent.Campaign) *dto.CampaignResponse {
+	response := &dto.CampaignResponse{
+		ID:                 c.ID,
+		Name:               c.Name,
+		Description:        c.Description,
+		Type:               c.Type.String(),
+		CommissionType:     c.CommissionType.String(),
+		BaseCommissionRate: c.BaseCommissionRate,
+		StartDate:          c.StartDate,
+		Status:             c.Status.String(),
+		TotalClicks:        c.TotalClicks,
+		TotalConversions:   c.TotalConversions,
+		TotalRevenue:       c.TotalRevenue,
+		ConversionRate:     c.ConversionRate,
+		EndDate:            &c.EndDate,
+	}
+
+	if c.TargetGeography != "" {
+		response.TargetGeography = c.TargetGeography
+	}
+	if c.TrackingURL != "" {
+		response.TrackingURL = c.TrackingURL
+	}
+	if len(c.CommissionTiers) > 0 {
+		response.CommissionTiers = c.CommissionTiers
+	}
+	if len(c.TargetDemographics) > 0 {
+		response.TargetDemographics = c.TargetDemographics
+	}
+
+	return response
+}
+func (s *CampaignService) GetCampaign(ctx context.Context, id int64) (*dto.CampaignResponse, error) {
+	// Retrieve campaign
+	campaign, err := s.client.Campaign.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("campaign not found: %w", err)
+	}
+
+	// Convert to response DTO
+	return s.convertToCampaignResponse(campaign), nil
+}
+
+func (s *CampaignService) ListCampaigns(ctx context.Context, filter *dto.CampaignFilter) ([]*dto.CampaignResponse, error) {
+	// Start query builder
 	query := s.client.Campaign.Query()
 
+	// Apply filters
 	if filter.Status != "" {
-		query = query.Where(campaign.StatusEQ(campaign.Status(filter.Status)))
+		query.Where(campaign.StatusEQ(campaign.Status(filter.Status)))
 	}
 	if filter.Type != "" {
-		query = query.Where(campaign.TypeEQ(campaign.Type(filter.Type)))
+		query.Where(campaign.TypeEQ(campaign.Type(filter.Type)))
 	}
+
+	// Date range filters
 	if !filter.StartDateFrom.IsZero() {
-		query = query.Where(campaign.StartDateGTE(filter.StartDateFrom))
+		query.Where(campaign.StartDateGTE(filter.StartDateFrom))
 	}
 	if !filter.StartDateTo.IsZero() {
-		query = query.Where(campaign.StartDateLTE(filter.StartDateTo))
+		query.Where(campaign.StartDateLTE(filter.StartDateTo))
 	}
 
-	return query.All(ctx)
+	// Execute query
+	campaigns, err := query.All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve campaigns: %w", err)
+	}
+
+	// Convert to response DTOs
+	responses := make([]*dto.CampaignResponse, len(campaigns))
+	for i, c := range campaigns {
+		responses[i] = s.convertToCampaignResponse(c)
+	}
+
+	return responses, nil
 }
 
-// DeleteCampaign soft deletes a campaign
 func (s *CampaignService) DeleteCampaign(ctx context.Context, id int64) error {
-	return s.client.Campaign.UpdateOneID(id).
-		SetStatus("deleted").
-		Exec(ctx)
-}
+	// Soft delete campaign by updating its status
+	_, err := s.client.Campaign.UpdateOneID(id).
+		SetStatus("completed"). // Or use a soft delete status like 'deleted'
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to delete campaign: %w", err)
+	}
 
-// Helper methods
-func (s *CampaignService) validateCampaignRequest(req *dto.CreateCampaignRequest) error {
-	if req.Name == "" {
-		return errors.New("campaign name is required")
-	}
-	if req.Type == "" {
-		return errors.New("campaign type is required")
-	}
-	if req.PayoutRate < 0 {
-		return errors.New("payout rate cannot be negative")
-	}
 	return nil
-}
-
-// generateCampaignCode creates a unique tracking code
-func (s *CampaignService) generateCampaignCode() string {
-	return uuid.New().String()[:8]
-}
-
-// generateTrackingURL creates a unique tracking URL
-func (s *CampaignService) generateTrackingURL(uniqueCode string) string {
-	return fmt.Sprintf("https://track.yourdomain.com/%s", uniqueCode)
 }

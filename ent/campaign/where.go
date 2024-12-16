@@ -65,9 +65,19 @@ func Description(v string) predicate.Campaign {
 	return predicate.Campaign(sql.FieldEQ(FieldDescription, v))
 }
 
-// PayoutRate applies equality check predicate on the "payout_rate" field. It's identical to PayoutRateEQ.
-func PayoutRate(v float64) predicate.Campaign {
-	return predicate.Campaign(sql.FieldEQ(FieldPayoutRate, v))
+// UniqueCode applies equality check predicate on the "unique_code" field. It's identical to UniqueCodeEQ.
+func UniqueCode(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldUniqueCode, v))
+}
+
+// BaseCommissionRate applies equality check predicate on the "base_commission_rate" field. It's identical to BaseCommissionRateEQ.
+func BaseCommissionRate(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldBaseCommissionRate, v))
+}
+
+// TargetGeography applies equality check predicate on the "target_geography" field. It's identical to TargetGeographyEQ.
+func TargetGeography(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldTargetGeography, v))
 }
 
 // StartDate applies equality check predicate on the "start_date" field. It's identical to StartDateEQ.
@@ -85,9 +95,34 @@ func TrackingURL(v string) predicate.Campaign {
 	return predicate.Campaign(sql.FieldEQ(FieldTrackingURL, v))
 }
 
-// UniqueCode applies equality check predicate on the "unique_code" field. It's identical to UniqueCodeEQ.
-func UniqueCode(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldEQ(FieldUniqueCode, v))
+// TotalClicks applies equality check predicate on the "total_clicks" field. It's identical to TotalClicksEQ.
+func TotalClicks(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldTotalClicks, v))
+}
+
+// TotalConversions applies equality check predicate on the "total_conversions" field. It's identical to TotalConversionsEQ.
+func TotalConversions(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldTotalConversions, v))
+}
+
+// TotalRevenue applies equality check predicate on the "total_revenue" field. It's identical to TotalRevenueEQ.
+func TotalRevenue(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldTotalRevenue, v))
+}
+
+// ConversionRate applies equality check predicate on the "conversion_rate" field. It's identical to ConversionRateEQ.
+func ConversionRate(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldConversionRate, v))
+}
+
+// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
+func CreatedAt(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
+func UpdatedAt(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -230,6 +265,71 @@ func DescriptionContainsFold(v string) predicate.Campaign {
 	return predicate.Campaign(sql.FieldContainsFold(FieldDescription, v))
 }
 
+// UniqueCodeEQ applies the EQ predicate on the "unique_code" field.
+func UniqueCodeEQ(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldUniqueCode, v))
+}
+
+// UniqueCodeNEQ applies the NEQ predicate on the "unique_code" field.
+func UniqueCodeNEQ(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNEQ(FieldUniqueCode, v))
+}
+
+// UniqueCodeIn applies the In predicate on the "unique_code" field.
+func UniqueCodeIn(vs ...string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldIn(FieldUniqueCode, vs...))
+}
+
+// UniqueCodeNotIn applies the NotIn predicate on the "unique_code" field.
+func UniqueCodeNotIn(vs ...string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotIn(FieldUniqueCode, vs...))
+}
+
+// UniqueCodeGT applies the GT predicate on the "unique_code" field.
+func UniqueCodeGT(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGT(FieldUniqueCode, v))
+}
+
+// UniqueCodeGTE applies the GTE predicate on the "unique_code" field.
+func UniqueCodeGTE(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGTE(FieldUniqueCode, v))
+}
+
+// UniqueCodeLT applies the LT predicate on the "unique_code" field.
+func UniqueCodeLT(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLT(FieldUniqueCode, v))
+}
+
+// UniqueCodeLTE applies the LTE predicate on the "unique_code" field.
+func UniqueCodeLTE(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLTE(FieldUniqueCode, v))
+}
+
+// UniqueCodeContains applies the Contains predicate on the "unique_code" field.
+func UniqueCodeContains(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldContains(FieldUniqueCode, v))
+}
+
+// UniqueCodeHasPrefix applies the HasPrefix predicate on the "unique_code" field.
+func UniqueCodeHasPrefix(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldHasPrefix(FieldUniqueCode, v))
+}
+
+// UniqueCodeHasSuffix applies the HasSuffix predicate on the "unique_code" field.
+func UniqueCodeHasSuffix(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldHasSuffix(FieldUniqueCode, v))
+}
+
+// UniqueCodeEqualFold applies the EqualFold predicate on the "unique_code" field.
+func UniqueCodeEqualFold(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEqualFold(FieldUniqueCode, v))
+}
+
+// UniqueCodeContainsFold applies the ContainsFold predicate on the "unique_code" field.
+func UniqueCodeContainsFold(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldContainsFold(FieldUniqueCode, v))
+}
+
 // TypeEQ applies the EQ predicate on the "type" field.
 func TypeEQ(v Type) predicate.Campaign {
 	return predicate.Campaign(sql.FieldEQ(FieldType, v))
@@ -250,44 +350,159 @@ func TypeNotIn(vs ...Type) predicate.Campaign {
 	return predicate.Campaign(sql.FieldNotIn(FieldType, vs...))
 }
 
-// PayoutRateEQ applies the EQ predicate on the "payout_rate" field.
-func PayoutRateEQ(v float64) predicate.Campaign {
-	return predicate.Campaign(sql.FieldEQ(FieldPayoutRate, v))
+// CommissionTypeEQ applies the EQ predicate on the "commission_type" field.
+func CommissionTypeEQ(v CommissionType) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldCommissionType, v))
 }
 
-// PayoutRateNEQ applies the NEQ predicate on the "payout_rate" field.
-func PayoutRateNEQ(v float64) predicate.Campaign {
-	return predicate.Campaign(sql.FieldNEQ(FieldPayoutRate, v))
+// CommissionTypeNEQ applies the NEQ predicate on the "commission_type" field.
+func CommissionTypeNEQ(v CommissionType) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNEQ(FieldCommissionType, v))
 }
 
-// PayoutRateIn applies the In predicate on the "payout_rate" field.
-func PayoutRateIn(vs ...float64) predicate.Campaign {
-	return predicate.Campaign(sql.FieldIn(FieldPayoutRate, vs...))
+// CommissionTypeIn applies the In predicate on the "commission_type" field.
+func CommissionTypeIn(vs ...CommissionType) predicate.Campaign {
+	return predicate.Campaign(sql.FieldIn(FieldCommissionType, vs...))
 }
 
-// PayoutRateNotIn applies the NotIn predicate on the "payout_rate" field.
-func PayoutRateNotIn(vs ...float64) predicate.Campaign {
-	return predicate.Campaign(sql.FieldNotIn(FieldPayoutRate, vs...))
+// CommissionTypeNotIn applies the NotIn predicate on the "commission_type" field.
+func CommissionTypeNotIn(vs ...CommissionType) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotIn(FieldCommissionType, vs...))
 }
 
-// PayoutRateGT applies the GT predicate on the "payout_rate" field.
-func PayoutRateGT(v float64) predicate.Campaign {
-	return predicate.Campaign(sql.FieldGT(FieldPayoutRate, v))
+// BaseCommissionRateEQ applies the EQ predicate on the "base_commission_rate" field.
+func BaseCommissionRateEQ(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldBaseCommissionRate, v))
 }
 
-// PayoutRateGTE applies the GTE predicate on the "payout_rate" field.
-func PayoutRateGTE(v float64) predicate.Campaign {
-	return predicate.Campaign(sql.FieldGTE(FieldPayoutRate, v))
+// BaseCommissionRateNEQ applies the NEQ predicate on the "base_commission_rate" field.
+func BaseCommissionRateNEQ(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNEQ(FieldBaseCommissionRate, v))
 }
 
-// PayoutRateLT applies the LT predicate on the "payout_rate" field.
-func PayoutRateLT(v float64) predicate.Campaign {
-	return predicate.Campaign(sql.FieldLT(FieldPayoutRate, v))
+// BaseCommissionRateIn applies the In predicate on the "base_commission_rate" field.
+func BaseCommissionRateIn(vs ...float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldIn(FieldBaseCommissionRate, vs...))
 }
 
-// PayoutRateLTE applies the LTE predicate on the "payout_rate" field.
-func PayoutRateLTE(v float64) predicate.Campaign {
-	return predicate.Campaign(sql.FieldLTE(FieldPayoutRate, v))
+// BaseCommissionRateNotIn applies the NotIn predicate on the "base_commission_rate" field.
+func BaseCommissionRateNotIn(vs ...float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotIn(FieldBaseCommissionRate, vs...))
+}
+
+// BaseCommissionRateGT applies the GT predicate on the "base_commission_rate" field.
+func BaseCommissionRateGT(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGT(FieldBaseCommissionRate, v))
+}
+
+// BaseCommissionRateGTE applies the GTE predicate on the "base_commission_rate" field.
+func BaseCommissionRateGTE(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGTE(FieldBaseCommissionRate, v))
+}
+
+// BaseCommissionRateLT applies the LT predicate on the "base_commission_rate" field.
+func BaseCommissionRateLT(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLT(FieldBaseCommissionRate, v))
+}
+
+// BaseCommissionRateLTE applies the LTE predicate on the "base_commission_rate" field.
+func BaseCommissionRateLTE(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLTE(FieldBaseCommissionRate, v))
+}
+
+// CommissionTiersIsNil applies the IsNil predicate on the "commission_tiers" field.
+func CommissionTiersIsNil() predicate.Campaign {
+	return predicate.Campaign(sql.FieldIsNull(FieldCommissionTiers))
+}
+
+// CommissionTiersNotNil applies the NotNil predicate on the "commission_tiers" field.
+func CommissionTiersNotNil() predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotNull(FieldCommissionTiers))
+}
+
+// TargetGeographyEQ applies the EQ predicate on the "target_geography" field.
+func TargetGeographyEQ(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldTargetGeography, v))
+}
+
+// TargetGeographyNEQ applies the NEQ predicate on the "target_geography" field.
+func TargetGeographyNEQ(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNEQ(FieldTargetGeography, v))
+}
+
+// TargetGeographyIn applies the In predicate on the "target_geography" field.
+func TargetGeographyIn(vs ...string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldIn(FieldTargetGeography, vs...))
+}
+
+// TargetGeographyNotIn applies the NotIn predicate on the "target_geography" field.
+func TargetGeographyNotIn(vs ...string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotIn(FieldTargetGeography, vs...))
+}
+
+// TargetGeographyGT applies the GT predicate on the "target_geography" field.
+func TargetGeographyGT(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGT(FieldTargetGeography, v))
+}
+
+// TargetGeographyGTE applies the GTE predicate on the "target_geography" field.
+func TargetGeographyGTE(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGTE(FieldTargetGeography, v))
+}
+
+// TargetGeographyLT applies the LT predicate on the "target_geography" field.
+func TargetGeographyLT(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLT(FieldTargetGeography, v))
+}
+
+// TargetGeographyLTE applies the LTE predicate on the "target_geography" field.
+func TargetGeographyLTE(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLTE(FieldTargetGeography, v))
+}
+
+// TargetGeographyContains applies the Contains predicate on the "target_geography" field.
+func TargetGeographyContains(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldContains(FieldTargetGeography, v))
+}
+
+// TargetGeographyHasPrefix applies the HasPrefix predicate on the "target_geography" field.
+func TargetGeographyHasPrefix(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldHasPrefix(FieldTargetGeography, v))
+}
+
+// TargetGeographyHasSuffix applies the HasSuffix predicate on the "target_geography" field.
+func TargetGeographyHasSuffix(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldHasSuffix(FieldTargetGeography, v))
+}
+
+// TargetGeographyIsNil applies the IsNil predicate on the "target_geography" field.
+func TargetGeographyIsNil() predicate.Campaign {
+	return predicate.Campaign(sql.FieldIsNull(FieldTargetGeography))
+}
+
+// TargetGeographyNotNil applies the NotNil predicate on the "target_geography" field.
+func TargetGeographyNotNil() predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotNull(FieldTargetGeography))
+}
+
+// TargetGeographyEqualFold applies the EqualFold predicate on the "target_geography" field.
+func TargetGeographyEqualFold(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEqualFold(FieldTargetGeography, v))
+}
+
+// TargetGeographyContainsFold applies the ContainsFold predicate on the "target_geography" field.
+func TargetGeographyContainsFold(v string) predicate.Campaign {
+	return predicate.Campaign(sql.FieldContainsFold(FieldTargetGeography, v))
+}
+
+// TargetDemographicsIsNil applies the IsNil predicate on the "target_demographics" field.
+func TargetDemographicsIsNil() predicate.Campaign {
+	return predicate.Campaign(sql.FieldIsNull(FieldTargetDemographics))
+}
+
+// TargetDemographicsNotNil applies the NotNil predicate on the "target_demographics" field.
+func TargetDemographicsNotNil() predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotNull(FieldTargetDemographics))
 }
 
 // StartDateEQ applies the EQ predicate on the "start_date" field.
@@ -455,6 +670,16 @@ func TrackingURLHasSuffix(v string) predicate.Campaign {
 	return predicate.Campaign(sql.FieldHasSuffix(FieldTrackingURL, v))
 }
 
+// TrackingURLIsNil applies the IsNil predicate on the "tracking_url" field.
+func TrackingURLIsNil() predicate.Campaign {
+	return predicate.Campaign(sql.FieldIsNull(FieldTrackingURL))
+}
+
+// TrackingURLNotNil applies the NotNil predicate on the "tracking_url" field.
+func TrackingURLNotNil() predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotNull(FieldTrackingURL))
+}
+
 // TrackingURLEqualFold applies the EqualFold predicate on the "tracking_url" field.
 func TrackingURLEqualFold(v string) predicate.Campaign {
 	return predicate.Campaign(sql.FieldEqualFold(FieldTrackingURL, v))
@@ -465,69 +690,244 @@ func TrackingURLContainsFold(v string) predicate.Campaign {
 	return predicate.Campaign(sql.FieldContainsFold(FieldTrackingURL, v))
 }
 
-// UniqueCodeEQ applies the EQ predicate on the "unique_code" field.
-func UniqueCodeEQ(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldEQ(FieldUniqueCode, v))
+// TotalClicksEQ applies the EQ predicate on the "total_clicks" field.
+func TotalClicksEQ(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldTotalClicks, v))
 }
 
-// UniqueCodeNEQ applies the NEQ predicate on the "unique_code" field.
-func UniqueCodeNEQ(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldNEQ(FieldUniqueCode, v))
+// TotalClicksNEQ applies the NEQ predicate on the "total_clicks" field.
+func TotalClicksNEQ(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNEQ(FieldTotalClicks, v))
 }
 
-// UniqueCodeIn applies the In predicate on the "unique_code" field.
-func UniqueCodeIn(vs ...string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldIn(FieldUniqueCode, vs...))
+// TotalClicksIn applies the In predicate on the "total_clicks" field.
+func TotalClicksIn(vs ...int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldIn(FieldTotalClicks, vs...))
 }
 
-// UniqueCodeNotIn applies the NotIn predicate on the "unique_code" field.
-func UniqueCodeNotIn(vs ...string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldNotIn(FieldUniqueCode, vs...))
+// TotalClicksNotIn applies the NotIn predicate on the "total_clicks" field.
+func TotalClicksNotIn(vs ...int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotIn(FieldTotalClicks, vs...))
 }
 
-// UniqueCodeGT applies the GT predicate on the "unique_code" field.
-func UniqueCodeGT(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldGT(FieldUniqueCode, v))
+// TotalClicksGT applies the GT predicate on the "total_clicks" field.
+func TotalClicksGT(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGT(FieldTotalClicks, v))
 }
 
-// UniqueCodeGTE applies the GTE predicate on the "unique_code" field.
-func UniqueCodeGTE(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldGTE(FieldUniqueCode, v))
+// TotalClicksGTE applies the GTE predicate on the "total_clicks" field.
+func TotalClicksGTE(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGTE(FieldTotalClicks, v))
 }
 
-// UniqueCodeLT applies the LT predicate on the "unique_code" field.
-func UniqueCodeLT(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldLT(FieldUniqueCode, v))
+// TotalClicksLT applies the LT predicate on the "total_clicks" field.
+func TotalClicksLT(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLT(FieldTotalClicks, v))
 }
 
-// UniqueCodeLTE applies the LTE predicate on the "unique_code" field.
-func UniqueCodeLTE(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldLTE(FieldUniqueCode, v))
+// TotalClicksLTE applies the LTE predicate on the "total_clicks" field.
+func TotalClicksLTE(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLTE(FieldTotalClicks, v))
 }
 
-// UniqueCodeContains applies the Contains predicate on the "unique_code" field.
-func UniqueCodeContains(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldContains(FieldUniqueCode, v))
+// TotalConversionsEQ applies the EQ predicate on the "total_conversions" field.
+func TotalConversionsEQ(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldTotalConversions, v))
 }
 
-// UniqueCodeHasPrefix applies the HasPrefix predicate on the "unique_code" field.
-func UniqueCodeHasPrefix(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldHasPrefix(FieldUniqueCode, v))
+// TotalConversionsNEQ applies the NEQ predicate on the "total_conversions" field.
+func TotalConversionsNEQ(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNEQ(FieldTotalConversions, v))
 }
 
-// UniqueCodeHasSuffix applies the HasSuffix predicate on the "unique_code" field.
-func UniqueCodeHasSuffix(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldHasSuffix(FieldUniqueCode, v))
+// TotalConversionsIn applies the In predicate on the "total_conversions" field.
+func TotalConversionsIn(vs ...int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldIn(FieldTotalConversions, vs...))
 }
 
-// UniqueCodeEqualFold applies the EqualFold predicate on the "unique_code" field.
-func UniqueCodeEqualFold(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldEqualFold(FieldUniqueCode, v))
+// TotalConversionsNotIn applies the NotIn predicate on the "total_conversions" field.
+func TotalConversionsNotIn(vs ...int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotIn(FieldTotalConversions, vs...))
 }
 
-// UniqueCodeContainsFold applies the ContainsFold predicate on the "unique_code" field.
-func UniqueCodeContainsFold(v string) predicate.Campaign {
-	return predicate.Campaign(sql.FieldContainsFold(FieldUniqueCode, v))
+// TotalConversionsGT applies the GT predicate on the "total_conversions" field.
+func TotalConversionsGT(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGT(FieldTotalConversions, v))
+}
+
+// TotalConversionsGTE applies the GTE predicate on the "total_conversions" field.
+func TotalConversionsGTE(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGTE(FieldTotalConversions, v))
+}
+
+// TotalConversionsLT applies the LT predicate on the "total_conversions" field.
+func TotalConversionsLT(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLT(FieldTotalConversions, v))
+}
+
+// TotalConversionsLTE applies the LTE predicate on the "total_conversions" field.
+func TotalConversionsLTE(v int) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLTE(FieldTotalConversions, v))
+}
+
+// TotalRevenueEQ applies the EQ predicate on the "total_revenue" field.
+func TotalRevenueEQ(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldTotalRevenue, v))
+}
+
+// TotalRevenueNEQ applies the NEQ predicate on the "total_revenue" field.
+func TotalRevenueNEQ(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNEQ(FieldTotalRevenue, v))
+}
+
+// TotalRevenueIn applies the In predicate on the "total_revenue" field.
+func TotalRevenueIn(vs ...float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldIn(FieldTotalRevenue, vs...))
+}
+
+// TotalRevenueNotIn applies the NotIn predicate on the "total_revenue" field.
+func TotalRevenueNotIn(vs ...float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotIn(FieldTotalRevenue, vs...))
+}
+
+// TotalRevenueGT applies the GT predicate on the "total_revenue" field.
+func TotalRevenueGT(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGT(FieldTotalRevenue, v))
+}
+
+// TotalRevenueGTE applies the GTE predicate on the "total_revenue" field.
+func TotalRevenueGTE(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGTE(FieldTotalRevenue, v))
+}
+
+// TotalRevenueLT applies the LT predicate on the "total_revenue" field.
+func TotalRevenueLT(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLT(FieldTotalRevenue, v))
+}
+
+// TotalRevenueLTE applies the LTE predicate on the "total_revenue" field.
+func TotalRevenueLTE(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLTE(FieldTotalRevenue, v))
+}
+
+// ConversionRateEQ applies the EQ predicate on the "conversion_rate" field.
+func ConversionRateEQ(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldConversionRate, v))
+}
+
+// ConversionRateNEQ applies the NEQ predicate on the "conversion_rate" field.
+func ConversionRateNEQ(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNEQ(FieldConversionRate, v))
+}
+
+// ConversionRateIn applies the In predicate on the "conversion_rate" field.
+func ConversionRateIn(vs ...float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldIn(FieldConversionRate, vs...))
+}
+
+// ConversionRateNotIn applies the NotIn predicate on the "conversion_rate" field.
+func ConversionRateNotIn(vs ...float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotIn(FieldConversionRate, vs...))
+}
+
+// ConversionRateGT applies the GT predicate on the "conversion_rate" field.
+func ConversionRateGT(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGT(FieldConversionRate, v))
+}
+
+// ConversionRateGTE applies the GTE predicate on the "conversion_rate" field.
+func ConversionRateGTE(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGTE(FieldConversionRate, v))
+}
+
+// ConversionRateLT applies the LT predicate on the "conversion_rate" field.
+func ConversionRateLT(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLT(FieldConversionRate, v))
+}
+
+// ConversionRateLTE applies the LTE predicate on the "conversion_rate" field.
+func ConversionRateLTE(v float64) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLTE(FieldConversionRate, v))
+}
+
+// CreatedAtEQ applies the EQ predicate on the "created_at" field.
+func CreatedAtEQ(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
+func CreatedAtNEQ(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNEQ(FieldCreatedAt, v))
+}
+
+// CreatedAtIn applies the In predicate on the "created_at" field.
+func CreatedAtIn(vs ...time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldIn(FieldCreatedAt, vs...))
+}
+
+// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
+func CreatedAtNotIn(vs ...time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotIn(FieldCreatedAt, vs...))
+}
+
+// CreatedAtGT applies the GT predicate on the "created_at" field.
+func CreatedAtGT(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGT(FieldCreatedAt, v))
+}
+
+// CreatedAtGTE applies the GTE predicate on the "created_at" field.
+func CreatedAtGTE(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGTE(FieldCreatedAt, v))
+}
+
+// CreatedAtLT applies the LT predicate on the "created_at" field.
+func CreatedAtLT(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLT(FieldCreatedAt, v))
+}
+
+// CreatedAtLTE applies the LTE predicate on the "created_at" field.
+func CreatedAtLTE(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLTE(FieldCreatedAt, v))
+}
+
+// UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
+func UpdatedAtEQ(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
+func UpdatedAtNEQ(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNEQ(FieldUpdatedAt, v))
+}
+
+// UpdatedAtIn applies the In predicate on the "updated_at" field.
+func UpdatedAtIn(vs ...time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldIn(FieldUpdatedAt, vs...))
+}
+
+// UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
+func UpdatedAtNotIn(vs ...time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldNotIn(FieldUpdatedAt, vs...))
+}
+
+// UpdatedAtGT applies the GT predicate on the "updated_at" field.
+func UpdatedAtGT(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGT(FieldUpdatedAt, v))
+}
+
+// UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
+func UpdatedAtGTE(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldGTE(FieldUpdatedAt, v))
+}
+
+// UpdatedAtLT applies the LT predicate on the "updated_at" field.
+func UpdatedAtLT(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLT(FieldUpdatedAt, v))
+}
+
+// UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
+func UpdatedAtLTE(v time.Time) predicate.Campaign {
+	return predicate.Campaign(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
 // HasOwner applies the HasEdge predicate on the "owner" edge.
@@ -614,6 +1014,29 @@ func HasReferrals() predicate.Campaign {
 func HasReferralsWith(preds ...predicate.Referral) predicate.Campaign {
 	return predicate.Campaign(func(s *sql.Selector) {
 		step := newReferralsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasBanners applies the HasEdge predicate on the "banners" edge.
+func HasBanners() predicate.Campaign {
+	return predicate.Campaign(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, BannersTable, BannersPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBannersWith applies the HasEdge predicate on the "banners" edge with a given conditions (other predicates).
+func HasBannersWith(preds ...predicate.Banner) predicate.Campaign {
+	return predicate.Campaign(func(s *sql.Selector) {
+		step := newBannersStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
