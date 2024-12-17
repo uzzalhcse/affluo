@@ -57,9 +57,9 @@ type CreateBannerCreativeRequest struct {
 
 type BannerCreativeResponse struct {
 	ID        int64     `json:"id"`
-	Name      string    `json:"name,omitempty"`
-	ImageURL  string    `json:"image_url,omitempty"`
-	Size      string    `json:"size,omitempty"`
+	Name      string    `json:"name"`
+	ImageURL  string    `json:"image_url"`
+	Size      string    `json:"size"`
 	Enabled   bool      `json:"enabled"`
 	CreatedAt time.Time `json:"created_at"`
 }

@@ -4,7 +4,6 @@ import (
 	"affluo/internal/dto"
 	"affluo/internal/service"
 	"github.com/gofiber/fiber/v2"
-	"time"
 )
 
 type BannerHandler struct {
@@ -20,7 +19,6 @@ func (h *BannerHandler) GetAllBanners(c *fiber.Ctx) error {
 		return Error(c, "Failed to retrieve banners", err.Error())
 	}
 
-	time.Sleep(2 * time.Second) // Simulate a delay
 	return Success(c, dto.NewBannersResponse(banners))
 }
 
