@@ -53,4 +53,10 @@ func (a *Application) SetupRoutes() {
 		creativeGroup.Get("/:id/creatives", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetBannerCreatives)
 	}
 
+	// Publisher routes
+	publisherGroup := a.App.Group("/api/publisher")
+	{
+		publisherGroup.Get("/banners", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetPublisherBanners)
+	}
+
 }

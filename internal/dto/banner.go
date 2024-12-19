@@ -22,6 +22,7 @@ type BannerResponse struct {
 	Type             string                `json:"type"`
 	Size             string                `json:"size"`
 	HTMLCode         string                `json:"html_code,omitempty"`
+	TrackingURL      string                `json:"tracking_url,omitempty"`
 	AllowedCountries []string              `json:"allowed_countries,omitempty"`
 	Status           string                `json:"status"`
 	Creatives        []*ent.BannerCreative `json:"creatives,omitempty"`
@@ -43,6 +44,7 @@ func NewBannersResponse(banners []*ent.Banner) *BannersResponse {
 			AllowedCountries: banner.AllowedCountries,
 			Status:           banner.Status.String(),
 			CreatedAt:        banner.CreatedAt,
+			Creatives:        banner.Edges.Creatives,
 		})
 	}
 	return res

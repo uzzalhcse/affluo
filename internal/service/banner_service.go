@@ -1,12 +1,14 @@
 package service
 
 import (
+	"affluo/constant"
 	"affluo/ent"
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
 	"affluo/internal/dto"
 	"context"
 	"fmt"
+	"strings"
 )
 
 type BannerService struct {
@@ -17,7 +19,7 @@ func NewBannerService(client *ent.Client) *BannerService {
 	return &BannerService{client: client}
 }
 func (s *BannerService) GetAllBanners(ctx context.Context) ([]*ent.Banner, error) {
-	return s.client.Banner.Query().All(ctx)
+	return s.client.Banner.Query().WithCreatives().All(ctx)
 }
 
 func (s *BannerService) GetAllBannerCreatives(ctx context.Context) ([]*ent.BannerCreative, error) {
@@ -163,4 +165,81 @@ func (s *BannerService) GetBannerCreativesByBannerID(ctx context.Context, banner
 	}
 
 	return responses, nil
+}
+
+func (s *BannerService) generateTrackingURL(banner *ent.Banner) string {
+	return fmt.Sprintf("https://%s/click/%d",
+		constant.TrackingDomain,
+		banner.ID)
+}
+
+func (s *BannerService) generateHTMLCode(banner *ent.Banner, creative *ent.BannerCreative) string {
+	// Parse size for width and height
+	dimensions := strings.Split(banner.Size, "x")
+	width, height := dimensions[0], dimensions[1]
+
+	// Generate the HTML code with tracking
+	html := fmt.Sprintf(`<a href="%s" target="_blank" rel="noopener">
+    <img src="%s" 
+         width="%s" 
+         height="%s" 
+         alt="%s" 
+         style="border:none;display:block" 
+    />
+</a>`,
+		s.generateTrackingURL(banner),
+		creative.ImageURL,
+		width,
+		height,
+		banner.Name,
+	)
+
+	return html
+}
+
+func (s *BannerService) enrichBannerResponse(ctx context.Context, banner *ent.Banner) (*dto.BannerResponse, error) {
+	// Get the first creative for the banner where enabled = true
+	creative, err := banner.QueryCreatives().
+		Where(bannercreative.EnabledEQ(true)).
+		First(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		return nil, err
+	}
+
+	response := &dto.BannerResponse{
+		ID:          banner.ID,
+		Name:        banner.Name,
+		Description: banner.Description,
+		Type:        banner.Type.String(),
+		Size:        banner.Size,
+		Status:      banner.Status.String(),
+		CreatedAt:   banner.CreatedAt,
+		TrackingURL: s.generateTrackingURL(banner),
+	}
+
+	if creative != nil {
+		response.HTMLCode = s.generateHTMLCode(banner, creative)
+	}
+
+	return response, nil
+}
+
+func (s *BannerService) GetAllPublisherBanners(ctx context.Context) ([]*dto.BannerResponse, error) {
+	banners, err := s.client.Banner.Query().
+		WithCreatives().
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var response []*dto.BannerResponse
+	for _, banner := range banners {
+		enrichedBanner, err := s.enrichBannerResponse(ctx, banner)
+		if err != nil {
+			return nil, err
+		}
+		response = append(response, enrichedBanner)
+	}
+
+	return response, nil
 }

@@ -21,6 +21,14 @@ func (h *BannerHandler) GetAllBanners(c *fiber.Ctx) error {
 
 	return Success(c, dto.NewBannersResponse(banners))
 }
+func (h *BannerHandler) GetPublisherBanners(c *fiber.Ctx) error {
+	banners, err := h.bannerService.GetAllPublisherBanners(c.Context())
+	if err != nil {
+		return Error(c, "Failed to retrieve banners", err.Error())
+	}
+
+	return Success(c, fiber.Map{"items": banners})
+}
 
 func (h *BannerHandler) GetAllBannerCreatives(c *fiber.Ctx) error {
 	bannerCreatives, err := h.bannerService.GetAllBannerCreatives(c.Context())
