@@ -6,6 +6,7 @@ import (
 	"affluo/ent/banner"
 	"affluo/ent/bannerstats"
 	"affluo/ent/predicate"
+	"affluo/ent/user"
 	"context"
 	"errors"
 	"fmt"
@@ -106,6 +107,27 @@ func (bsu *BannerStatsUpdate) AddLeads(i int64) *BannerStatsUpdate {
 	return bsu
 }
 
+// SetEarnings sets the "earnings" field.
+func (bsu *BannerStatsUpdate) SetEarnings(f float64) *BannerStatsUpdate {
+	bsu.mutation.ResetEarnings()
+	bsu.mutation.SetEarnings(f)
+	return bsu
+}
+
+// SetNillableEarnings sets the "earnings" field if the given value is not nil.
+func (bsu *BannerStatsUpdate) SetNillableEarnings(f *float64) *BannerStatsUpdate {
+	if f != nil {
+		bsu.SetEarnings(*f)
+	}
+	return bsu
+}
+
+// AddEarnings adds f to the "earnings" field.
+func (bsu *BannerStatsUpdate) AddEarnings(f float64) *BannerStatsUpdate {
+	bsu.mutation.AddEarnings(f)
+	return bsu
+}
+
 // SetCtr sets the "ctr" field.
 func (bsu *BannerStatsUpdate) SetCtr(f float64) *BannerStatsUpdate {
 	bsu.mutation.ResetCtr()
@@ -160,6 +182,66 @@ func (bsu *BannerStatsUpdate) ClearConversionRate() *BannerStatsUpdate {
 	return bsu
 }
 
+// SetDeviceType sets the "device_type" field.
+func (bsu *BannerStatsUpdate) SetDeviceType(s string) *BannerStatsUpdate {
+	bsu.mutation.SetDeviceType(s)
+	return bsu
+}
+
+// SetNillableDeviceType sets the "device_type" field if the given value is not nil.
+func (bsu *BannerStatsUpdate) SetNillableDeviceType(s *string) *BannerStatsUpdate {
+	if s != nil {
+		bsu.SetDeviceType(*s)
+	}
+	return bsu
+}
+
+// ClearDeviceType clears the value of the "device_type" field.
+func (bsu *BannerStatsUpdate) ClearDeviceType() *BannerStatsUpdate {
+	bsu.mutation.ClearDeviceType()
+	return bsu
+}
+
+// SetBrowser sets the "browser" field.
+func (bsu *BannerStatsUpdate) SetBrowser(s string) *BannerStatsUpdate {
+	bsu.mutation.SetBrowser(s)
+	return bsu
+}
+
+// SetNillableBrowser sets the "browser" field if the given value is not nil.
+func (bsu *BannerStatsUpdate) SetNillableBrowser(s *string) *BannerStatsUpdate {
+	if s != nil {
+		bsu.SetBrowser(*s)
+	}
+	return bsu
+}
+
+// ClearBrowser clears the value of the "browser" field.
+func (bsu *BannerStatsUpdate) ClearBrowser() *BannerStatsUpdate {
+	bsu.mutation.ClearBrowser()
+	return bsu
+}
+
+// SetOs sets the "os" field.
+func (bsu *BannerStatsUpdate) SetOs(s string) *BannerStatsUpdate {
+	bsu.mutation.SetOs(s)
+	return bsu
+}
+
+// SetNillableOs sets the "os" field if the given value is not nil.
+func (bsu *BannerStatsUpdate) SetNillableOs(s *string) *BannerStatsUpdate {
+	if s != nil {
+		bsu.SetOs(*s)
+	}
+	return bsu
+}
+
+// ClearOs clears the value of the "os" field.
+func (bsu *BannerStatsUpdate) ClearOs() *BannerStatsUpdate {
+	bsu.mutation.ClearOs()
+	return bsu
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (bsu *BannerStatsUpdate) SetCreatedAt(t time.Time) *BannerStatsUpdate {
 	bsu.mutation.SetCreatedAt(t)
@@ -199,6 +281,25 @@ func (bsu *BannerStatsUpdate) SetBanner(b *Banner) *BannerStatsUpdate {
 	return bsu.SetBannerID(b.ID)
 }
 
+// SetPublisherID sets the "publisher" edge to the User entity by ID.
+func (bsu *BannerStatsUpdate) SetPublisherID(id int64) *BannerStatsUpdate {
+	bsu.mutation.SetPublisherID(id)
+	return bsu
+}
+
+// SetNillablePublisherID sets the "publisher" edge to the User entity by ID if the given value is not nil.
+func (bsu *BannerStatsUpdate) SetNillablePublisherID(id *int64) *BannerStatsUpdate {
+	if id != nil {
+		bsu = bsu.SetPublisherID(*id)
+	}
+	return bsu
+}
+
+// SetPublisher sets the "publisher" edge to the User entity.
+func (bsu *BannerStatsUpdate) SetPublisher(u *User) *BannerStatsUpdate {
+	return bsu.SetPublisherID(u.ID)
+}
+
 // Mutation returns the BannerStatsMutation object of the builder.
 func (bsu *BannerStatsUpdate) Mutation() *BannerStatsMutation {
 	return bsu.mutation
@@ -207,6 +308,12 @@ func (bsu *BannerStatsUpdate) Mutation() *BannerStatsMutation {
 // ClearBanner clears the "banner" edge to the Banner entity.
 func (bsu *BannerStatsUpdate) ClearBanner() *BannerStatsUpdate {
 	bsu.mutation.ClearBanner()
+	return bsu
+}
+
+// ClearPublisher clears the "publisher" edge to the User entity.
+func (bsu *BannerStatsUpdate) ClearPublisher() *BannerStatsUpdate {
+	bsu.mutation.ClearPublisher()
 	return bsu
 }
 
@@ -276,6 +383,12 @@ func (bsu *BannerStatsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := bsu.mutation.AddedLeads(); ok {
 		_spec.AddField(bannerstats.FieldLeads, field.TypeInt64, value)
 	}
+	if value, ok := bsu.mutation.Earnings(); ok {
+		_spec.SetField(bannerstats.FieldEarnings, field.TypeFloat64, value)
+	}
+	if value, ok := bsu.mutation.AddedEarnings(); ok {
+		_spec.AddField(bannerstats.FieldEarnings, field.TypeFloat64, value)
+	}
 	if value, ok := bsu.mutation.Ctr(); ok {
 		_spec.SetField(bannerstats.FieldCtr, field.TypeFloat64, value)
 	}
@@ -293,6 +406,24 @@ func (bsu *BannerStatsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if bsu.mutation.ConversionRateCleared() {
 		_spec.ClearField(bannerstats.FieldConversionRate, field.TypeFloat64)
+	}
+	if value, ok := bsu.mutation.DeviceType(); ok {
+		_spec.SetField(bannerstats.FieldDeviceType, field.TypeString, value)
+	}
+	if bsu.mutation.DeviceTypeCleared() {
+		_spec.ClearField(bannerstats.FieldDeviceType, field.TypeString)
+	}
+	if value, ok := bsu.mutation.Browser(); ok {
+		_spec.SetField(bannerstats.FieldBrowser, field.TypeString, value)
+	}
+	if bsu.mutation.BrowserCleared() {
+		_spec.ClearField(bannerstats.FieldBrowser, field.TypeString)
+	}
+	if value, ok := bsu.mutation.Os(); ok {
+		_spec.SetField(bannerstats.FieldOs, field.TypeString, value)
+	}
+	if bsu.mutation.OsCleared() {
+		_spec.ClearField(bannerstats.FieldOs, field.TypeString)
 	}
 	if value, ok := bsu.mutation.CreatedAt(); ok {
 		_spec.SetField(bannerstats.FieldCreatedAt, field.TypeTime, value)
@@ -322,6 +453,35 @@ func (bsu *BannerStatsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if bsu.mutation.PublisherCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   bannerstats.PublisherTable,
+			Columns: []string{bannerstats.PublisherColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bsu.mutation.PublisherIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   bannerstats.PublisherTable,
+			Columns: []string{bannerstats.PublisherColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -426,6 +586,27 @@ func (bsuo *BannerStatsUpdateOne) AddLeads(i int64) *BannerStatsUpdateOne {
 	return bsuo
 }
 
+// SetEarnings sets the "earnings" field.
+func (bsuo *BannerStatsUpdateOne) SetEarnings(f float64) *BannerStatsUpdateOne {
+	bsuo.mutation.ResetEarnings()
+	bsuo.mutation.SetEarnings(f)
+	return bsuo
+}
+
+// SetNillableEarnings sets the "earnings" field if the given value is not nil.
+func (bsuo *BannerStatsUpdateOne) SetNillableEarnings(f *float64) *BannerStatsUpdateOne {
+	if f != nil {
+		bsuo.SetEarnings(*f)
+	}
+	return bsuo
+}
+
+// AddEarnings adds f to the "earnings" field.
+func (bsuo *BannerStatsUpdateOne) AddEarnings(f float64) *BannerStatsUpdateOne {
+	bsuo.mutation.AddEarnings(f)
+	return bsuo
+}
+
 // SetCtr sets the "ctr" field.
 func (bsuo *BannerStatsUpdateOne) SetCtr(f float64) *BannerStatsUpdateOne {
 	bsuo.mutation.ResetCtr()
@@ -480,6 +661,66 @@ func (bsuo *BannerStatsUpdateOne) ClearConversionRate() *BannerStatsUpdateOne {
 	return bsuo
 }
 
+// SetDeviceType sets the "device_type" field.
+func (bsuo *BannerStatsUpdateOne) SetDeviceType(s string) *BannerStatsUpdateOne {
+	bsuo.mutation.SetDeviceType(s)
+	return bsuo
+}
+
+// SetNillableDeviceType sets the "device_type" field if the given value is not nil.
+func (bsuo *BannerStatsUpdateOne) SetNillableDeviceType(s *string) *BannerStatsUpdateOne {
+	if s != nil {
+		bsuo.SetDeviceType(*s)
+	}
+	return bsuo
+}
+
+// ClearDeviceType clears the value of the "device_type" field.
+func (bsuo *BannerStatsUpdateOne) ClearDeviceType() *BannerStatsUpdateOne {
+	bsuo.mutation.ClearDeviceType()
+	return bsuo
+}
+
+// SetBrowser sets the "browser" field.
+func (bsuo *BannerStatsUpdateOne) SetBrowser(s string) *BannerStatsUpdateOne {
+	bsuo.mutation.SetBrowser(s)
+	return bsuo
+}
+
+// SetNillableBrowser sets the "browser" field if the given value is not nil.
+func (bsuo *BannerStatsUpdateOne) SetNillableBrowser(s *string) *BannerStatsUpdateOne {
+	if s != nil {
+		bsuo.SetBrowser(*s)
+	}
+	return bsuo
+}
+
+// ClearBrowser clears the value of the "browser" field.
+func (bsuo *BannerStatsUpdateOne) ClearBrowser() *BannerStatsUpdateOne {
+	bsuo.mutation.ClearBrowser()
+	return bsuo
+}
+
+// SetOs sets the "os" field.
+func (bsuo *BannerStatsUpdateOne) SetOs(s string) *BannerStatsUpdateOne {
+	bsuo.mutation.SetOs(s)
+	return bsuo
+}
+
+// SetNillableOs sets the "os" field if the given value is not nil.
+func (bsuo *BannerStatsUpdateOne) SetNillableOs(s *string) *BannerStatsUpdateOne {
+	if s != nil {
+		bsuo.SetOs(*s)
+	}
+	return bsuo
+}
+
+// ClearOs clears the value of the "os" field.
+func (bsuo *BannerStatsUpdateOne) ClearOs() *BannerStatsUpdateOne {
+	bsuo.mutation.ClearOs()
+	return bsuo
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (bsuo *BannerStatsUpdateOne) SetCreatedAt(t time.Time) *BannerStatsUpdateOne {
 	bsuo.mutation.SetCreatedAt(t)
@@ -519,6 +760,25 @@ func (bsuo *BannerStatsUpdateOne) SetBanner(b *Banner) *BannerStatsUpdateOne {
 	return bsuo.SetBannerID(b.ID)
 }
 
+// SetPublisherID sets the "publisher" edge to the User entity by ID.
+func (bsuo *BannerStatsUpdateOne) SetPublisherID(id int64) *BannerStatsUpdateOne {
+	bsuo.mutation.SetPublisherID(id)
+	return bsuo
+}
+
+// SetNillablePublisherID sets the "publisher" edge to the User entity by ID if the given value is not nil.
+func (bsuo *BannerStatsUpdateOne) SetNillablePublisherID(id *int64) *BannerStatsUpdateOne {
+	if id != nil {
+		bsuo = bsuo.SetPublisherID(*id)
+	}
+	return bsuo
+}
+
+// SetPublisher sets the "publisher" edge to the User entity.
+func (bsuo *BannerStatsUpdateOne) SetPublisher(u *User) *BannerStatsUpdateOne {
+	return bsuo.SetPublisherID(u.ID)
+}
+
 // Mutation returns the BannerStatsMutation object of the builder.
 func (bsuo *BannerStatsUpdateOne) Mutation() *BannerStatsMutation {
 	return bsuo.mutation
@@ -527,6 +787,12 @@ func (bsuo *BannerStatsUpdateOne) Mutation() *BannerStatsMutation {
 // ClearBanner clears the "banner" edge to the Banner entity.
 func (bsuo *BannerStatsUpdateOne) ClearBanner() *BannerStatsUpdateOne {
 	bsuo.mutation.ClearBanner()
+	return bsuo
+}
+
+// ClearPublisher clears the "publisher" edge to the User entity.
+func (bsuo *BannerStatsUpdateOne) ClearPublisher() *BannerStatsUpdateOne {
+	bsuo.mutation.ClearPublisher()
 	return bsuo
 }
 
@@ -626,6 +892,12 @@ func (bsuo *BannerStatsUpdateOne) sqlSave(ctx context.Context) (_node *BannerSta
 	if value, ok := bsuo.mutation.AddedLeads(); ok {
 		_spec.AddField(bannerstats.FieldLeads, field.TypeInt64, value)
 	}
+	if value, ok := bsuo.mutation.Earnings(); ok {
+		_spec.SetField(bannerstats.FieldEarnings, field.TypeFloat64, value)
+	}
+	if value, ok := bsuo.mutation.AddedEarnings(); ok {
+		_spec.AddField(bannerstats.FieldEarnings, field.TypeFloat64, value)
+	}
 	if value, ok := bsuo.mutation.Ctr(); ok {
 		_spec.SetField(bannerstats.FieldCtr, field.TypeFloat64, value)
 	}
@@ -643,6 +915,24 @@ func (bsuo *BannerStatsUpdateOne) sqlSave(ctx context.Context) (_node *BannerSta
 	}
 	if bsuo.mutation.ConversionRateCleared() {
 		_spec.ClearField(bannerstats.FieldConversionRate, field.TypeFloat64)
+	}
+	if value, ok := bsuo.mutation.DeviceType(); ok {
+		_spec.SetField(bannerstats.FieldDeviceType, field.TypeString, value)
+	}
+	if bsuo.mutation.DeviceTypeCleared() {
+		_spec.ClearField(bannerstats.FieldDeviceType, field.TypeString)
+	}
+	if value, ok := bsuo.mutation.Browser(); ok {
+		_spec.SetField(bannerstats.FieldBrowser, field.TypeString, value)
+	}
+	if bsuo.mutation.BrowserCleared() {
+		_spec.ClearField(bannerstats.FieldBrowser, field.TypeString)
+	}
+	if value, ok := bsuo.mutation.Os(); ok {
+		_spec.SetField(bannerstats.FieldOs, field.TypeString, value)
+	}
+	if bsuo.mutation.OsCleared() {
+		_spec.ClearField(bannerstats.FieldOs, field.TypeString)
 	}
 	if value, ok := bsuo.mutation.CreatedAt(); ok {
 		_spec.SetField(bannerstats.FieldCreatedAt, field.TypeTime, value)
@@ -672,6 +962,35 @@ func (bsuo *BannerStatsUpdateOne) sqlSave(ctx context.Context) (_node *BannerSta
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if bsuo.mutation.PublisherCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   bannerstats.PublisherTable,
+			Columns: []string{bannerstats.PublisherColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bsuo.mutation.PublisherIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   bannerstats.PublisherTable,
+			Columns: []string{bannerstats.PublisherColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

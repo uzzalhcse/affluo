@@ -40,18 +40,23 @@ func (a *Application) SetupRoutes() {
 		bannerGroup.Post("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.CreateBanner)
 		bannerGroup.Get("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetAllBanners)
 		bannerGroup.Get("/:id", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetBanner)
-		bannerGroup.Post("/:id/creatives", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.CreateBannerCreative)
+
+		// New routes for banner-creative relationship management
+		bannerGroup.Post("/:id/creatives", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.AssignCreative)
+		bannerGroup.Put("/:id/creatives/order", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.UpdateCreativeOrder)
+		bannerGroup.Delete("/:banner_id/creatives/:creative_id", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.RemoveCreative)
+		bannerGroup.Put("/:banner_id/creatives/:creative_id/primary", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.SetPrimaryCreative)
 		bannerGroup.Get("/:id/creatives", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetBannerCreatives)
 	}
+
 	// Creative routes
 	creativeGroup := a.App.Group("/api/creatives")
 	{
-		creativeGroup.Get("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetAllBannerCreatives)
+		creativeGroup.Get("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetAllCreatives)
 		creativeGroup.Post("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.CreateBannerCreative)
-		creativeGroup.Get("/:id/creatives", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetBannerCreatives)
 	}
 
-	// Publisher routes
+	// Publisher routes remain the same
 	publisherGroup := a.App.Group("/api/publisher")
 	{
 		publisherGroup.Get("/banners", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetPublisherBanners)

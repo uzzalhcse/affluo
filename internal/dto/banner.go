@@ -5,6 +5,19 @@ import (
 	"time"
 )
 
+type AssignCreativeRequest struct {
+	BannerID     int64 `json:"banner_id" validate:"required"`
+	CreativeID   int64 `json:"creative_id" validate:"required"`
+	DisplayOrder int   `json:"display_order"`
+	IsPrimary    bool  `json:"is_primary"`
+}
+
+type CreativeOrder struct {
+	CreativeID int64 `json:"creative_id" validate:"required"`
+	Order      int   `json:"order" validate:"required"`
+}
+
+// Modify existing CreateBannerRequest to include creative IDs
 type CreateBannerRequest struct {
 	Name             string   `json:"name" validate:"required"`
 	Description      string   `json:"description,omitempty"`
@@ -13,6 +26,19 @@ type CreateBannerRequest struct {
 	Size             string   `json:"size" validate:"required"`
 	Status           string   `json:"status" validate:"oneof=draft active inactive"`
 	AllowedCountries []string `json:"allowed_countries,omitempty"`
+	CreativeIDs      []int64  `json:"creative_ids,omitempty"` // Add this field
+}
+
+// Modify BannerCreativeResponse to include relationship metadata
+type BannerCreativeResponse struct {
+	ID           int64     `json:"id"`
+	Name         string    `json:"name"`
+	ImageURL     string    `json:"image_url"`
+	Size         string    `json:"size"`
+	Enabled      bool      `json:"enabled"`
+	DisplayOrder int       `json:"display_order,omitempty"`
+	IsPrimary    bool      `json:"is_primary,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type BannerResponse struct {
@@ -44,7 +70,7 @@ func NewBannersResponse(banners []*ent.Banner) *BannersResponse {
 			AllowedCountries: banner.AllowedCountries,
 			Status:           banner.Status.String(),
 			CreatedAt:        banner.CreatedAt,
-			Creatives:        banner.Edges.Creatives,
+			Creatives:        banner.Edges.BannerCreatives,
 		})
 	}
 	return res
@@ -55,32 +81,4 @@ type CreateBannerCreativeRequest struct {
 	ImageURL string `json:"image_url,omitempty"`
 	Enabled  bool   `json:"enabled,omitempty"`
 	Size     string `json:"size,omitempty"`
-}
-
-type BannerCreativeResponse struct {
-	ID        int64     `json:"id"`
-	Name      string    `json:"name"`
-	ImageURL  string    `json:"image_url"`
-	Size      string    `json:"size"`
-	Enabled   bool      `json:"enabled"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
-type BannerCreativesResponse struct {
-	BannerCreatives []*BannerCreativeResponse `json:"items"`
-}
-
-func NewBannerCreativesResponse(bannerCreatives []*ent.BannerCreative) *BannerCreativesResponse {
-	res := &BannerCreativesResponse{}
-	for _, bannerCreative := range bannerCreatives {
-		res.BannerCreatives = append(res.BannerCreatives, &BannerCreativeResponse{
-			ID:        bannerCreative.ID,
-			Name:      bannerCreative.Name,
-			ImageURL:  bannerCreative.ImageURL,
-			Enabled:   bannerCreative.Enabled,
-			Size:      bannerCreative.Size,
-			CreatedAt: bannerCreative.CreatedAt,
-		})
-	}
-	return res
 }

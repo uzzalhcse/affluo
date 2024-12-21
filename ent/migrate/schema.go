@@ -37,14 +37,13 @@ var (
 	}
 	// BannerCreativesColumns holds the columns for the "banner_creatives" table.
 	BannerCreativesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt64, Increment: true},
-		{Name: "name", Type: field.TypeString, Nullable: true},
-		{Name: "image_url", Type: field.TypeString, Nullable: true},
-		{Name: "size", Type: field.TypeString, Nullable: true},
-		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "banner_creatives", Type: field.TypeInt64, Nullable: true},
+		{Name: "is_primary", Type: field.TypeBool, Default: false},
+		{Name: "display_order", Type: field.TypeInt, Nullable: true},
+		{Name: "banner_id", Type: field.TypeInt64},
+		{Name: "creative_id", Type: field.TypeInt64},
 	}
 	// BannerCreativesTable holds the schema information for the "banner_creatives" table.
 	BannerCreativesTable = &schema.Table{
@@ -53,10 +52,23 @@ var (
 		PrimaryKey: []*schema.Column{BannerCreativesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "banner_creatives_banners_creatives",
-				Columns:    []*schema.Column{BannerCreativesColumns[7]},
+				Symbol:     "banner_creatives_banners_banner",
+				Columns:    []*schema.Column{BannerCreativesColumns[5]},
 				RefColumns: []*schema.Column{BannersColumns[0]},
-				OnDelete:   schema.SetNull,
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "banner_creatives_creatives_creative",
+				Columns:    []*schema.Column{BannerCreativesColumns[6]},
+				RefColumns: []*schema.Column{CreativesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "bannercreative_banner_id_creative_id",
+				Unique:  true,
+				Columns: []*schema.Column{BannerCreativesColumns[5], BannerCreativesColumns[6]},
 			},
 		},
 	}
@@ -67,11 +79,16 @@ var (
 		{Name: "impressions", Type: field.TypeInt64, Default: 0},
 		{Name: "clicks", Type: field.TypeInt64, Default: 0},
 		{Name: "leads", Type: field.TypeInt64, Default: 0},
+		{Name: "earnings", Type: field.TypeFloat64, Default: 0},
 		{Name: "ctr", Type: field.TypeFloat64, Nullable: true},
 		{Name: "conversion_rate", Type: field.TypeFloat64, Nullable: true},
+		{Name: "device_type", Type: field.TypeString, Nullable: true},
+		{Name: "browser", Type: field.TypeString, Nullable: true},
+		{Name: "os", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "banner_stats", Type: field.TypeInt64, Nullable: true},
+		{Name: "user_stats", Type: field.TypeInt64, Nullable: true},
 	}
 	// BannerStatsTable holds the schema information for the "banner_stats" table.
 	BannerStatsTable = &schema.Table{
@@ -81,21 +98,32 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "banner_stats_banners_stats",
-				Columns:    []*schema.Column{BannerStatsColumns[9]},
+				Columns:    []*schema.Column{BannerStatsColumns[13]},
 				RefColumns: []*schema.Column{BannersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "banner_stats_users_stats",
+				Columns:    []*schema.Column{BannerStatsColumns[14]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "bannerstats_date",
-				Unique:  false,
-				Columns: []*schema.Column{BannerStatsColumns[1]},
+				Name:    "bannerstats_date_banner_stats_user_stats",
+				Unique:  true,
+				Columns: []*schema.Column{BannerStatsColumns[1], BannerStatsColumns[13], BannerStatsColumns[14]},
 			},
 			{
-				Name:    "bannerstats_date_banner_stats",
-				Unique:  true,
-				Columns: []*schema.Column{BannerStatsColumns[1], BannerStatsColumns[9]},
+				Name:    "bannerstats_banner_stats",
+				Unique:  false,
+				Columns: []*schema.Column{BannerStatsColumns[13]},
+			},
+			{
+				Name:    "bannerstats_user_stats",
+				Unique:  false,
+				Columns: []*schema.Column{BannerStatsColumns[14]},
 			},
 		},
 	}
@@ -182,6 +210,22 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
+	}
+	// CreativesColumns holds the columns for the "creatives" table.
+	CreativesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "name", Type: field.TypeString, Nullable: true},
+		{Name: "image_url", Type: field.TypeString, Nullable: true},
+		{Name: "size", Type: field.TypeString, Nullable: true},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// CreativesTable holds the schema information for the "creatives" table.
+	CreativesTable = &schema.Table{
+		Name:       "creatives",
+		Columns:    CreativesColumns,
+		PrimaryKey: []*schema.Column{CreativesColumns[0]},
 	}
 	// LeadsColumns holds the columns for the "leads" table.
 	LeadsColumns = []*schema.Column{
@@ -398,6 +442,7 @@ var (
 		BannerStatsTable,
 		CampaignsTable,
 		CampaignLinksTable,
+		CreativesTable,
 		LeadsTable,
 		PayoutsTable,
 		PostsTable,
@@ -411,7 +456,9 @@ var (
 
 func init() {
 	BannerCreativesTable.ForeignKeys[0].RefTable = BannersTable
+	BannerCreativesTable.ForeignKeys[1].RefTable = CreativesTable
 	BannerStatsTable.ForeignKeys[0].RefTable = BannersTable
+	BannerStatsTable.ForeignKeys[1].RefTable = UsersTable
 	CampaignsTable.ForeignKeys[0].RefTable = UsersTable
 	CampaignLinksTable.ForeignKeys[0].RefTable = CampaignsTable
 	LeadsTable.ForeignKeys[0].RefTable = BannersTable

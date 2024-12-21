@@ -57,6 +57,8 @@ const (
 	EdgeStats = "stats"
 	// EdgeLeads holds the string denoting the leads edge name in mutations.
 	EdgeLeads = "leads"
+	// EdgeBannerCreatives holds the string denoting the banner_creatives edge name in mutations.
+	EdgeBannerCreatives = "banner_creatives"
 	// Table holds the table name of the banner in the database.
 	Table = "banners"
 	// CampaignsTable is the table that holds the campaigns relation/edge. The primary key declared below.
@@ -64,13 +66,11 @@ const (
 	// CampaignsInverseTable is the table name for the Campaign entity.
 	// It exists in this package in order to avoid circular dependency with the "campaign" package.
 	CampaignsInverseTable = "campaigns"
-	// CreativesTable is the table that holds the creatives relation/edge.
+	// CreativesTable is the table that holds the creatives relation/edge. The primary key declared below.
 	CreativesTable = "banner_creatives"
-	// CreativesInverseTable is the table name for the BannerCreative entity.
-	// It exists in this package in order to avoid circular dependency with the "bannercreative" package.
-	CreativesInverseTable = "banner_creatives"
-	// CreativesColumn is the table column denoting the creatives relation/edge.
-	CreativesColumn = "banner_creatives"
+	// CreativesInverseTable is the table name for the Creative entity.
+	// It exists in this package in order to avoid circular dependency with the "creative" package.
+	CreativesInverseTable = "creatives"
 	// StatsTable is the table that holds the stats relation/edge.
 	StatsTable = "banner_stats"
 	// StatsInverseTable is the table name for the BannerStats entity.
@@ -85,6 +85,13 @@ const (
 	LeadsInverseTable = "leads"
 	// LeadsColumn is the table column denoting the leads relation/edge.
 	LeadsColumn = "banner_leads"
+	// BannerCreativesTable is the table that holds the banner_creatives relation/edge.
+	BannerCreativesTable = "banner_creatives"
+	// BannerCreativesInverseTable is the table name for the BannerCreative entity.
+	// It exists in this package in order to avoid circular dependency with the "bannercreative" package.
+	BannerCreativesInverseTable = "banner_creatives"
+	// BannerCreativesColumn is the table column denoting the banner_creatives relation/edge.
+	BannerCreativesColumn = "banner_id"
 )
 
 // Columns holds all SQL columns for banner fields.
@@ -113,6 +120,9 @@ var (
 	// CampaignsPrimaryKey and CampaignsColumn2 are the table columns denoting the
 	// primary key for the campaigns relation (M2M).
 	CampaignsPrimaryKey = []string{"campaign_id", "banner_id"}
+	// CreativesPrimaryKey and CreativesColumn2 are the table columns denoting the
+	// primary key for the creatives relation (M2M).
+	CreativesPrimaryKey = []string{"banner_id", "creative_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -321,6 +331,20 @@ func ByLeads(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newLeadsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByBannerCreativesCount orders the results by banner_creatives count.
+func ByBannerCreativesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBannerCreativesStep(), opts...)
+	}
+}
+
+// ByBannerCreatives orders the results by banner_creatives terms.
+func ByBannerCreatives(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBannerCreativesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newCampaignsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -332,7 +356,7 @@ func newCreativesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CreativesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, CreativesTable, CreativesColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, CreativesTable, CreativesPrimaryKey...),
 	)
 }
 func newStatsStep() *sqlgraph.Step {
@@ -347,5 +371,12 @@ func newLeadsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LeadsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, LeadsTable, LeadsColumn),
+	)
+}
+func newBannerCreativesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BannerCreativesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, BannerCreativesTable, BannerCreativesColumn),
 	)
 }

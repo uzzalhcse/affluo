@@ -6,6 +6,7 @@ import (
 	"affluo/ent/banner"
 	"affluo/ent/bannerstats"
 	"affluo/ent/predicate"
+	"affluo/ent/user"
 	"context"
 	"fmt"
 	"math"
@@ -19,12 +20,13 @@ import (
 // BannerStatsQuery is the builder for querying BannerStats entities.
 type BannerStatsQuery struct {
 	config
-	ctx        *QueryContext
-	order      []bannerstats.OrderOption
-	inters     []Interceptor
-	predicates []predicate.BannerStats
-	withBanner *BannerQuery
-	withFKs    bool
+	ctx           *QueryContext
+	order         []bannerstats.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.BannerStats
+	withBanner    *BannerQuery
+	withPublisher *UserQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +78,28 @@ func (bsq *BannerStatsQuery) QueryBanner() *BannerQuery {
 			sqlgraph.From(bannerstats.Table, bannerstats.FieldID, selector),
 			sqlgraph.To(banner.Table, banner.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, bannerstats.BannerTable, bannerstats.BannerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(bsq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPublisher chains the current query on the "publisher" edge.
+func (bsq *BannerStatsQuery) QueryPublisher() *UserQuery {
+	query := (&UserClient{config: bsq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := bsq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := bsq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(bannerstats.Table, bannerstats.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, bannerstats.PublisherTable, bannerstats.PublisherColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(bsq.driver.Dialect(), step)
 		return fromU, nil
@@ -270,12 +294,13 @@ func (bsq *BannerStatsQuery) Clone() *BannerStatsQuery {
 		return nil
 	}
 	return &BannerStatsQuery{
-		config:     bsq.config,
-		ctx:        bsq.ctx.Clone(),
-		order:      append([]bannerstats.OrderOption{}, bsq.order...),
-		inters:     append([]Interceptor{}, bsq.inters...),
-		predicates: append([]predicate.BannerStats{}, bsq.predicates...),
-		withBanner: bsq.withBanner.Clone(),
+		config:        bsq.config,
+		ctx:           bsq.ctx.Clone(),
+		order:         append([]bannerstats.OrderOption{}, bsq.order...),
+		inters:        append([]Interceptor{}, bsq.inters...),
+		predicates:    append([]predicate.BannerStats{}, bsq.predicates...),
+		withBanner:    bsq.withBanner.Clone(),
+		withPublisher: bsq.withPublisher.Clone(),
 		// clone intermediate query.
 		sql:  bsq.sql.Clone(),
 		path: bsq.path,
@@ -290,6 +315,17 @@ func (bsq *BannerStatsQuery) WithBanner(opts ...func(*BannerQuery)) *BannerStats
 		opt(query)
 	}
 	bsq.withBanner = query
+	return bsq
+}
+
+// WithPublisher tells the query-builder to eager-load the nodes that are connected to
+// the "publisher" edge. The optional arguments are used to configure the query builder of the edge.
+func (bsq *BannerStatsQuery) WithPublisher(opts ...func(*UserQuery)) *BannerStatsQuery {
+	query := (&UserClient{config: bsq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	bsq.withPublisher = query
 	return bsq
 }
 
@@ -372,11 +408,12 @@ func (bsq *BannerStatsQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		nodes       = []*BannerStats{}
 		withFKs     = bsq.withFKs
 		_spec       = bsq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			bsq.withBanner != nil,
+			bsq.withPublisher != nil,
 		}
 	)
-	if bsq.withBanner != nil {
+	if bsq.withBanner != nil || bsq.withPublisher != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -403,6 +440,12 @@ func (bsq *BannerStatsQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if query := bsq.withBanner; query != nil {
 		if err := bsq.loadBanner(ctx, query, nodes, nil,
 			func(n *BannerStats, e *Banner) { n.Edges.Banner = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := bsq.withPublisher; query != nil {
+		if err := bsq.loadPublisher(ctx, query, nodes, nil,
+			func(n *BannerStats, e *User) { n.Edges.Publisher = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -434,6 +477,38 @@ func (bsq *BannerStatsQuery) loadBanner(ctx context.Context, query *BannerQuery,
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "banner_stats" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (bsq *BannerStatsQuery) loadPublisher(ctx context.Context, query *UserQuery, nodes []*BannerStats, init func(*BannerStats), assign func(*BannerStats, *User)) error {
+	ids := make([]int64, 0, len(nodes))
+	nodeids := make(map[int64][]*BannerStats)
+	for i := range nodes {
+		if nodes[i].user_stats == nil {
+			continue
+		}
+		fk := *nodes[i].user_stats
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "user_stats" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

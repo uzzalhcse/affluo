@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/payout"
 	"affluo/ent/post"
@@ -250,6 +251,21 @@ func (uc *UserCreate) AddPosts(p ...*Post) *UserCreate {
 	return uc.AddPostIDs(ids...)
 }
 
+// AddStatIDs adds the "stats" edge to the BannerStats entity by IDs.
+func (uc *UserCreate) AddStatIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddStatIDs(ids...)
+	return uc
+}
+
+// AddStats adds the "stats" edges to the BannerStats entity.
+func (uc *UserCreate) AddStats(b ...*BannerStats) *UserCreate {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return uc.AddStatIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uc *UserCreate) Mutation() *UserMutation {
 	return uc.mutation
@@ -494,6 +510,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.StatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatsTable,
+			Columns: []string{user.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/payout"
 	"affluo/ent/post"
@@ -33,6 +34,7 @@ type UserQuery struct {
 	withTracks    *TrackQuery
 	withPayouts   *PayoutQuery
 	withPosts     *PostQuery
+	withStats     *BannerStatsQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -172,6 +174,28 @@ func (uq *UserQuery) QueryPosts() *PostQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(post.Table, post.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.PostsTable, user.PostsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryStats chains the current query on the "stats" edge.
+func (uq *UserQuery) QueryStats() *BannerStatsQuery {
+	query := (&BannerStatsClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(bannerstats.Table, bannerstats.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.StatsTable, user.StatsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -376,6 +400,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		withTracks:    uq.withTracks.Clone(),
 		withPayouts:   uq.withPayouts.Clone(),
 		withPosts:     uq.withPosts.Clone(),
+		withStats:     uq.withStats.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -434,6 +459,17 @@ func (uq *UserQuery) WithPosts(opts ...func(*PostQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withPosts = query
+	return uq
+}
+
+// WithStats tells the query-builder to eager-load the nodes that are connected to
+// the "stats" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithStats(opts ...func(*BannerStatsQuery)) *UserQuery {
+	query := (&BannerStatsClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withStats = query
 	return uq
 }
 
@@ -515,12 +551,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			uq.withCampaigns != nil,
 			uq.withReferrals != nil,
 			uq.withTracks != nil,
 			uq.withPayouts != nil,
 			uq.withPosts != nil,
+			uq.withStats != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -573,6 +610,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadPosts(ctx, query, nodes,
 			func(n *User) { n.Edges.Posts = []*Post{} },
 			func(n *User, e *Post) { n.Edges.Posts = append(n.Edges.Posts, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withStats; query != nil {
+		if err := uq.loadStats(ctx, query, nodes,
+			func(n *User) { n.Edges.Stats = []*BannerStats{} },
+			func(n *User, e *BannerStats) { n.Edges.Stats = append(n.Edges.Stats, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -729,6 +773,37 @@ func (uq *UserQuery) loadPosts(ctx context.Context, query *PostQuery, nodes []*U
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_posts" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadStats(ctx context.Context, query *BannerStatsQuery, nodes []*User, init func(*User), assign func(*User, *BannerStats)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.BannerStats(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.StatsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_stats
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_stats" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_stats" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

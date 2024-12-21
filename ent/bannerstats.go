@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannerstats"
+	"affluo/ent/user"
 	"fmt"
 	"strings"
 	"time"
@@ -26,10 +27,18 @@ type BannerStats struct {
 	Clicks int64 `json:"clicks,omitempty"`
 	// Leads holds the value of the "leads" field.
 	Leads int64 `json:"leads,omitempty"`
+	// Earnings holds the value of the "earnings" field.
+	Earnings float64 `json:"earnings,omitempty"`
 	// Ctr holds the value of the "ctr" field.
 	Ctr float64 `json:"ctr,omitempty"`
 	// ConversionRate holds the value of the "conversion_rate" field.
 	ConversionRate float64 `json:"conversion_rate,omitempty"`
+	// DeviceType holds the value of the "device_type" field.
+	DeviceType string `json:"device_type,omitempty"`
+	// Browser holds the value of the "browser" field.
+	Browser string `json:"browser,omitempty"`
+	// Os holds the value of the "os" field.
+	Os string `json:"os,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -38,6 +47,7 @@ type BannerStats struct {
 	// The values are being populated by the BannerStatsQuery when eager-loading is set.
 	Edges        BannerStatsEdges `json:"edges"`
 	banner_stats *int64
+	user_stats   *int64
 	selectValues sql.SelectValues
 }
 
@@ -45,9 +55,11 @@ type BannerStats struct {
 type BannerStatsEdges struct {
 	// Banner holds the value of the banner edge.
 	Banner *Banner `json:"banner,omitempty"`
+	// Publisher holds the value of the publisher edge.
+	Publisher *User `json:"publisher,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // BannerOrErr returns the Banner value or an error if the edge
@@ -61,18 +73,33 @@ func (e BannerStatsEdges) BannerOrErr() (*Banner, error) {
 	return nil, &NotLoadedError{edge: "banner"}
 }
 
+// PublisherOrErr returns the Publisher value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e BannerStatsEdges) PublisherOrErr() (*User, error) {
+	if e.Publisher != nil {
+		return e.Publisher, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "publisher"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*BannerStats) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case bannerstats.FieldCtr, bannerstats.FieldConversionRate:
+		case bannerstats.FieldEarnings, bannerstats.FieldCtr, bannerstats.FieldConversionRate:
 			values[i] = new(sql.NullFloat64)
 		case bannerstats.FieldID, bannerstats.FieldImpressions, bannerstats.FieldClicks, bannerstats.FieldLeads:
 			values[i] = new(sql.NullInt64)
+		case bannerstats.FieldDeviceType, bannerstats.FieldBrowser, bannerstats.FieldOs:
+			values[i] = new(sql.NullString)
 		case bannerstats.FieldDate, bannerstats.FieldCreatedAt, bannerstats.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case bannerstats.ForeignKeys[0]: // banner_stats
+			values[i] = new(sql.NullInt64)
+		case bannerstats.ForeignKeys[1]: // user_stats
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -119,6 +146,12 @@ func (bs *BannerStats) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				bs.Leads = value.Int64
 			}
+		case bannerstats.FieldEarnings:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field earnings", values[i])
+			} else if value.Valid {
+				bs.Earnings = value.Float64
+			}
 		case bannerstats.FieldCtr:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
 				return fmt.Errorf("unexpected type %T for field ctr", values[i])
@@ -130,6 +163,24 @@ func (bs *BannerStats) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field conversion_rate", values[i])
 			} else if value.Valid {
 				bs.ConversionRate = value.Float64
+			}
+		case bannerstats.FieldDeviceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field device_type", values[i])
+			} else if value.Valid {
+				bs.DeviceType = value.String
+			}
+		case bannerstats.FieldBrowser:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field browser", values[i])
+			} else if value.Valid {
+				bs.Browser = value.String
+			}
+		case bannerstats.FieldOs:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field os", values[i])
+			} else if value.Valid {
+				bs.Os = value.String
 			}
 		case bannerstats.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -150,6 +201,13 @@ func (bs *BannerStats) assignValues(columns []string, values []any) error {
 				bs.banner_stats = new(int64)
 				*bs.banner_stats = int64(value.Int64)
 			}
+		case bannerstats.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field user_stats", value)
+			} else if value.Valid {
+				bs.user_stats = new(int64)
+				*bs.user_stats = int64(value.Int64)
+			}
 		default:
 			bs.selectValues.Set(columns[i], values[i])
 		}
@@ -166,6 +224,11 @@ func (bs *BannerStats) Value(name string) (ent.Value, error) {
 // QueryBanner queries the "banner" edge of the BannerStats entity.
 func (bs *BannerStats) QueryBanner() *BannerQuery {
 	return NewBannerStatsClient(bs.config).QueryBanner(bs)
+}
+
+// QueryPublisher queries the "publisher" edge of the BannerStats entity.
+func (bs *BannerStats) QueryPublisher() *UserQuery {
+	return NewBannerStatsClient(bs.config).QueryPublisher(bs)
 }
 
 // Update returns a builder for updating this BannerStats.
@@ -203,11 +266,23 @@ func (bs *BannerStats) String() string {
 	builder.WriteString("leads=")
 	builder.WriteString(fmt.Sprintf("%v", bs.Leads))
 	builder.WriteString(", ")
+	builder.WriteString("earnings=")
+	builder.WriteString(fmt.Sprintf("%v", bs.Earnings))
+	builder.WriteString(", ")
 	builder.WriteString("ctr=")
 	builder.WriteString(fmt.Sprintf("%v", bs.Ctr))
 	builder.WriteString(", ")
 	builder.WriteString("conversion_rate=")
 	builder.WriteString(fmt.Sprintf("%v", bs.ConversionRate))
+	builder.WriteString(", ")
+	builder.WriteString("device_type=")
+	builder.WriteString(bs.DeviceType)
+	builder.WriteString(", ")
+	builder.WriteString("browser=")
+	builder.WriteString(bs.Browser)
+	builder.WriteString(", ")
+	builder.WriteString("os=")
+	builder.WriteString(bs.Os)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(bs.CreatedAt.Format(time.ANSIC))

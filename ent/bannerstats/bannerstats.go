@@ -22,16 +22,26 @@ const (
 	FieldClicks = "clicks"
 	// FieldLeads holds the string denoting the leads field in the database.
 	FieldLeads = "leads"
+	// FieldEarnings holds the string denoting the earnings field in the database.
+	FieldEarnings = "earnings"
 	// FieldCtr holds the string denoting the ctr field in the database.
 	FieldCtr = "ctr"
 	// FieldConversionRate holds the string denoting the conversion_rate field in the database.
 	FieldConversionRate = "conversion_rate"
+	// FieldDeviceType holds the string denoting the device_type field in the database.
+	FieldDeviceType = "device_type"
+	// FieldBrowser holds the string denoting the browser field in the database.
+	FieldBrowser = "browser"
+	// FieldOs holds the string denoting the os field in the database.
+	FieldOs = "os"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// EdgeBanner holds the string denoting the banner edge name in mutations.
 	EdgeBanner = "banner"
+	// EdgePublisher holds the string denoting the publisher edge name in mutations.
+	EdgePublisher = "publisher"
 	// Table holds the table name of the bannerstats in the database.
 	Table = "banner_stats"
 	// BannerTable is the table that holds the banner relation/edge.
@@ -41,6 +51,13 @@ const (
 	BannerInverseTable = "banners"
 	// BannerColumn is the table column denoting the banner relation/edge.
 	BannerColumn = "banner_stats"
+	// PublisherTable is the table that holds the publisher relation/edge.
+	PublisherTable = "banner_stats"
+	// PublisherInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	PublisherInverseTable = "users"
+	// PublisherColumn is the table column denoting the publisher relation/edge.
+	PublisherColumn = "user_stats"
 )
 
 // Columns holds all SQL columns for bannerstats fields.
@@ -50,8 +67,12 @@ var Columns = []string{
 	FieldImpressions,
 	FieldClicks,
 	FieldLeads,
+	FieldEarnings,
 	FieldCtr,
 	FieldConversionRate,
+	FieldDeviceType,
+	FieldBrowser,
+	FieldOs,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -60,6 +81,7 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"banner_stats",
+	"user_stats",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -86,6 +108,8 @@ var (
 	DefaultClicks int64
 	// DefaultLeads holds the default value on creation for the "leads" field.
 	DefaultLeads int64
+	// DefaultEarnings holds the default value on creation for the "earnings" field.
+	DefaultEarnings float64
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -122,6 +146,11 @@ func ByLeads(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLeads, opts...).ToFunc()
 }
 
+// ByEarnings orders the results by the earnings field.
+func ByEarnings(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEarnings, opts...).ToFunc()
+}
+
 // ByCtr orders the results by the ctr field.
 func ByCtr(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCtr, opts...).ToFunc()
@@ -130,6 +159,21 @@ func ByCtr(opts ...sql.OrderTermOption) OrderOption {
 // ByConversionRate orders the results by the conversion_rate field.
 func ByConversionRate(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldConversionRate, opts...).ToFunc()
+}
+
+// ByDeviceType orders the results by the device_type field.
+func ByDeviceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeviceType, opts...).ToFunc()
+}
+
+// ByBrowser orders the results by the browser field.
+func ByBrowser(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBrowser, opts...).ToFunc()
+}
+
+// ByOs orders the results by the os field.
+func ByOs(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOs, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -148,10 +192,24 @@ func ByBannerField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newBannerStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByPublisherField orders the results by publisher field.
+func ByPublisherField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPublisherStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newBannerStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(BannerInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, BannerTable, BannerColumn),
+	)
+}
+func newPublisherStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PublisherInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, PublisherTable, PublisherColumn),
 	)
 }

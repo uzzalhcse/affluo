@@ -8,6 +8,7 @@ import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/creative"
 	"affluo/ent/lead"
 	"affluo/ent/payout"
 	"affluo/ent/post"
@@ -40,6 +41,7 @@ const (
 	TypeBannerStats    = "BannerStats"
 	TypeCampaign       = "Campaign"
 	TypeCampaignLink   = "CampaignLink"
+	TypeCreative       = "Creative"
 	TypeLead           = "Lead"
 	TypePayout         = "Payout"
 	TypePost           = "Post"
@@ -91,6 +93,9 @@ type BannerMutation struct {
 	leads                   map[int64]struct{}
 	removedleads            map[int64]struct{}
 	clearedleads            bool
+	banner_creatives        map[int]struct{}
+	removedbanner_creatives map[int]struct{}
+	clearedbanner_creatives bool
 	done                    bool
 	oldValue                func(context.Context) (*Banner, error)
 	predicates              []predicate.Banner
@@ -1101,7 +1106,7 @@ func (m *BannerMutation) ResetCampaigns() {
 	m.removedcampaigns = nil
 }
 
-// AddCreativeIDs adds the "creatives" edge to the BannerCreative entity by ids.
+// AddCreativeIDs adds the "creatives" edge to the Creative entity by ids.
 func (m *BannerMutation) AddCreativeIDs(ids ...int64) {
 	if m.creatives == nil {
 		m.creatives = make(map[int64]struct{})
@@ -1111,17 +1116,17 @@ func (m *BannerMutation) AddCreativeIDs(ids ...int64) {
 	}
 }
 
-// ClearCreatives clears the "creatives" edge to the BannerCreative entity.
+// ClearCreatives clears the "creatives" edge to the Creative entity.
 func (m *BannerMutation) ClearCreatives() {
 	m.clearedcreatives = true
 }
 
-// CreativesCleared reports if the "creatives" edge to the BannerCreative entity was cleared.
+// CreativesCleared reports if the "creatives" edge to the Creative entity was cleared.
 func (m *BannerMutation) CreativesCleared() bool {
 	return m.clearedcreatives
 }
 
-// RemoveCreativeIDs removes the "creatives" edge to the BannerCreative entity by IDs.
+// RemoveCreativeIDs removes the "creatives" edge to the Creative entity by IDs.
 func (m *BannerMutation) RemoveCreativeIDs(ids ...int64) {
 	if m.removedcreatives == nil {
 		m.removedcreatives = make(map[int64]struct{})
@@ -1132,7 +1137,7 @@ func (m *BannerMutation) RemoveCreativeIDs(ids ...int64) {
 	}
 }
 
-// RemovedCreatives returns the removed IDs of the "creatives" edge to the BannerCreative entity.
+// RemovedCreatives returns the removed IDs of the "creatives" edge to the Creative entity.
 func (m *BannerMutation) RemovedCreativesIDs() (ids []int64) {
 	for id := range m.removedcreatives {
 		ids = append(ids, id)
@@ -1261,6 +1266,60 @@ func (m *BannerMutation) ResetLeads() {
 	m.leads = nil
 	m.clearedleads = false
 	m.removedleads = nil
+}
+
+// AddBannerCreativeIDs adds the "banner_creatives" edge to the BannerCreative entity by ids.
+func (m *BannerMutation) AddBannerCreativeIDs(ids ...int) {
+	if m.banner_creatives == nil {
+		m.banner_creatives = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.banner_creatives[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBannerCreatives clears the "banner_creatives" edge to the BannerCreative entity.
+func (m *BannerMutation) ClearBannerCreatives() {
+	m.clearedbanner_creatives = true
+}
+
+// BannerCreativesCleared reports if the "banner_creatives" edge to the BannerCreative entity was cleared.
+func (m *BannerMutation) BannerCreativesCleared() bool {
+	return m.clearedbanner_creatives
+}
+
+// RemoveBannerCreativeIDs removes the "banner_creatives" edge to the BannerCreative entity by IDs.
+func (m *BannerMutation) RemoveBannerCreativeIDs(ids ...int) {
+	if m.removedbanner_creatives == nil {
+		m.removedbanner_creatives = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.banner_creatives, ids[i])
+		m.removedbanner_creatives[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBannerCreatives returns the removed IDs of the "banner_creatives" edge to the BannerCreative entity.
+func (m *BannerMutation) RemovedBannerCreativesIDs() (ids []int) {
+	for id := range m.removedbanner_creatives {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BannerCreativesIDs returns the "banner_creatives" edge IDs in the mutation.
+func (m *BannerMutation) BannerCreativesIDs() (ids []int) {
+	for id := range m.banner_creatives {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBannerCreatives resets all changes to the "banner_creatives" edge.
+func (m *BannerMutation) ResetBannerCreatives() {
+	m.banner_creatives = nil
+	m.clearedbanner_creatives = false
+	m.removedbanner_creatives = nil
 }
 
 // Where appends a list predicates to the BannerMutation builder.
@@ -1758,7 +1817,7 @@ func (m *BannerMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *BannerMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.campaigns != nil {
 		edges = append(edges, banner.EdgeCampaigns)
 	}
@@ -1770,6 +1829,9 @@ func (m *BannerMutation) AddedEdges() []string {
 	}
 	if m.leads != nil {
 		edges = append(edges, banner.EdgeLeads)
+	}
+	if m.banner_creatives != nil {
+		edges = append(edges, banner.EdgeBannerCreatives)
 	}
 	return edges
 }
@@ -1802,13 +1864,19 @@ func (m *BannerMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case banner.EdgeBannerCreatives:
+		ids := make([]ent.Value, 0, len(m.banner_creatives))
+		for id := range m.banner_creatives {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BannerMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedcampaigns != nil {
 		edges = append(edges, banner.EdgeCampaigns)
 	}
@@ -1820,6 +1888,9 @@ func (m *BannerMutation) RemovedEdges() []string {
 	}
 	if m.removedleads != nil {
 		edges = append(edges, banner.EdgeLeads)
+	}
+	if m.removedbanner_creatives != nil {
+		edges = append(edges, banner.EdgeBannerCreatives)
 	}
 	return edges
 }
@@ -1852,13 +1923,19 @@ func (m *BannerMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case banner.EdgeBannerCreatives:
+		ids := make([]ent.Value, 0, len(m.removedbanner_creatives))
+		for id := range m.removedbanner_creatives {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *BannerMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedcampaigns {
 		edges = append(edges, banner.EdgeCampaigns)
 	}
@@ -1870,6 +1947,9 @@ func (m *BannerMutation) ClearedEdges() []string {
 	}
 	if m.clearedleads {
 		edges = append(edges, banner.EdgeLeads)
+	}
+	if m.clearedbanner_creatives {
+		edges = append(edges, banner.EdgeBannerCreatives)
 	}
 	return edges
 }
@@ -1886,6 +1966,8 @@ func (m *BannerMutation) EdgeCleared(name string) bool {
 		return m.clearedstats
 	case banner.EdgeLeads:
 		return m.clearedleads
+	case banner.EdgeBannerCreatives:
+		return m.clearedbanner_creatives
 	}
 	return false
 }
@@ -1914,6 +1996,9 @@ func (m *BannerMutation) ResetEdge(name string) error {
 	case banner.EdgeLeads:
 		m.ResetLeads()
 		return nil
+	case banner.EdgeBannerCreatives:
+		m.ResetBannerCreatives()
+		return nil
 	}
 	return fmt.Errorf("unknown Banner edge %s", name)
 }
@@ -1921,21 +2006,22 @@ func (m *BannerMutation) ResetEdge(name string) error {
 // BannerCreativeMutation represents an operation that mutates the BannerCreative nodes in the graph.
 type BannerCreativeMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int64
-	name          *string
-	image_url     *string
-	size          *string
-	enabled       *bool
-	created_at    *time.Time
-	updated_at    *time.Time
-	clearedFields map[string]struct{}
-	banner        *int64
-	clearedbanner bool
-	done          bool
-	oldValue      func(context.Context) (*BannerCreative, error)
-	predicates    []predicate.BannerCreative
+	op               Op
+	typ              string
+	id               *int
+	created_at       *time.Time
+	updated_at       *time.Time
+	is_primary       *bool
+	display_order    *int
+	adddisplay_order *int
+	clearedFields    map[string]struct{}
+	banner           *int64
+	clearedbanner    bool
+	creative         *int64
+	clearedcreative  bool
+	done             bool
+	oldValue         func(context.Context) (*BannerCreative, error)
+	predicates       []predicate.BannerCreative
 }
 
 var _ ent.Mutation = (*BannerCreativeMutation)(nil)
@@ -1958,7 +2044,7 @@ func newBannerCreativeMutation(c config, op Op, opts ...bannercreativeOption) *B
 }
 
 // withBannerCreativeID sets the ID field of the mutation.
-func withBannerCreativeID(id int64) bannercreativeOption {
+func withBannerCreativeID(id int) bannercreativeOption {
 	return func(m *BannerCreativeMutation) {
 		var (
 			err   error
@@ -2008,15 +2094,9 @@ func (m BannerCreativeMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
-// SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of BannerCreative entities.
-func (m *BannerCreativeMutation) SetID(id int64) {
-	m.id = &id
-}
-
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *BannerCreativeMutation) ID() (id int64, exists bool) {
+func (m *BannerCreativeMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -2027,12 +2107,12 @@ func (m *BannerCreativeMutation) ID() (id int64, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *BannerCreativeMutation) IDs(ctx context.Context) ([]int64, error) {
+func (m *BannerCreativeMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int64{id}, nil
+			return []int{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -2042,187 +2122,76 @@ func (m *BannerCreativeMutation) IDs(ctx context.Context) ([]int64, error) {
 	}
 }
 
-// SetName sets the "name" field.
-func (m *BannerCreativeMutation) SetName(s string) {
-	m.name = &s
+// SetBannerID sets the "banner_id" field.
+func (m *BannerCreativeMutation) SetBannerID(i int64) {
+	m.banner = &i
 }
 
-// Name returns the value of the "name" field in the mutation.
-func (m *BannerCreativeMutation) Name() (r string, exists bool) {
-	v := m.name
+// BannerID returns the value of the "banner_id" field in the mutation.
+func (m *BannerCreativeMutation) BannerID() (r int64, exists bool) {
+	v := m.banner
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldName returns the old "name" field's value of the BannerCreative entity.
+// OldBannerID returns the old "banner_id" field's value of the BannerCreative entity.
 // If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BannerCreativeMutation) OldName(ctx context.Context) (v string, err error) {
+func (m *BannerCreativeMutation) OldBannerID(ctx context.Context) (v int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldName is only allowed on UpdateOne operations")
+		return v, errors.New("OldBannerID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldName requires an ID field in the mutation")
+		return v, errors.New("OldBannerID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldName: %w", err)
+		return v, fmt.Errorf("querying old value for OldBannerID: %w", err)
 	}
-	return oldValue.Name, nil
+	return oldValue.BannerID, nil
 }
 
-// ClearName clears the value of the "name" field.
-func (m *BannerCreativeMutation) ClearName() {
-	m.name = nil
-	m.clearedFields[bannercreative.FieldName] = struct{}{}
+// ResetBannerID resets all changes to the "banner_id" field.
+func (m *BannerCreativeMutation) ResetBannerID() {
+	m.banner = nil
 }
 
-// NameCleared returns if the "name" field was cleared in this mutation.
-func (m *BannerCreativeMutation) NameCleared() bool {
-	_, ok := m.clearedFields[bannercreative.FieldName]
-	return ok
+// SetCreativeID sets the "creative_id" field.
+func (m *BannerCreativeMutation) SetCreativeID(i int64) {
+	m.creative = &i
 }
 
-// ResetName resets all changes to the "name" field.
-func (m *BannerCreativeMutation) ResetName() {
-	m.name = nil
-	delete(m.clearedFields, bannercreative.FieldName)
-}
-
-// SetImageURL sets the "image_url" field.
-func (m *BannerCreativeMutation) SetImageURL(s string) {
-	m.image_url = &s
-}
-
-// ImageURL returns the value of the "image_url" field in the mutation.
-func (m *BannerCreativeMutation) ImageURL() (r string, exists bool) {
-	v := m.image_url
+// CreativeID returns the value of the "creative_id" field in the mutation.
+func (m *BannerCreativeMutation) CreativeID() (r int64, exists bool) {
+	v := m.creative
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldImageURL returns the old "image_url" field's value of the BannerCreative entity.
+// OldCreativeID returns the old "creative_id" field's value of the BannerCreative entity.
 // If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BannerCreativeMutation) OldImageURL(ctx context.Context) (v string, err error) {
+func (m *BannerCreativeMutation) OldCreativeID(ctx context.Context) (v int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldImageURL is only allowed on UpdateOne operations")
+		return v, errors.New("OldCreativeID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldImageURL requires an ID field in the mutation")
+		return v, errors.New("OldCreativeID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldImageURL: %w", err)
+		return v, fmt.Errorf("querying old value for OldCreativeID: %w", err)
 	}
-	return oldValue.ImageURL, nil
+	return oldValue.CreativeID, nil
 }
 
-// ClearImageURL clears the value of the "image_url" field.
-func (m *BannerCreativeMutation) ClearImageURL() {
-	m.image_url = nil
-	m.clearedFields[bannercreative.FieldImageURL] = struct{}{}
-}
-
-// ImageURLCleared returns if the "image_url" field was cleared in this mutation.
-func (m *BannerCreativeMutation) ImageURLCleared() bool {
-	_, ok := m.clearedFields[bannercreative.FieldImageURL]
-	return ok
-}
-
-// ResetImageURL resets all changes to the "image_url" field.
-func (m *BannerCreativeMutation) ResetImageURL() {
-	m.image_url = nil
-	delete(m.clearedFields, bannercreative.FieldImageURL)
-}
-
-// SetSize sets the "size" field.
-func (m *BannerCreativeMutation) SetSize(s string) {
-	m.size = &s
-}
-
-// Size returns the value of the "size" field in the mutation.
-func (m *BannerCreativeMutation) Size() (r string, exists bool) {
-	v := m.size
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSize returns the old "size" field's value of the BannerCreative entity.
-// If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BannerCreativeMutation) OldSize(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSize is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSize requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSize: %w", err)
-	}
-	return oldValue.Size, nil
-}
-
-// ClearSize clears the value of the "size" field.
-func (m *BannerCreativeMutation) ClearSize() {
-	m.size = nil
-	m.clearedFields[bannercreative.FieldSize] = struct{}{}
-}
-
-// SizeCleared returns if the "size" field was cleared in this mutation.
-func (m *BannerCreativeMutation) SizeCleared() bool {
-	_, ok := m.clearedFields[bannercreative.FieldSize]
-	return ok
-}
-
-// ResetSize resets all changes to the "size" field.
-func (m *BannerCreativeMutation) ResetSize() {
-	m.size = nil
-	delete(m.clearedFields, bannercreative.FieldSize)
-}
-
-// SetEnabled sets the "enabled" field.
-func (m *BannerCreativeMutation) SetEnabled(b bool) {
-	m.enabled = &b
-}
-
-// Enabled returns the value of the "enabled" field in the mutation.
-func (m *BannerCreativeMutation) Enabled() (r bool, exists bool) {
-	v := m.enabled
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldEnabled returns the old "enabled" field's value of the BannerCreative entity.
-// If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BannerCreativeMutation) OldEnabled(ctx context.Context) (v bool, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldEnabled is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldEnabled requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldEnabled: %w", err)
-	}
-	return oldValue.Enabled, nil
-}
-
-// ResetEnabled resets all changes to the "enabled" field.
-func (m *BannerCreativeMutation) ResetEnabled() {
-	m.enabled = nil
+// ResetCreativeID resets all changes to the "creative_id" field.
+func (m *BannerCreativeMutation) ResetCreativeID() {
+	m.creative = nil
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -2297,27 +2266,121 @@ func (m *BannerCreativeMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetBannerID sets the "banner" edge to the Banner entity by id.
-func (m *BannerCreativeMutation) SetBannerID(id int64) {
-	m.banner = &id
+// SetIsPrimary sets the "is_primary" field.
+func (m *BannerCreativeMutation) SetIsPrimary(b bool) {
+	m.is_primary = &b
+}
+
+// IsPrimary returns the value of the "is_primary" field in the mutation.
+func (m *BannerCreativeMutation) IsPrimary() (r bool, exists bool) {
+	v := m.is_primary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsPrimary returns the old "is_primary" field's value of the BannerCreative entity.
+// If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerCreativeMutation) OldIsPrimary(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsPrimary is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsPrimary requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsPrimary: %w", err)
+	}
+	return oldValue.IsPrimary, nil
+}
+
+// ResetIsPrimary resets all changes to the "is_primary" field.
+func (m *BannerCreativeMutation) ResetIsPrimary() {
+	m.is_primary = nil
+}
+
+// SetDisplayOrder sets the "display_order" field.
+func (m *BannerCreativeMutation) SetDisplayOrder(i int) {
+	m.display_order = &i
+	m.adddisplay_order = nil
+}
+
+// DisplayOrder returns the value of the "display_order" field in the mutation.
+func (m *BannerCreativeMutation) DisplayOrder() (r int, exists bool) {
+	v := m.display_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDisplayOrder returns the old "display_order" field's value of the BannerCreative entity.
+// If the BannerCreative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerCreativeMutation) OldDisplayOrder(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDisplayOrder is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDisplayOrder requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDisplayOrder: %w", err)
+	}
+	return oldValue.DisplayOrder, nil
+}
+
+// AddDisplayOrder adds i to the "display_order" field.
+func (m *BannerCreativeMutation) AddDisplayOrder(i int) {
+	if m.adddisplay_order != nil {
+		*m.adddisplay_order += i
+	} else {
+		m.adddisplay_order = &i
+	}
+}
+
+// AddedDisplayOrder returns the value that was added to the "display_order" field in this mutation.
+func (m *BannerCreativeMutation) AddedDisplayOrder() (r int, exists bool) {
+	v := m.adddisplay_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearDisplayOrder clears the value of the "display_order" field.
+func (m *BannerCreativeMutation) ClearDisplayOrder() {
+	m.display_order = nil
+	m.adddisplay_order = nil
+	m.clearedFields[bannercreative.FieldDisplayOrder] = struct{}{}
+}
+
+// DisplayOrderCleared returns if the "display_order" field was cleared in this mutation.
+func (m *BannerCreativeMutation) DisplayOrderCleared() bool {
+	_, ok := m.clearedFields[bannercreative.FieldDisplayOrder]
+	return ok
+}
+
+// ResetDisplayOrder resets all changes to the "display_order" field.
+func (m *BannerCreativeMutation) ResetDisplayOrder() {
+	m.display_order = nil
+	m.adddisplay_order = nil
+	delete(m.clearedFields, bannercreative.FieldDisplayOrder)
 }
 
 // ClearBanner clears the "banner" edge to the Banner entity.
 func (m *BannerCreativeMutation) ClearBanner() {
 	m.clearedbanner = true
+	m.clearedFields[bannercreative.FieldBannerID] = struct{}{}
 }
 
 // BannerCleared reports if the "banner" edge to the Banner entity was cleared.
 func (m *BannerCreativeMutation) BannerCleared() bool {
 	return m.clearedbanner
-}
-
-// BannerID returns the "banner" edge ID in the mutation.
-func (m *BannerCreativeMutation) BannerID() (id int64, exists bool) {
-	if m.banner != nil {
-		return *m.banner, true
-	}
-	return
 }
 
 // BannerIDs returns the "banner" edge IDs in the mutation.
@@ -2334,6 +2397,33 @@ func (m *BannerCreativeMutation) BannerIDs() (ids []int64) {
 func (m *BannerCreativeMutation) ResetBanner() {
 	m.banner = nil
 	m.clearedbanner = false
+}
+
+// ClearCreative clears the "creative" edge to the Creative entity.
+func (m *BannerCreativeMutation) ClearCreative() {
+	m.clearedcreative = true
+	m.clearedFields[bannercreative.FieldCreativeID] = struct{}{}
+}
+
+// CreativeCleared reports if the "creative" edge to the Creative entity was cleared.
+func (m *BannerCreativeMutation) CreativeCleared() bool {
+	return m.clearedcreative
+}
+
+// CreativeIDs returns the "creative" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CreativeID instead. It exists only for internal usage by the builders.
+func (m *BannerCreativeMutation) CreativeIDs() (ids []int64) {
+	if id := m.creative; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCreative resets all changes to the "creative" edge.
+func (m *BannerCreativeMutation) ResetCreative() {
+	m.creative = nil
+	m.clearedcreative = false
 }
 
 // Where appends a list predicates to the BannerCreativeMutation builder.
@@ -2371,23 +2461,23 @@ func (m *BannerCreativeMutation) Type() string {
 // AddedFields().
 func (m *BannerCreativeMutation) Fields() []string {
 	fields := make([]string, 0, 6)
-	if m.name != nil {
-		fields = append(fields, bannercreative.FieldName)
+	if m.banner != nil {
+		fields = append(fields, bannercreative.FieldBannerID)
 	}
-	if m.image_url != nil {
-		fields = append(fields, bannercreative.FieldImageURL)
-	}
-	if m.size != nil {
-		fields = append(fields, bannercreative.FieldSize)
-	}
-	if m.enabled != nil {
-		fields = append(fields, bannercreative.FieldEnabled)
+	if m.creative != nil {
+		fields = append(fields, bannercreative.FieldCreativeID)
 	}
 	if m.created_at != nil {
 		fields = append(fields, bannercreative.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, bannercreative.FieldUpdatedAt)
+	}
+	if m.is_primary != nil {
+		fields = append(fields, bannercreative.FieldIsPrimary)
+	}
+	if m.display_order != nil {
+		fields = append(fields, bannercreative.FieldDisplayOrder)
 	}
 	return fields
 }
@@ -2397,18 +2487,18 @@ func (m *BannerCreativeMutation) Fields() []string {
 // schema.
 func (m *BannerCreativeMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case bannercreative.FieldName:
-		return m.Name()
-	case bannercreative.FieldImageURL:
-		return m.ImageURL()
-	case bannercreative.FieldSize:
-		return m.Size()
-	case bannercreative.FieldEnabled:
-		return m.Enabled()
+	case bannercreative.FieldBannerID:
+		return m.BannerID()
+	case bannercreative.FieldCreativeID:
+		return m.CreativeID()
 	case bannercreative.FieldCreatedAt:
 		return m.CreatedAt()
 	case bannercreative.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case bannercreative.FieldIsPrimary:
+		return m.IsPrimary()
+	case bannercreative.FieldDisplayOrder:
+		return m.DisplayOrder()
 	}
 	return nil, false
 }
@@ -2418,18 +2508,18 @@ func (m *BannerCreativeMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *BannerCreativeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case bannercreative.FieldName:
-		return m.OldName(ctx)
-	case bannercreative.FieldImageURL:
-		return m.OldImageURL(ctx)
-	case bannercreative.FieldSize:
-		return m.OldSize(ctx)
-	case bannercreative.FieldEnabled:
-		return m.OldEnabled(ctx)
+	case bannercreative.FieldBannerID:
+		return m.OldBannerID(ctx)
+	case bannercreative.FieldCreativeID:
+		return m.OldCreativeID(ctx)
 	case bannercreative.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case bannercreative.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case bannercreative.FieldIsPrimary:
+		return m.OldIsPrimary(ctx)
+	case bannercreative.FieldDisplayOrder:
+		return m.OldDisplayOrder(ctx)
 	}
 	return nil, fmt.Errorf("unknown BannerCreative field %s", name)
 }
@@ -2439,33 +2529,19 @@ func (m *BannerCreativeMutation) OldField(ctx context.Context, name string) (ent
 // type.
 func (m *BannerCreativeMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case bannercreative.FieldName:
-		v, ok := value.(string)
+	case bannercreative.FieldBannerID:
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetName(v)
+		m.SetBannerID(v)
 		return nil
-	case bannercreative.FieldImageURL:
-		v, ok := value.(string)
+	case bannercreative.FieldCreativeID:
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetImageURL(v)
-		return nil
-	case bannercreative.FieldSize:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSize(v)
-		return nil
-	case bannercreative.FieldEnabled:
-		v, ok := value.(bool)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetEnabled(v)
+		m.SetCreativeID(v)
 		return nil
 	case bannercreative.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -2481,6 +2557,20 @@ func (m *BannerCreativeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case bannercreative.FieldIsPrimary:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsPrimary(v)
+		return nil
+	case bannercreative.FieldDisplayOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDisplayOrder(v)
+		return nil
 	}
 	return fmt.Errorf("unknown BannerCreative field %s", name)
 }
@@ -2488,13 +2578,21 @@ func (m *BannerCreativeMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *BannerCreativeMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.adddisplay_order != nil {
+		fields = append(fields, bannercreative.FieldDisplayOrder)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *BannerCreativeMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case bannercreative.FieldDisplayOrder:
+		return m.AddedDisplayOrder()
+	}
 	return nil, false
 }
 
@@ -2503,6 +2601,13 @@ func (m *BannerCreativeMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *BannerCreativeMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case bannercreative.FieldDisplayOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDisplayOrder(v)
+		return nil
 	}
 	return fmt.Errorf("unknown BannerCreative numeric field %s", name)
 }
@@ -2511,14 +2616,8 @@ func (m *BannerCreativeMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *BannerCreativeMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(bannercreative.FieldName) {
-		fields = append(fields, bannercreative.FieldName)
-	}
-	if m.FieldCleared(bannercreative.FieldImageURL) {
-		fields = append(fields, bannercreative.FieldImageURL)
-	}
-	if m.FieldCleared(bannercreative.FieldSize) {
-		fields = append(fields, bannercreative.FieldSize)
+	if m.FieldCleared(bannercreative.FieldDisplayOrder) {
+		fields = append(fields, bannercreative.FieldDisplayOrder)
 	}
 	return fields
 }
@@ -2534,14 +2633,8 @@ func (m *BannerCreativeMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *BannerCreativeMutation) ClearField(name string) error {
 	switch name {
-	case bannercreative.FieldName:
-		m.ClearName()
-		return nil
-	case bannercreative.FieldImageURL:
-		m.ClearImageURL()
-		return nil
-	case bannercreative.FieldSize:
-		m.ClearSize()
+	case bannercreative.FieldDisplayOrder:
+		m.ClearDisplayOrder()
 		return nil
 	}
 	return fmt.Errorf("unknown BannerCreative nullable field %s", name)
@@ -2551,17 +2644,11 @@ func (m *BannerCreativeMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *BannerCreativeMutation) ResetField(name string) error {
 	switch name {
-	case bannercreative.FieldName:
-		m.ResetName()
+	case bannercreative.FieldBannerID:
+		m.ResetBannerID()
 		return nil
-	case bannercreative.FieldImageURL:
-		m.ResetImageURL()
-		return nil
-	case bannercreative.FieldSize:
-		m.ResetSize()
-		return nil
-	case bannercreative.FieldEnabled:
-		m.ResetEnabled()
+	case bannercreative.FieldCreativeID:
+		m.ResetCreativeID()
 		return nil
 	case bannercreative.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -2569,15 +2656,24 @@ func (m *BannerCreativeMutation) ResetField(name string) error {
 	case bannercreative.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case bannercreative.FieldIsPrimary:
+		m.ResetIsPrimary()
+		return nil
+	case bannercreative.FieldDisplayOrder:
+		m.ResetDisplayOrder()
+		return nil
 	}
 	return fmt.Errorf("unknown BannerCreative field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *BannerCreativeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.banner != nil {
 		edges = append(edges, bannercreative.EdgeBanner)
+	}
+	if m.creative != nil {
+		edges = append(edges, bannercreative.EdgeCreative)
 	}
 	return edges
 }
@@ -2590,13 +2686,17 @@ func (m *BannerCreativeMutation) AddedIDs(name string) []ent.Value {
 		if id := m.banner; id != nil {
 			return []ent.Value{*id}
 		}
+	case bannercreative.EdgeCreative:
+		if id := m.creative; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BannerCreativeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -2608,9 +2708,12 @@ func (m *BannerCreativeMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *BannerCreativeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedbanner {
 		edges = append(edges, bannercreative.EdgeBanner)
+	}
+	if m.clearedcreative {
+		edges = append(edges, bannercreative.EdgeCreative)
 	}
 	return edges
 }
@@ -2621,6 +2724,8 @@ func (m *BannerCreativeMutation) EdgeCleared(name string) bool {
 	switch name {
 	case bannercreative.EdgeBanner:
 		return m.clearedbanner
+	case bannercreative.EdgeCreative:
+		return m.clearedcreative
 	}
 	return false
 }
@@ -2632,6 +2737,9 @@ func (m *BannerCreativeMutation) ClearEdge(name string) error {
 	case bannercreative.EdgeBanner:
 		m.ClearBanner()
 		return nil
+	case bannercreative.EdgeCreative:
+		m.ClearCreative()
+		return nil
 	}
 	return fmt.Errorf("unknown BannerCreative unique edge %s", name)
 }
@@ -2642,6 +2750,9 @@ func (m *BannerCreativeMutation) ResetEdge(name string) error {
 	switch name {
 	case bannercreative.EdgeBanner:
 		m.ResetBanner()
+		return nil
+	case bannercreative.EdgeCreative:
+		m.ResetCreative()
 		return nil
 	}
 	return fmt.Errorf("unknown BannerCreative edge %s", name)
@@ -2660,15 +2771,22 @@ type BannerStatsMutation struct {
 	addclicks          *int64
 	leads              *int64
 	addleads           *int64
+	earnings           *float64
+	addearnings        *float64
 	ctr                *float64
 	addctr             *float64
 	conversion_rate    *float64
 	addconversion_rate *float64
+	device_type        *string
+	browser            *string
+	os                 *string
 	created_at         *time.Time
 	updated_at         *time.Time
 	clearedFields      map[string]struct{}
 	banner             *int64
 	clearedbanner      bool
+	publisher          *int64
+	clearedpublisher   bool
 	done               bool
 	oldValue           func(context.Context) (*BannerStats, error)
 	predicates         []predicate.BannerStats
@@ -2982,6 +3100,62 @@ func (m *BannerStatsMutation) ResetLeads() {
 	m.addleads = nil
 }
 
+// SetEarnings sets the "earnings" field.
+func (m *BannerStatsMutation) SetEarnings(f float64) {
+	m.earnings = &f
+	m.addearnings = nil
+}
+
+// Earnings returns the value of the "earnings" field in the mutation.
+func (m *BannerStatsMutation) Earnings() (r float64, exists bool) {
+	v := m.earnings
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEarnings returns the old "earnings" field's value of the BannerStats entity.
+// If the BannerStats object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerStatsMutation) OldEarnings(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEarnings is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEarnings requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEarnings: %w", err)
+	}
+	return oldValue.Earnings, nil
+}
+
+// AddEarnings adds f to the "earnings" field.
+func (m *BannerStatsMutation) AddEarnings(f float64) {
+	if m.addearnings != nil {
+		*m.addearnings += f
+	} else {
+		m.addearnings = &f
+	}
+}
+
+// AddedEarnings returns the value that was added to the "earnings" field in this mutation.
+func (m *BannerStatsMutation) AddedEarnings() (r float64, exists bool) {
+	v := m.addearnings
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetEarnings resets all changes to the "earnings" field.
+func (m *BannerStatsMutation) ResetEarnings() {
+	m.earnings = nil
+	m.addearnings = nil
+}
+
 // SetCtr sets the "ctr" field.
 func (m *BannerStatsMutation) SetCtr(f float64) {
 	m.ctr = &f
@@ -3122,6 +3296,153 @@ func (m *BannerStatsMutation) ResetConversionRate() {
 	delete(m.clearedFields, bannerstats.FieldConversionRate)
 }
 
+// SetDeviceType sets the "device_type" field.
+func (m *BannerStatsMutation) SetDeviceType(s string) {
+	m.device_type = &s
+}
+
+// DeviceType returns the value of the "device_type" field in the mutation.
+func (m *BannerStatsMutation) DeviceType() (r string, exists bool) {
+	v := m.device_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeviceType returns the old "device_type" field's value of the BannerStats entity.
+// If the BannerStats object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerStatsMutation) OldDeviceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeviceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeviceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeviceType: %w", err)
+	}
+	return oldValue.DeviceType, nil
+}
+
+// ClearDeviceType clears the value of the "device_type" field.
+func (m *BannerStatsMutation) ClearDeviceType() {
+	m.device_type = nil
+	m.clearedFields[bannerstats.FieldDeviceType] = struct{}{}
+}
+
+// DeviceTypeCleared returns if the "device_type" field was cleared in this mutation.
+func (m *BannerStatsMutation) DeviceTypeCleared() bool {
+	_, ok := m.clearedFields[bannerstats.FieldDeviceType]
+	return ok
+}
+
+// ResetDeviceType resets all changes to the "device_type" field.
+func (m *BannerStatsMutation) ResetDeviceType() {
+	m.device_type = nil
+	delete(m.clearedFields, bannerstats.FieldDeviceType)
+}
+
+// SetBrowser sets the "browser" field.
+func (m *BannerStatsMutation) SetBrowser(s string) {
+	m.browser = &s
+}
+
+// Browser returns the value of the "browser" field in the mutation.
+func (m *BannerStatsMutation) Browser() (r string, exists bool) {
+	v := m.browser
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBrowser returns the old "browser" field's value of the BannerStats entity.
+// If the BannerStats object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerStatsMutation) OldBrowser(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBrowser is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBrowser requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBrowser: %w", err)
+	}
+	return oldValue.Browser, nil
+}
+
+// ClearBrowser clears the value of the "browser" field.
+func (m *BannerStatsMutation) ClearBrowser() {
+	m.browser = nil
+	m.clearedFields[bannerstats.FieldBrowser] = struct{}{}
+}
+
+// BrowserCleared returns if the "browser" field was cleared in this mutation.
+func (m *BannerStatsMutation) BrowserCleared() bool {
+	_, ok := m.clearedFields[bannerstats.FieldBrowser]
+	return ok
+}
+
+// ResetBrowser resets all changes to the "browser" field.
+func (m *BannerStatsMutation) ResetBrowser() {
+	m.browser = nil
+	delete(m.clearedFields, bannerstats.FieldBrowser)
+}
+
+// SetOs sets the "os" field.
+func (m *BannerStatsMutation) SetOs(s string) {
+	m.os = &s
+}
+
+// Os returns the value of the "os" field in the mutation.
+func (m *BannerStatsMutation) Os() (r string, exists bool) {
+	v := m.os
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOs returns the old "os" field's value of the BannerStats entity.
+// If the BannerStats object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BannerStatsMutation) OldOs(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOs: %w", err)
+	}
+	return oldValue.Os, nil
+}
+
+// ClearOs clears the value of the "os" field.
+func (m *BannerStatsMutation) ClearOs() {
+	m.os = nil
+	m.clearedFields[bannerstats.FieldOs] = struct{}{}
+}
+
+// OsCleared returns if the "os" field was cleared in this mutation.
+func (m *BannerStatsMutation) OsCleared() bool {
+	_, ok := m.clearedFields[bannerstats.FieldOs]
+	return ok
+}
+
+// ResetOs resets all changes to the "os" field.
+func (m *BannerStatsMutation) ResetOs() {
+	m.os = nil
+	delete(m.clearedFields, bannerstats.FieldOs)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *BannerStatsMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -3233,6 +3554,45 @@ func (m *BannerStatsMutation) ResetBanner() {
 	m.clearedbanner = false
 }
 
+// SetPublisherID sets the "publisher" edge to the User entity by id.
+func (m *BannerStatsMutation) SetPublisherID(id int64) {
+	m.publisher = &id
+}
+
+// ClearPublisher clears the "publisher" edge to the User entity.
+func (m *BannerStatsMutation) ClearPublisher() {
+	m.clearedpublisher = true
+}
+
+// PublisherCleared reports if the "publisher" edge to the User entity was cleared.
+func (m *BannerStatsMutation) PublisherCleared() bool {
+	return m.clearedpublisher
+}
+
+// PublisherID returns the "publisher" edge ID in the mutation.
+func (m *BannerStatsMutation) PublisherID() (id int64, exists bool) {
+	if m.publisher != nil {
+		return *m.publisher, true
+	}
+	return
+}
+
+// PublisherIDs returns the "publisher" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PublisherID instead. It exists only for internal usage by the builders.
+func (m *BannerStatsMutation) PublisherIDs() (ids []int64) {
+	if id := m.publisher; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPublisher resets all changes to the "publisher" edge.
+func (m *BannerStatsMutation) ResetPublisher() {
+	m.publisher = nil
+	m.clearedpublisher = false
+}
+
 // Where appends a list predicates to the BannerStatsMutation builder.
 func (m *BannerStatsMutation) Where(ps ...predicate.BannerStats) {
 	m.predicates = append(m.predicates, ps...)
@@ -3267,7 +3627,7 @@ func (m *BannerStatsMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *BannerStatsMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 12)
 	if m.date != nil {
 		fields = append(fields, bannerstats.FieldDate)
 	}
@@ -3280,11 +3640,23 @@ func (m *BannerStatsMutation) Fields() []string {
 	if m.leads != nil {
 		fields = append(fields, bannerstats.FieldLeads)
 	}
+	if m.earnings != nil {
+		fields = append(fields, bannerstats.FieldEarnings)
+	}
 	if m.ctr != nil {
 		fields = append(fields, bannerstats.FieldCtr)
 	}
 	if m.conversion_rate != nil {
 		fields = append(fields, bannerstats.FieldConversionRate)
+	}
+	if m.device_type != nil {
+		fields = append(fields, bannerstats.FieldDeviceType)
+	}
+	if m.browser != nil {
+		fields = append(fields, bannerstats.FieldBrowser)
+	}
+	if m.os != nil {
+		fields = append(fields, bannerstats.FieldOs)
 	}
 	if m.created_at != nil {
 		fields = append(fields, bannerstats.FieldCreatedAt)
@@ -3308,10 +3680,18 @@ func (m *BannerStatsMutation) Field(name string) (ent.Value, bool) {
 		return m.Clicks()
 	case bannerstats.FieldLeads:
 		return m.Leads()
+	case bannerstats.FieldEarnings:
+		return m.Earnings()
 	case bannerstats.FieldCtr:
 		return m.Ctr()
 	case bannerstats.FieldConversionRate:
 		return m.ConversionRate()
+	case bannerstats.FieldDeviceType:
+		return m.DeviceType()
+	case bannerstats.FieldBrowser:
+		return m.Browser()
+	case bannerstats.FieldOs:
+		return m.Os()
 	case bannerstats.FieldCreatedAt:
 		return m.CreatedAt()
 	case bannerstats.FieldUpdatedAt:
@@ -3333,10 +3713,18 @@ func (m *BannerStatsMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldClicks(ctx)
 	case bannerstats.FieldLeads:
 		return m.OldLeads(ctx)
+	case bannerstats.FieldEarnings:
+		return m.OldEarnings(ctx)
 	case bannerstats.FieldCtr:
 		return m.OldCtr(ctx)
 	case bannerstats.FieldConversionRate:
 		return m.OldConversionRate(ctx)
+	case bannerstats.FieldDeviceType:
+		return m.OldDeviceType(ctx)
+	case bannerstats.FieldBrowser:
+		return m.OldBrowser(ctx)
+	case bannerstats.FieldOs:
+		return m.OldOs(ctx)
 	case bannerstats.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case bannerstats.FieldUpdatedAt:
@@ -3378,6 +3766,13 @@ func (m *BannerStatsMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetLeads(v)
 		return nil
+	case bannerstats.FieldEarnings:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEarnings(v)
+		return nil
 	case bannerstats.FieldCtr:
 		v, ok := value.(float64)
 		if !ok {
@@ -3391,6 +3786,27 @@ func (m *BannerStatsMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetConversionRate(v)
+		return nil
+	case bannerstats.FieldDeviceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeviceType(v)
+		return nil
+	case bannerstats.FieldBrowser:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBrowser(v)
+		return nil
+	case bannerstats.FieldOs:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOs(v)
 		return nil
 	case bannerstats.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -3423,6 +3839,9 @@ func (m *BannerStatsMutation) AddedFields() []string {
 	if m.addleads != nil {
 		fields = append(fields, bannerstats.FieldLeads)
 	}
+	if m.addearnings != nil {
+		fields = append(fields, bannerstats.FieldEarnings)
+	}
 	if m.addctr != nil {
 		fields = append(fields, bannerstats.FieldCtr)
 	}
@@ -3443,6 +3862,8 @@ func (m *BannerStatsMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedClicks()
 	case bannerstats.FieldLeads:
 		return m.AddedLeads()
+	case bannerstats.FieldEarnings:
+		return m.AddedEarnings()
 	case bannerstats.FieldCtr:
 		return m.AddedCtr()
 	case bannerstats.FieldConversionRate:
@@ -3477,6 +3898,13 @@ func (m *BannerStatsMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddLeads(v)
 		return nil
+	case bannerstats.FieldEarnings:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddEarnings(v)
+		return nil
 	case bannerstats.FieldCtr:
 		v, ok := value.(float64)
 		if !ok {
@@ -3505,6 +3933,15 @@ func (m *BannerStatsMutation) ClearedFields() []string {
 	if m.FieldCleared(bannerstats.FieldConversionRate) {
 		fields = append(fields, bannerstats.FieldConversionRate)
 	}
+	if m.FieldCleared(bannerstats.FieldDeviceType) {
+		fields = append(fields, bannerstats.FieldDeviceType)
+	}
+	if m.FieldCleared(bannerstats.FieldBrowser) {
+		fields = append(fields, bannerstats.FieldBrowser)
+	}
+	if m.FieldCleared(bannerstats.FieldOs) {
+		fields = append(fields, bannerstats.FieldOs)
+	}
 	return fields
 }
 
@@ -3524,6 +3961,15 @@ func (m *BannerStatsMutation) ClearField(name string) error {
 		return nil
 	case bannerstats.FieldConversionRate:
 		m.ClearConversionRate()
+		return nil
+	case bannerstats.FieldDeviceType:
+		m.ClearDeviceType()
+		return nil
+	case bannerstats.FieldBrowser:
+		m.ClearBrowser()
+		return nil
+	case bannerstats.FieldOs:
+		m.ClearOs()
 		return nil
 	}
 	return fmt.Errorf("unknown BannerStats nullable field %s", name)
@@ -3545,11 +3991,23 @@ func (m *BannerStatsMutation) ResetField(name string) error {
 	case bannerstats.FieldLeads:
 		m.ResetLeads()
 		return nil
+	case bannerstats.FieldEarnings:
+		m.ResetEarnings()
+		return nil
 	case bannerstats.FieldCtr:
 		m.ResetCtr()
 		return nil
 	case bannerstats.FieldConversionRate:
 		m.ResetConversionRate()
+		return nil
+	case bannerstats.FieldDeviceType:
+		m.ResetDeviceType()
+		return nil
+	case bannerstats.FieldBrowser:
+		m.ResetBrowser()
+		return nil
+	case bannerstats.FieldOs:
+		m.ResetOs()
 		return nil
 	case bannerstats.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -3563,9 +4021,12 @@ func (m *BannerStatsMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *BannerStatsMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.banner != nil {
 		edges = append(edges, bannerstats.EdgeBanner)
+	}
+	if m.publisher != nil {
+		edges = append(edges, bannerstats.EdgePublisher)
 	}
 	return edges
 }
@@ -3578,13 +4039,17 @@ func (m *BannerStatsMutation) AddedIDs(name string) []ent.Value {
 		if id := m.banner; id != nil {
 			return []ent.Value{*id}
 		}
+	case bannerstats.EdgePublisher:
+		if id := m.publisher; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BannerStatsMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -3596,9 +4061,12 @@ func (m *BannerStatsMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *BannerStatsMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedbanner {
 		edges = append(edges, bannerstats.EdgeBanner)
+	}
+	if m.clearedpublisher {
+		edges = append(edges, bannerstats.EdgePublisher)
 	}
 	return edges
 }
@@ -3609,6 +4077,8 @@ func (m *BannerStatsMutation) EdgeCleared(name string) bool {
 	switch name {
 	case bannerstats.EdgeBanner:
 		return m.clearedbanner
+	case bannerstats.EdgePublisher:
+		return m.clearedpublisher
 	}
 	return false
 }
@@ -3620,6 +4090,9 @@ func (m *BannerStatsMutation) ClearEdge(name string) error {
 	case bannerstats.EdgeBanner:
 		m.ClearBanner()
 		return nil
+	case bannerstats.EdgePublisher:
+		m.ClearPublisher()
+		return nil
 	}
 	return fmt.Errorf("unknown BannerStats unique edge %s", name)
 }
@@ -3630,6 +4103,9 @@ func (m *BannerStatsMutation) ResetEdge(name string) error {
 	switch name {
 	case bannerstats.EdgeBanner:
 		m.ResetBanner()
+		return nil
+	case bannerstats.EdgePublisher:
+		m.ResetPublisher()
 		return nil
 	}
 	return fmt.Errorf("unknown BannerStats edge %s", name)
@@ -6340,6 +6816,844 @@ func (m *CampaignLinkMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown CampaignLink edge %s", name)
+}
+
+// CreativeMutation represents an operation that mutates the Creative nodes in the graph.
+type CreativeMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *int64
+	name                    *string
+	image_url               *string
+	size                    *string
+	enabled                 *bool
+	created_at              *time.Time
+	updated_at              *time.Time
+	clearedFields           map[string]struct{}
+	banners                 map[int64]struct{}
+	removedbanners          map[int64]struct{}
+	clearedbanners          bool
+	banner_creatives        map[int]struct{}
+	removedbanner_creatives map[int]struct{}
+	clearedbanner_creatives bool
+	done                    bool
+	oldValue                func(context.Context) (*Creative, error)
+	predicates              []predicate.Creative
+}
+
+var _ ent.Mutation = (*CreativeMutation)(nil)
+
+// creativeOption allows management of the mutation configuration using functional options.
+type creativeOption func(*CreativeMutation)
+
+// newCreativeMutation creates new mutation for the Creative entity.
+func newCreativeMutation(c config, op Op, opts ...creativeOption) *CreativeMutation {
+	m := &CreativeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCreative,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCreativeID sets the ID field of the mutation.
+func withCreativeID(id int64) creativeOption {
+	return func(m *CreativeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Creative
+		)
+		m.oldValue = func(ctx context.Context) (*Creative, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Creative.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCreative sets the old Creative of the mutation.
+func withCreative(node *Creative) creativeOption {
+	return func(m *CreativeMutation) {
+		m.oldValue = func(context.Context) (*Creative, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CreativeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CreativeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Creative entities.
+func (m *CreativeMutation) SetID(id int64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CreativeMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CreativeMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Creative.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *CreativeMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *CreativeMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Creative entity.
+// If the Creative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CreativeMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ClearName clears the value of the "name" field.
+func (m *CreativeMutation) ClearName() {
+	m.name = nil
+	m.clearedFields[creative.FieldName] = struct{}{}
+}
+
+// NameCleared returns if the "name" field was cleared in this mutation.
+func (m *CreativeMutation) NameCleared() bool {
+	_, ok := m.clearedFields[creative.FieldName]
+	return ok
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *CreativeMutation) ResetName() {
+	m.name = nil
+	delete(m.clearedFields, creative.FieldName)
+}
+
+// SetImageURL sets the "image_url" field.
+func (m *CreativeMutation) SetImageURL(s string) {
+	m.image_url = &s
+}
+
+// ImageURL returns the value of the "image_url" field in the mutation.
+func (m *CreativeMutation) ImageURL() (r string, exists bool) {
+	v := m.image_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImageURL returns the old "image_url" field's value of the Creative entity.
+// If the Creative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CreativeMutation) OldImageURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImageURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImageURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImageURL: %w", err)
+	}
+	return oldValue.ImageURL, nil
+}
+
+// ClearImageURL clears the value of the "image_url" field.
+func (m *CreativeMutation) ClearImageURL() {
+	m.image_url = nil
+	m.clearedFields[creative.FieldImageURL] = struct{}{}
+}
+
+// ImageURLCleared returns if the "image_url" field was cleared in this mutation.
+func (m *CreativeMutation) ImageURLCleared() bool {
+	_, ok := m.clearedFields[creative.FieldImageURL]
+	return ok
+}
+
+// ResetImageURL resets all changes to the "image_url" field.
+func (m *CreativeMutation) ResetImageURL() {
+	m.image_url = nil
+	delete(m.clearedFields, creative.FieldImageURL)
+}
+
+// SetSize sets the "size" field.
+func (m *CreativeMutation) SetSize(s string) {
+	m.size = &s
+}
+
+// Size returns the value of the "size" field in the mutation.
+func (m *CreativeMutation) Size() (r string, exists bool) {
+	v := m.size
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSize returns the old "size" field's value of the Creative entity.
+// If the Creative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CreativeMutation) OldSize(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSize is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSize requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSize: %w", err)
+	}
+	return oldValue.Size, nil
+}
+
+// ClearSize clears the value of the "size" field.
+func (m *CreativeMutation) ClearSize() {
+	m.size = nil
+	m.clearedFields[creative.FieldSize] = struct{}{}
+}
+
+// SizeCleared returns if the "size" field was cleared in this mutation.
+func (m *CreativeMutation) SizeCleared() bool {
+	_, ok := m.clearedFields[creative.FieldSize]
+	return ok
+}
+
+// ResetSize resets all changes to the "size" field.
+func (m *CreativeMutation) ResetSize() {
+	m.size = nil
+	delete(m.clearedFields, creative.FieldSize)
+}
+
+// SetEnabled sets the "enabled" field.
+func (m *CreativeMutation) SetEnabled(b bool) {
+	m.enabled = &b
+}
+
+// Enabled returns the value of the "enabled" field in the mutation.
+func (m *CreativeMutation) Enabled() (r bool, exists bool) {
+	v := m.enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnabled returns the old "enabled" field's value of the Creative entity.
+// If the Creative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CreativeMutation) OldEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnabled: %w", err)
+	}
+	return oldValue.Enabled, nil
+}
+
+// ResetEnabled resets all changes to the "enabled" field.
+func (m *CreativeMutation) ResetEnabled() {
+	m.enabled = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *CreativeMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *CreativeMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Creative entity.
+// If the Creative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CreativeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *CreativeMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *CreativeMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *CreativeMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Creative entity.
+// If the Creative object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CreativeMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *CreativeMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// AddBannerIDs adds the "banners" edge to the Banner entity by ids.
+func (m *CreativeMutation) AddBannerIDs(ids ...int64) {
+	if m.banners == nil {
+		m.banners = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.banners[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBanners clears the "banners" edge to the Banner entity.
+func (m *CreativeMutation) ClearBanners() {
+	m.clearedbanners = true
+}
+
+// BannersCleared reports if the "banners" edge to the Banner entity was cleared.
+func (m *CreativeMutation) BannersCleared() bool {
+	return m.clearedbanners
+}
+
+// RemoveBannerIDs removes the "banners" edge to the Banner entity by IDs.
+func (m *CreativeMutation) RemoveBannerIDs(ids ...int64) {
+	if m.removedbanners == nil {
+		m.removedbanners = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.banners, ids[i])
+		m.removedbanners[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBanners returns the removed IDs of the "banners" edge to the Banner entity.
+func (m *CreativeMutation) RemovedBannersIDs() (ids []int64) {
+	for id := range m.removedbanners {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BannersIDs returns the "banners" edge IDs in the mutation.
+func (m *CreativeMutation) BannersIDs() (ids []int64) {
+	for id := range m.banners {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBanners resets all changes to the "banners" edge.
+func (m *CreativeMutation) ResetBanners() {
+	m.banners = nil
+	m.clearedbanners = false
+	m.removedbanners = nil
+}
+
+// AddBannerCreativeIDs adds the "banner_creatives" edge to the BannerCreative entity by ids.
+func (m *CreativeMutation) AddBannerCreativeIDs(ids ...int) {
+	if m.banner_creatives == nil {
+		m.banner_creatives = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.banner_creatives[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBannerCreatives clears the "banner_creatives" edge to the BannerCreative entity.
+func (m *CreativeMutation) ClearBannerCreatives() {
+	m.clearedbanner_creatives = true
+}
+
+// BannerCreativesCleared reports if the "banner_creatives" edge to the BannerCreative entity was cleared.
+func (m *CreativeMutation) BannerCreativesCleared() bool {
+	return m.clearedbanner_creatives
+}
+
+// RemoveBannerCreativeIDs removes the "banner_creatives" edge to the BannerCreative entity by IDs.
+func (m *CreativeMutation) RemoveBannerCreativeIDs(ids ...int) {
+	if m.removedbanner_creatives == nil {
+		m.removedbanner_creatives = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.banner_creatives, ids[i])
+		m.removedbanner_creatives[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBannerCreatives returns the removed IDs of the "banner_creatives" edge to the BannerCreative entity.
+func (m *CreativeMutation) RemovedBannerCreativesIDs() (ids []int) {
+	for id := range m.removedbanner_creatives {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BannerCreativesIDs returns the "banner_creatives" edge IDs in the mutation.
+func (m *CreativeMutation) BannerCreativesIDs() (ids []int) {
+	for id := range m.banner_creatives {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBannerCreatives resets all changes to the "banner_creatives" edge.
+func (m *CreativeMutation) ResetBannerCreatives() {
+	m.banner_creatives = nil
+	m.clearedbanner_creatives = false
+	m.removedbanner_creatives = nil
+}
+
+// Where appends a list predicates to the CreativeMutation builder.
+func (m *CreativeMutation) Where(ps ...predicate.Creative) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CreativeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CreativeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Creative, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CreativeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CreativeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Creative).
+func (m *CreativeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CreativeMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.name != nil {
+		fields = append(fields, creative.FieldName)
+	}
+	if m.image_url != nil {
+		fields = append(fields, creative.FieldImageURL)
+	}
+	if m.size != nil {
+		fields = append(fields, creative.FieldSize)
+	}
+	if m.enabled != nil {
+		fields = append(fields, creative.FieldEnabled)
+	}
+	if m.created_at != nil {
+		fields = append(fields, creative.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, creative.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CreativeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case creative.FieldName:
+		return m.Name()
+	case creative.FieldImageURL:
+		return m.ImageURL()
+	case creative.FieldSize:
+		return m.Size()
+	case creative.FieldEnabled:
+		return m.Enabled()
+	case creative.FieldCreatedAt:
+		return m.CreatedAt()
+	case creative.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CreativeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case creative.FieldName:
+		return m.OldName(ctx)
+	case creative.FieldImageURL:
+		return m.OldImageURL(ctx)
+	case creative.FieldSize:
+		return m.OldSize(ctx)
+	case creative.FieldEnabled:
+		return m.OldEnabled(ctx)
+	case creative.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case creative.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Creative field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CreativeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case creative.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case creative.FieldImageURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImageURL(v)
+		return nil
+	case creative.FieldSize:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSize(v)
+		return nil
+	case creative.FieldEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnabled(v)
+		return nil
+	case creative.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case creative.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Creative field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CreativeMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CreativeMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CreativeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Creative numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CreativeMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(creative.FieldName) {
+		fields = append(fields, creative.FieldName)
+	}
+	if m.FieldCleared(creative.FieldImageURL) {
+		fields = append(fields, creative.FieldImageURL)
+	}
+	if m.FieldCleared(creative.FieldSize) {
+		fields = append(fields, creative.FieldSize)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CreativeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CreativeMutation) ClearField(name string) error {
+	switch name {
+	case creative.FieldName:
+		m.ClearName()
+		return nil
+	case creative.FieldImageURL:
+		m.ClearImageURL()
+		return nil
+	case creative.FieldSize:
+		m.ClearSize()
+		return nil
+	}
+	return fmt.Errorf("unknown Creative nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CreativeMutation) ResetField(name string) error {
+	switch name {
+	case creative.FieldName:
+		m.ResetName()
+		return nil
+	case creative.FieldImageURL:
+		m.ResetImageURL()
+		return nil
+	case creative.FieldSize:
+		m.ResetSize()
+		return nil
+	case creative.FieldEnabled:
+		m.ResetEnabled()
+		return nil
+	case creative.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case creative.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Creative field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CreativeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.banners != nil {
+		edges = append(edges, creative.EdgeBanners)
+	}
+	if m.banner_creatives != nil {
+		edges = append(edges, creative.EdgeBannerCreatives)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CreativeMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case creative.EdgeBanners:
+		ids := make([]ent.Value, 0, len(m.banners))
+		for id := range m.banners {
+			ids = append(ids, id)
+		}
+		return ids
+	case creative.EdgeBannerCreatives:
+		ids := make([]ent.Value, 0, len(m.banner_creatives))
+		for id := range m.banner_creatives {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CreativeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedbanners != nil {
+		edges = append(edges, creative.EdgeBanners)
+	}
+	if m.removedbanner_creatives != nil {
+		edges = append(edges, creative.EdgeBannerCreatives)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CreativeMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case creative.EdgeBanners:
+		ids := make([]ent.Value, 0, len(m.removedbanners))
+		for id := range m.removedbanners {
+			ids = append(ids, id)
+		}
+		return ids
+	case creative.EdgeBannerCreatives:
+		ids := make([]ent.Value, 0, len(m.removedbanner_creatives))
+		for id := range m.removedbanner_creatives {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CreativeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedbanners {
+		edges = append(edges, creative.EdgeBanners)
+	}
+	if m.clearedbanner_creatives {
+		edges = append(edges, creative.EdgeBannerCreatives)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CreativeMutation) EdgeCleared(name string) bool {
+	switch name {
+	case creative.EdgeBanners:
+		return m.clearedbanners
+	case creative.EdgeBannerCreatives:
+		return m.clearedbanner_creatives
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CreativeMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Creative unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CreativeMutation) ResetEdge(name string) error {
+	switch name {
+	case creative.EdgeBanners:
+		m.ResetBanners()
+		return nil
+	case creative.EdgeBannerCreatives:
+		m.ResetBannerCreatives()
+		return nil
+	}
+	return fmt.Errorf("unknown Creative edge %s", name)
 }
 
 // LeadMutation represents an operation that mutates the Lead nodes in the graph.
@@ -10346,6 +11660,9 @@ type UserMutation struct {
 	posts                  map[string]struct{}
 	removedposts           map[string]struct{}
 	clearedposts           bool
+	stats                  map[int64]struct{}
+	removedstats           map[int64]struct{}
+	clearedstats           bool
 	done                   bool
 	oldValue               func(context.Context) (*User, error)
 	predicates             []predicate.User
@@ -11222,6 +12539,60 @@ func (m *UserMutation) ResetPosts() {
 	m.removedposts = nil
 }
 
+// AddStatIDs adds the "stats" edge to the BannerStats entity by ids.
+func (m *UserMutation) AddStatIDs(ids ...int64) {
+	if m.stats == nil {
+		m.stats = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.stats[ids[i]] = struct{}{}
+	}
+}
+
+// ClearStats clears the "stats" edge to the BannerStats entity.
+func (m *UserMutation) ClearStats() {
+	m.clearedstats = true
+}
+
+// StatsCleared reports if the "stats" edge to the BannerStats entity was cleared.
+func (m *UserMutation) StatsCleared() bool {
+	return m.clearedstats
+}
+
+// RemoveStatIDs removes the "stats" edge to the BannerStats entity by IDs.
+func (m *UserMutation) RemoveStatIDs(ids ...int64) {
+	if m.removedstats == nil {
+		m.removedstats = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.stats, ids[i])
+		m.removedstats[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedStats returns the removed IDs of the "stats" edge to the BannerStats entity.
+func (m *UserMutation) RemovedStatsIDs() (ids []int64) {
+	for id := range m.removedstats {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// StatsIDs returns the "stats" edge IDs in the mutation.
+func (m *UserMutation) StatsIDs() (ids []int64) {
+	for id := range m.stats {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetStats resets all changes to the "stats" edge.
+func (m *UserMutation) ResetStats() {
+	m.stats = nil
+	m.clearedstats = false
+	m.removedstats = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -11575,7 +12946,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.campaigns != nil {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -11590,6 +12961,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.posts != nil {
 		edges = append(edges, user.EdgePosts)
+	}
+	if m.stats != nil {
+		edges = append(edges, user.EdgeStats)
 	}
 	return edges
 }
@@ -11628,13 +13002,19 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeStats:
+		ids := make([]ent.Value, 0, len(m.stats))
+		for id := range m.stats {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.removedcampaigns != nil {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -11649,6 +13029,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedposts != nil {
 		edges = append(edges, user.EdgePosts)
+	}
+	if m.removedstats != nil {
+		edges = append(edges, user.EdgeStats)
 	}
 	return edges
 }
@@ -11687,13 +13070,19 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeStats:
+		ids := make([]ent.Value, 0, len(m.removedstats))
+		for id := range m.removedstats {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.clearedcampaigns {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -11708,6 +13097,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedposts {
 		edges = append(edges, user.EdgePosts)
+	}
+	if m.clearedstats {
+		edges = append(edges, user.EdgeStats)
 	}
 	return edges
 }
@@ -11726,6 +13118,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedpayouts
 	case user.EdgePosts:
 		return m.clearedposts
+	case user.EdgeStats:
+		return m.clearedstats
 	}
 	return false
 }
@@ -11756,6 +13150,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgePosts:
 		m.ResetPosts()
+		return nil
+	case user.EdgeStats:
+		m.ResetStats()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

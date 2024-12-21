@@ -75,6 +75,11 @@ func Leads(v int64) predicate.BannerStats {
 	return predicate.BannerStats(sql.FieldEQ(FieldLeads, v))
 }
 
+// Earnings applies equality check predicate on the "earnings" field. It's identical to EarningsEQ.
+func Earnings(v float64) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEQ(FieldEarnings, v))
+}
+
 // Ctr applies equality check predicate on the "ctr" field. It's identical to CtrEQ.
 func Ctr(v float64) predicate.BannerStats {
 	return predicate.BannerStats(sql.FieldEQ(FieldCtr, v))
@@ -83,6 +88,21 @@ func Ctr(v float64) predicate.BannerStats {
 // ConversionRate applies equality check predicate on the "conversion_rate" field. It's identical to ConversionRateEQ.
 func ConversionRate(v float64) predicate.BannerStats {
 	return predicate.BannerStats(sql.FieldEQ(FieldConversionRate, v))
+}
+
+// DeviceType applies equality check predicate on the "device_type" field. It's identical to DeviceTypeEQ.
+func DeviceType(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEQ(FieldDeviceType, v))
+}
+
+// Browser applies equality check predicate on the "browser" field. It's identical to BrowserEQ.
+func Browser(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEQ(FieldBrowser, v))
+}
+
+// Os applies equality check predicate on the "os" field. It's identical to OsEQ.
+func Os(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEQ(FieldOs, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -255,6 +275,46 @@ func LeadsLTE(v int64) predicate.BannerStats {
 	return predicate.BannerStats(sql.FieldLTE(FieldLeads, v))
 }
 
+// EarningsEQ applies the EQ predicate on the "earnings" field.
+func EarningsEQ(v float64) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEQ(FieldEarnings, v))
+}
+
+// EarningsNEQ applies the NEQ predicate on the "earnings" field.
+func EarningsNEQ(v float64) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNEQ(FieldEarnings, v))
+}
+
+// EarningsIn applies the In predicate on the "earnings" field.
+func EarningsIn(vs ...float64) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldIn(FieldEarnings, vs...))
+}
+
+// EarningsNotIn applies the NotIn predicate on the "earnings" field.
+func EarningsNotIn(vs ...float64) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNotIn(FieldEarnings, vs...))
+}
+
+// EarningsGT applies the GT predicate on the "earnings" field.
+func EarningsGT(v float64) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldGT(FieldEarnings, v))
+}
+
+// EarningsGTE applies the GTE predicate on the "earnings" field.
+func EarningsGTE(v float64) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldGTE(FieldEarnings, v))
+}
+
+// EarningsLT applies the LT predicate on the "earnings" field.
+func EarningsLT(v float64) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldLT(FieldEarnings, v))
+}
+
+// EarningsLTE applies the LTE predicate on the "earnings" field.
+func EarningsLTE(v float64) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldLTE(FieldEarnings, v))
+}
+
 // CtrEQ applies the EQ predicate on the "ctr" field.
 func CtrEQ(v float64) predicate.BannerStats {
 	return predicate.BannerStats(sql.FieldEQ(FieldCtr, v))
@@ -355,6 +415,231 @@ func ConversionRateNotNil() predicate.BannerStats {
 	return predicate.BannerStats(sql.FieldNotNull(FieldConversionRate))
 }
 
+// DeviceTypeEQ applies the EQ predicate on the "device_type" field.
+func DeviceTypeEQ(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEQ(FieldDeviceType, v))
+}
+
+// DeviceTypeNEQ applies the NEQ predicate on the "device_type" field.
+func DeviceTypeNEQ(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNEQ(FieldDeviceType, v))
+}
+
+// DeviceTypeIn applies the In predicate on the "device_type" field.
+func DeviceTypeIn(vs ...string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldIn(FieldDeviceType, vs...))
+}
+
+// DeviceTypeNotIn applies the NotIn predicate on the "device_type" field.
+func DeviceTypeNotIn(vs ...string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNotIn(FieldDeviceType, vs...))
+}
+
+// DeviceTypeGT applies the GT predicate on the "device_type" field.
+func DeviceTypeGT(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldGT(FieldDeviceType, v))
+}
+
+// DeviceTypeGTE applies the GTE predicate on the "device_type" field.
+func DeviceTypeGTE(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldGTE(FieldDeviceType, v))
+}
+
+// DeviceTypeLT applies the LT predicate on the "device_type" field.
+func DeviceTypeLT(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldLT(FieldDeviceType, v))
+}
+
+// DeviceTypeLTE applies the LTE predicate on the "device_type" field.
+func DeviceTypeLTE(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldLTE(FieldDeviceType, v))
+}
+
+// DeviceTypeContains applies the Contains predicate on the "device_type" field.
+func DeviceTypeContains(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldContains(FieldDeviceType, v))
+}
+
+// DeviceTypeHasPrefix applies the HasPrefix predicate on the "device_type" field.
+func DeviceTypeHasPrefix(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldHasPrefix(FieldDeviceType, v))
+}
+
+// DeviceTypeHasSuffix applies the HasSuffix predicate on the "device_type" field.
+func DeviceTypeHasSuffix(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldHasSuffix(FieldDeviceType, v))
+}
+
+// DeviceTypeIsNil applies the IsNil predicate on the "device_type" field.
+func DeviceTypeIsNil() predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldIsNull(FieldDeviceType))
+}
+
+// DeviceTypeNotNil applies the NotNil predicate on the "device_type" field.
+func DeviceTypeNotNil() predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNotNull(FieldDeviceType))
+}
+
+// DeviceTypeEqualFold applies the EqualFold predicate on the "device_type" field.
+func DeviceTypeEqualFold(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEqualFold(FieldDeviceType, v))
+}
+
+// DeviceTypeContainsFold applies the ContainsFold predicate on the "device_type" field.
+func DeviceTypeContainsFold(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldContainsFold(FieldDeviceType, v))
+}
+
+// BrowserEQ applies the EQ predicate on the "browser" field.
+func BrowserEQ(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEQ(FieldBrowser, v))
+}
+
+// BrowserNEQ applies the NEQ predicate on the "browser" field.
+func BrowserNEQ(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNEQ(FieldBrowser, v))
+}
+
+// BrowserIn applies the In predicate on the "browser" field.
+func BrowserIn(vs ...string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldIn(FieldBrowser, vs...))
+}
+
+// BrowserNotIn applies the NotIn predicate on the "browser" field.
+func BrowserNotIn(vs ...string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNotIn(FieldBrowser, vs...))
+}
+
+// BrowserGT applies the GT predicate on the "browser" field.
+func BrowserGT(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldGT(FieldBrowser, v))
+}
+
+// BrowserGTE applies the GTE predicate on the "browser" field.
+func BrowserGTE(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldGTE(FieldBrowser, v))
+}
+
+// BrowserLT applies the LT predicate on the "browser" field.
+func BrowserLT(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldLT(FieldBrowser, v))
+}
+
+// BrowserLTE applies the LTE predicate on the "browser" field.
+func BrowserLTE(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldLTE(FieldBrowser, v))
+}
+
+// BrowserContains applies the Contains predicate on the "browser" field.
+func BrowserContains(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldContains(FieldBrowser, v))
+}
+
+// BrowserHasPrefix applies the HasPrefix predicate on the "browser" field.
+func BrowserHasPrefix(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldHasPrefix(FieldBrowser, v))
+}
+
+// BrowserHasSuffix applies the HasSuffix predicate on the "browser" field.
+func BrowserHasSuffix(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldHasSuffix(FieldBrowser, v))
+}
+
+// BrowserIsNil applies the IsNil predicate on the "browser" field.
+func BrowserIsNil() predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldIsNull(FieldBrowser))
+}
+
+// BrowserNotNil applies the NotNil predicate on the "browser" field.
+func BrowserNotNil() predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNotNull(FieldBrowser))
+}
+
+// BrowserEqualFold applies the EqualFold predicate on the "browser" field.
+func BrowserEqualFold(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEqualFold(FieldBrowser, v))
+}
+
+// BrowserContainsFold applies the ContainsFold predicate on the "browser" field.
+func BrowserContainsFold(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldContainsFold(FieldBrowser, v))
+}
+
+// OsEQ applies the EQ predicate on the "os" field.
+func OsEQ(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEQ(FieldOs, v))
+}
+
+// OsNEQ applies the NEQ predicate on the "os" field.
+func OsNEQ(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNEQ(FieldOs, v))
+}
+
+// OsIn applies the In predicate on the "os" field.
+func OsIn(vs ...string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldIn(FieldOs, vs...))
+}
+
+// OsNotIn applies the NotIn predicate on the "os" field.
+func OsNotIn(vs ...string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNotIn(FieldOs, vs...))
+}
+
+// OsGT applies the GT predicate on the "os" field.
+func OsGT(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldGT(FieldOs, v))
+}
+
+// OsGTE applies the GTE predicate on the "os" field.
+func OsGTE(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldGTE(FieldOs, v))
+}
+
+// OsLT applies the LT predicate on the "os" field.
+func OsLT(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldLT(FieldOs, v))
+}
+
+// OsLTE applies the LTE predicate on the "os" field.
+func OsLTE(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldLTE(FieldOs, v))
+}
+
+// OsContains applies the Contains predicate on the "os" field.
+func OsContains(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldContains(FieldOs, v))
+}
+
+// OsHasPrefix applies the HasPrefix predicate on the "os" field.
+func OsHasPrefix(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldHasPrefix(FieldOs, v))
+}
+
+// OsHasSuffix applies the HasSuffix predicate on the "os" field.
+func OsHasSuffix(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldHasSuffix(FieldOs, v))
+}
+
+// OsIsNil applies the IsNil predicate on the "os" field.
+func OsIsNil() predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldIsNull(FieldOs))
+}
+
+// OsNotNil applies the NotNil predicate on the "os" field.
+func OsNotNil() predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldNotNull(FieldOs))
+}
+
+// OsEqualFold applies the EqualFold predicate on the "os" field.
+func OsEqualFold(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldEqualFold(FieldOs, v))
+}
+
+// OsContainsFold applies the ContainsFold predicate on the "os" field.
+func OsContainsFold(v string) predicate.BannerStats {
+	return predicate.BannerStats(sql.FieldContainsFold(FieldOs, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.BannerStats {
 	return predicate.BannerStats(sql.FieldEQ(FieldCreatedAt, v))
@@ -450,6 +735,29 @@ func HasBanner() predicate.BannerStats {
 func HasBannerWith(preds ...predicate.Banner) predicate.BannerStats {
 	return predicate.BannerStats(func(s *sql.Selector) {
 		step := newBannerStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPublisher applies the HasEdge predicate on the "publisher" edge.
+func HasPublisher() predicate.BannerStats {
+	return predicate.BannerStats(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, PublisherTable, PublisherColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPublisherWith applies the HasEdge predicate on the "publisher" edge with a given conditions (other predicates).
+func HasPublisherWith(preds ...predicate.User) predicate.BannerStats {
+	return predicate.BannerStats(func(s *sql.Selector) {
+		step := newPublisherStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

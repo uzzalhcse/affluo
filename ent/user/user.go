@@ -49,6 +49,8 @@ const (
 	EdgePayouts = "payouts"
 	// EdgePosts holds the string denoting the posts edge name in mutations.
 	EdgePosts = "posts"
+	// EdgeStats holds the string denoting the stats edge name in mutations.
+	EdgeStats = "stats"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// CampaignsTable is the table that holds the campaigns relation/edge.
@@ -86,6 +88,13 @@ const (
 	PostsInverseTable = "posts"
 	// PostsColumn is the table column denoting the posts relation/edge.
 	PostsColumn = "user_posts"
+	// StatsTable is the table that holds the stats relation/edge.
+	StatsTable = "banner_stats"
+	// StatsInverseTable is the table name for the BannerStats entity.
+	// It exists in this package in order to avoid circular dependency with the "bannerstats" package.
+	StatsInverseTable = "banner_stats"
+	// StatsColumn is the table column denoting the stats relation/edge.
+	StatsColumn = "user_stats"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -294,6 +303,20 @@ func ByPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByStatsCount orders the results by stats count.
+func ByStatsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newStatsStep(), opts...)
+	}
+}
+
+// ByStats orders the results by stats terms.
+func ByStats(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStatsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newCampaignsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -327,5 +350,12 @@ func newPostsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PostsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PostsTable, PostsColumn),
+	)
+}
+func newStatsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StatsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, StatsTable, StatsColumn),
 	)
 }

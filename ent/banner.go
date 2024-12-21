@@ -63,14 +63,16 @@ type BannerEdges struct {
 	// Campaigns holds the value of the campaigns edge.
 	Campaigns []*Campaign `json:"campaigns,omitempty"`
 	// Creatives holds the value of the creatives edge.
-	Creatives []*BannerCreative `json:"creatives,omitempty"`
+	Creatives []*Creative `json:"creatives,omitempty"`
 	// Stats holds the value of the stats edge.
 	Stats []*BannerStats `json:"stats,omitempty"`
 	// Leads holds the value of the leads edge.
 	Leads []*Lead `json:"leads,omitempty"`
+	// BannerCreatives holds the value of the banner_creatives edge.
+	BannerCreatives []*BannerCreative `json:"banner_creatives,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // CampaignsOrErr returns the Campaigns value or an error if the edge
@@ -84,7 +86,7 @@ func (e BannerEdges) CampaignsOrErr() ([]*Campaign, error) {
 
 // CreativesOrErr returns the Creatives value or an error if the edge
 // was not loaded in eager-loading.
-func (e BannerEdges) CreativesOrErr() ([]*BannerCreative, error) {
+func (e BannerEdges) CreativesOrErr() ([]*Creative, error) {
 	if e.loadedTypes[1] {
 		return e.Creatives, nil
 	}
@@ -107,6 +109,15 @@ func (e BannerEdges) LeadsOrErr() ([]*Lead, error) {
 		return e.Leads, nil
 	}
 	return nil, &NotLoadedError{edge: "leads"}
+}
+
+// BannerCreativesOrErr returns the BannerCreatives value or an error if the edge
+// was not loaded in eager-loading.
+func (e BannerEdges) BannerCreativesOrErr() ([]*BannerCreative, error) {
+	if e.loadedTypes[4] {
+		return e.BannerCreatives, nil
+	}
+	return nil, &NotLoadedError{edge: "banner_creatives"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -274,7 +285,7 @@ func (b *Banner) QueryCampaigns() *CampaignQuery {
 }
 
 // QueryCreatives queries the "creatives" edge of the Banner entity.
-func (b *Banner) QueryCreatives() *BannerCreativeQuery {
+func (b *Banner) QueryCreatives() *CreativeQuery {
 	return NewBannerClient(b.config).QueryCreatives(b)
 }
 
@@ -286,6 +297,11 @@ func (b *Banner) QueryStats() *BannerStatsQuery {
 // QueryLeads queries the "leads" edge of the Banner entity.
 func (b *Banner) QueryLeads() *LeadQuery {
 	return NewBannerClient(b.config).QueryLeads(b)
+}
+
+// QueryBannerCreatives queries the "banner_creatives" edge of the Banner entity.
+func (b *Banner) QueryBannerCreatives() *BannerCreativeQuery {
+	return NewBannerClient(b.config).QueryBannerCreatives(b)
 }
 
 // Update returns a builder for updating this Banner.

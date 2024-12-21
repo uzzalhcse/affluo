@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
+	"affluo/ent/creative"
 	"affluo/ent/predicate"
 	"context"
 	"fmt"
@@ -19,12 +20,12 @@ import (
 // BannerCreativeQuery is the builder for querying BannerCreative entities.
 type BannerCreativeQuery struct {
 	config
-	ctx        *QueryContext
-	order      []bannercreative.OrderOption
-	inters     []Interceptor
-	predicates []predicate.BannerCreative
-	withBanner *BannerQuery
-	withFKs    bool
+	ctx          *QueryContext
+	order        []bannercreative.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.BannerCreative
+	withBanner   *BannerQuery
+	withCreative *CreativeQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,7 +76,29 @@ func (bcq *BannerCreativeQuery) QueryBanner() *BannerQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bannercreative.Table, bannercreative.FieldID, selector),
 			sqlgraph.To(banner.Table, banner.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, bannercreative.BannerTable, bannercreative.BannerColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, bannercreative.BannerTable, bannercreative.BannerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(bcq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCreative chains the current query on the "creative" edge.
+func (bcq *BannerCreativeQuery) QueryCreative() *CreativeQuery {
+	query := (&CreativeClient{config: bcq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := bcq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := bcq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(bannercreative.Table, bannercreative.FieldID, selector),
+			sqlgraph.To(creative.Table, creative.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, bannercreative.CreativeTable, bannercreative.CreativeColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(bcq.driver.Dialect(), step)
 		return fromU, nil
@@ -107,8 +130,8 @@ func (bcq *BannerCreativeQuery) FirstX(ctx context.Context) *BannerCreative {
 
 // FirstID returns the first BannerCreative ID from the query.
 // Returns a *NotFoundError when no BannerCreative ID was found.
-func (bcq *BannerCreativeQuery) FirstID(ctx context.Context) (id int64, err error) {
-	var ids []int64
+func (bcq *BannerCreativeQuery) FirstID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = bcq.Limit(1).IDs(setContextOp(ctx, bcq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -120,7 +143,7 @@ func (bcq *BannerCreativeQuery) FirstID(ctx context.Context) (id int64, err erro
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (bcq *BannerCreativeQuery) FirstIDX(ctx context.Context) int64 {
+func (bcq *BannerCreativeQuery) FirstIDX(ctx context.Context) int {
 	id, err := bcq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +181,8 @@ func (bcq *BannerCreativeQuery) OnlyX(ctx context.Context) *BannerCreative {
 // OnlyID is like Only, but returns the only BannerCreative ID in the query.
 // Returns a *NotSingularError when more than one BannerCreative ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (bcq *BannerCreativeQuery) OnlyID(ctx context.Context) (id int64, err error) {
-	var ids []int64
+func (bcq *BannerCreativeQuery) OnlyID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = bcq.Limit(2).IDs(setContextOp(ctx, bcq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -175,7 +198,7 @@ func (bcq *BannerCreativeQuery) OnlyID(ctx context.Context) (id int64, err error
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (bcq *BannerCreativeQuery) OnlyIDX(ctx context.Context) int64 {
+func (bcq *BannerCreativeQuery) OnlyIDX(ctx context.Context) int {
 	id, err := bcq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +226,7 @@ func (bcq *BannerCreativeQuery) AllX(ctx context.Context) []*BannerCreative {
 }
 
 // IDs executes the query and returns a list of BannerCreative IDs.
-func (bcq *BannerCreativeQuery) IDs(ctx context.Context) (ids []int64, err error) {
+func (bcq *BannerCreativeQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if bcq.ctx.Unique == nil && bcq.path != nil {
 		bcq.Unique(true)
 	}
@@ -215,7 +238,7 @@ func (bcq *BannerCreativeQuery) IDs(ctx context.Context) (ids []int64, err error
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (bcq *BannerCreativeQuery) IDsX(ctx context.Context) []int64 {
+func (bcq *BannerCreativeQuery) IDsX(ctx context.Context) []int {
 	ids, err := bcq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -270,12 +293,13 @@ func (bcq *BannerCreativeQuery) Clone() *BannerCreativeQuery {
 		return nil
 	}
 	return &BannerCreativeQuery{
-		config:     bcq.config,
-		ctx:        bcq.ctx.Clone(),
-		order:      append([]bannercreative.OrderOption{}, bcq.order...),
-		inters:     append([]Interceptor{}, bcq.inters...),
-		predicates: append([]predicate.BannerCreative{}, bcq.predicates...),
-		withBanner: bcq.withBanner.Clone(),
+		config:       bcq.config,
+		ctx:          bcq.ctx.Clone(),
+		order:        append([]bannercreative.OrderOption{}, bcq.order...),
+		inters:       append([]Interceptor{}, bcq.inters...),
+		predicates:   append([]predicate.BannerCreative{}, bcq.predicates...),
+		withBanner:   bcq.withBanner.Clone(),
+		withCreative: bcq.withCreative.Clone(),
 		// clone intermediate query.
 		sql:  bcq.sql.Clone(),
 		path: bcq.path,
@@ -293,18 +317,29 @@ func (bcq *BannerCreativeQuery) WithBanner(opts ...func(*BannerQuery)) *BannerCr
 	return bcq
 }
 
+// WithCreative tells the query-builder to eager-load the nodes that are connected to
+// the "creative" edge. The optional arguments are used to configure the query builder of the edge.
+func (bcq *BannerCreativeQuery) WithCreative(opts ...func(*CreativeQuery)) *BannerCreativeQuery {
+	query := (&CreativeClient{config: bcq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	bcq.withCreative = query
+	return bcq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		BannerID int64 `json:"banner_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.BannerCreative.Query().
-//		GroupBy(bannercreative.FieldName).
+//		GroupBy(bannercreative.FieldBannerID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (bcq *BannerCreativeQuery) GroupBy(field string, fields ...string) *BannerCreativeGroupBy {
@@ -322,11 +357,11 @@ func (bcq *BannerCreativeQuery) GroupBy(field string, fields ...string) *BannerC
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		BannerID int64 `json:"banner_id,omitempty"`
 //	}
 //
 //	client.BannerCreative.Query().
-//		Select(bannercreative.FieldName).
+//		Select(bannercreative.FieldBannerID).
 //		Scan(ctx, &v)
 func (bcq *BannerCreativeQuery) Select(fields ...string) *BannerCreativeSelect {
 	bcq.ctx.Fields = append(bcq.ctx.Fields, fields...)
@@ -370,18 +405,12 @@ func (bcq *BannerCreativeQuery) prepareQuery(ctx context.Context) error {
 func (bcq *BannerCreativeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*BannerCreative, error) {
 	var (
 		nodes       = []*BannerCreative{}
-		withFKs     = bcq.withFKs
 		_spec       = bcq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			bcq.withBanner != nil,
+			bcq.withCreative != nil,
 		}
 	)
-	if bcq.withBanner != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, bannercreative.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*BannerCreative).scanValues(nil, columns)
 	}
@@ -406,6 +435,12 @@ func (bcq *BannerCreativeQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 			return nil, err
 		}
 	}
+	if query := bcq.withCreative; query != nil {
+		if err := bcq.loadCreative(ctx, query, nodes, nil,
+			func(n *BannerCreative, e *Creative) { n.Edges.Creative = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -413,10 +448,7 @@ func (bcq *BannerCreativeQuery) loadBanner(ctx context.Context, query *BannerQue
 	ids := make([]int64, 0, len(nodes))
 	nodeids := make(map[int64][]*BannerCreative)
 	for i := range nodes {
-		if nodes[i].banner_creatives == nil {
-			continue
-		}
-		fk := *nodes[i].banner_creatives
+		fk := nodes[i].BannerID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -433,7 +465,36 @@ func (bcq *BannerCreativeQuery) loadBanner(ctx context.Context, query *BannerQue
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "banner_creatives" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "banner_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (bcq *BannerCreativeQuery) loadCreative(ctx context.Context, query *CreativeQuery, nodes []*BannerCreative, init func(*BannerCreative), assign func(*BannerCreative, *Creative)) error {
+	ids := make([]int64, 0, len(nodes))
+	nodeids := make(map[int64][]*BannerCreative)
+	for i := range nodes {
+		fk := nodes[i].CreativeID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(creative.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "creative_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -452,7 +513,7 @@ func (bcq *BannerCreativeQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (bcq *BannerCreativeQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(bannercreative.Table, bannercreative.Columns, sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64))
+	_spec := sqlgraph.NewQuerySpec(bannercreative.Table, bannercreative.Columns, sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt))
 	_spec.From = bcq.sql
 	if unique := bcq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -466,6 +527,12 @@ func (bcq *BannerCreativeQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != bannercreative.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if bcq.withBanner != nil {
+			_spec.Node.AddColumnOnce(bannercreative.FieldBannerID)
+		}
+		if bcq.withCreative != nil {
+			_spec.Node.AddColumnOnce(bannercreative.FieldCreativeID)
 		}
 	}
 	if ps := bcq.predicates; len(ps) > 0 {

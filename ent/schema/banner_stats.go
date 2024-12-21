@@ -1,3 +1,4 @@
+// schema/stats.go
 package schema
 
 import (
@@ -20,8 +21,12 @@ func (BannerStats) Fields() []ent.Field {
 		field.Int64("impressions").Default(0),
 		field.Int64("clicks").Default(0),
 		field.Int64("leads").Default(0),
+		field.Float("earnings").Default(0),
 		field.Float("ctr").Optional(),
 		field.Float("conversion_rate").Optional(),
+		field.String("device_type").Optional(),
+		field.String("browser").Optional(),
+		field.String("os").Optional(),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}
@@ -29,15 +34,18 @@ func (BannerStats) Fields() []ent.Field {
 
 func (BannerStats) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("banner", Banner.Type).
-			Ref("stats").
-			Unique(),
+		edge.From("banner", Banner.Type).Ref("stats").Unique(),
+		edge.From("publisher", User.Type).Ref("stats").Unique(),
 	}
 }
 
 func (BannerStats) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("date"),
-		index.Fields("date").Edges("banner").Unique(),
+		// Unique index for date + banner + publisher
+		index.Fields("date").Edges("banner", "publisher").Unique(),
+
+		// Additional indexes for optimization
+		index.Edges("banner"),
+		index.Edges("publisher"),
 	}
 }

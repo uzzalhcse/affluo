@@ -21,6 +21,9 @@ type Campaign func(*sql.Selector)
 // CampaignLink is the predicate function for campaignlink builders.
 type CampaignLink func(*sql.Selector)
 
+// Creative is the predicate function for creative builders.
+type Creative func(*sql.Selector)
+
 // Lead is the predicate function for lead builders.
 type Lead func(*sql.Selector)
 

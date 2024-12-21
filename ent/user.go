@@ -59,9 +59,11 @@ type UserEdges struct {
 	Payouts []*Payout `json:"payouts,omitempty"`
 	// Posts holds the value of the posts edge.
 	Posts []*Post `json:"posts,omitempty"`
+	// Stats holds the value of the stats edge.
+	Stats []*BannerStats `json:"stats,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // CampaignsOrErr returns the Campaigns value or an error if the edge
@@ -107,6 +109,15 @@ func (e UserEdges) PostsOrErr() ([]*Post, error) {
 		return e.Posts, nil
 	}
 	return nil, &NotLoadedError{edge: "posts"}
+}
+
+// StatsOrErr returns the Stats value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) StatsOrErr() ([]*BannerStats, error) {
+	if e.loadedTypes[5] {
+		return e.Stats, nil
+	}
+	return nil, &NotLoadedError{edge: "stats"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -251,6 +262,11 @@ func (u *User) QueryPayouts() *PayoutQuery {
 // QueryPosts queries the "posts" edge of the User entity.
 func (u *User) QueryPosts() *PostQuery {
 	return NewUserClient(u.config).QueryPosts(u)
+}
+
+// QueryStats queries the "stats" edge of the User entity.
+func (u *User) QueryStats() *BannerStatsQuery {
+	return NewUserClient(u.config).QueryStats(u)
 }
 
 // Update returns a builder for updating this User.

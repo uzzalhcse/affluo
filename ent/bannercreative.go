@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
+	"affluo/ent/creative"
 	"fmt"
 	"strings"
 	"time"
@@ -17,33 +18,34 @@ import (
 type BannerCreative struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int64 `json:"id,omitempty"`
-	// Name holds the value of the "name" field.
-	Name string `json:"name,omitempty"`
-	// ImageURL holds the value of the "image_url" field.
-	ImageURL string `json:"image_url,omitempty"`
-	// Size holds the value of the "size" field.
-	Size string `json:"size,omitempty"`
-	// Enabled holds the value of the "enabled" field.
-	Enabled bool `json:"enabled,omitempty"`
+	ID int `json:"id,omitempty"`
+	// BannerID holds the value of the "banner_id" field.
+	BannerID int64 `json:"banner_id,omitempty"`
+	// CreativeID holds the value of the "creative_id" field.
+	CreativeID int64 `json:"creative_id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// IsPrimary holds the value of the "is_primary" field.
+	IsPrimary bool `json:"is_primary,omitempty"`
+	// DisplayOrder holds the value of the "display_order" field.
+	DisplayOrder int `json:"display_order,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the BannerCreativeQuery when eager-loading is set.
-	Edges            BannerCreativeEdges `json:"edges"`
-	banner_creatives *int64
-	selectValues     sql.SelectValues
+	Edges        BannerCreativeEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // BannerCreativeEdges holds the relations/edges for other nodes in the graph.
 type BannerCreativeEdges struct {
 	// Banner holds the value of the banner edge.
 	Banner *Banner `json:"banner,omitempty"`
+	// Creative holds the value of the creative edge.
+	Creative *Creative `json:"creative,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // BannerOrErr returns the Banner value or an error if the edge
@@ -57,21 +59,28 @@ func (e BannerCreativeEdges) BannerOrErr() (*Banner, error) {
 	return nil, &NotLoadedError{edge: "banner"}
 }
 
+// CreativeOrErr returns the Creative value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e BannerCreativeEdges) CreativeOrErr() (*Creative, error) {
+	if e.Creative != nil {
+		return e.Creative, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: creative.Label}
+	}
+	return nil, &NotLoadedError{edge: "creative"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*BannerCreative) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case bannercreative.FieldEnabled:
+		case bannercreative.FieldIsPrimary:
 			values[i] = new(sql.NullBool)
-		case bannercreative.FieldID:
+		case bannercreative.FieldID, bannercreative.FieldBannerID, bannercreative.FieldCreativeID, bannercreative.FieldDisplayOrder:
 			values[i] = new(sql.NullInt64)
-		case bannercreative.FieldName, bannercreative.FieldImageURL, bannercreative.FieldSize:
-			values[i] = new(sql.NullString)
 		case bannercreative.FieldCreatedAt, bannercreative.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case bannercreative.ForeignKeys[0]: // banner_creatives
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -92,30 +101,18 @@ func (bc *BannerCreative) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			bc.ID = int64(value.Int64)
-		case bannercreative.FieldName:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field name", values[i])
+			bc.ID = int(value.Int64)
+		case bannercreative.FieldBannerID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field banner_id", values[i])
 			} else if value.Valid {
-				bc.Name = value.String
+				bc.BannerID = value.Int64
 			}
-		case bannercreative.FieldImageURL:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field image_url", values[i])
+		case bannercreative.FieldCreativeID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field creative_id", values[i])
 			} else if value.Valid {
-				bc.ImageURL = value.String
-			}
-		case bannercreative.FieldSize:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field size", values[i])
-			} else if value.Valid {
-				bc.Size = value.String
-			}
-		case bannercreative.FieldEnabled:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field enabled", values[i])
-			} else if value.Valid {
-				bc.Enabled = value.Bool
+				bc.CreativeID = value.Int64
 			}
 		case bannercreative.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -129,12 +126,17 @@ func (bc *BannerCreative) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				bc.UpdatedAt = value.Time
 			}
-		case bannercreative.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field banner_creatives", value)
+		case bannercreative.FieldIsPrimary:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_primary", values[i])
 			} else if value.Valid {
-				bc.banner_creatives = new(int64)
-				*bc.banner_creatives = int64(value.Int64)
+				bc.IsPrimary = value.Bool
+			}
+		case bannercreative.FieldDisplayOrder:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field display_order", values[i])
+			} else if value.Valid {
+				bc.DisplayOrder = int(value.Int64)
 			}
 		default:
 			bc.selectValues.Set(columns[i], values[i])
@@ -152,6 +154,11 @@ func (bc *BannerCreative) Value(name string) (ent.Value, error) {
 // QueryBanner queries the "banner" edge of the BannerCreative entity.
 func (bc *BannerCreative) QueryBanner() *BannerQuery {
 	return NewBannerCreativeClient(bc.config).QueryBanner(bc)
+}
+
+// QueryCreative queries the "creative" edge of the BannerCreative entity.
+func (bc *BannerCreative) QueryCreative() *CreativeQuery {
+	return NewBannerCreativeClient(bc.config).QueryCreative(bc)
 }
 
 // Update returns a builder for updating this BannerCreative.
@@ -177,23 +184,23 @@ func (bc *BannerCreative) String() string {
 	var builder strings.Builder
 	builder.WriteString("BannerCreative(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", bc.ID))
-	builder.WriteString("name=")
-	builder.WriteString(bc.Name)
+	builder.WriteString("banner_id=")
+	builder.WriteString(fmt.Sprintf("%v", bc.BannerID))
 	builder.WriteString(", ")
-	builder.WriteString("image_url=")
-	builder.WriteString(bc.ImageURL)
-	builder.WriteString(", ")
-	builder.WriteString("size=")
-	builder.WriteString(bc.Size)
-	builder.WriteString(", ")
-	builder.WriteString("enabled=")
-	builder.WriteString(fmt.Sprintf("%v", bc.Enabled))
+	builder.WriteString("creative_id=")
+	builder.WriteString(fmt.Sprintf("%v", bc.CreativeID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(bc.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(bc.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("is_primary=")
+	builder.WriteString(fmt.Sprintf("%v", bc.IsPrimary))
+	builder.WriteString(", ")
+	builder.WriteString("display_order=")
+	builder.WriteString(fmt.Sprintf("%v", bc.DisplayOrder))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -68,6 +68,18 @@ func (f CampaignLinkFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CampaignLinkMutation", m)
 }
 
+// The CreativeFunc type is an adapter to allow the use of ordinary
+// function as Creative mutator.
+type CreativeFunc func(context.Context, *ent.CreativeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CreativeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CreativeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CreativeMutation", m)
+}
+
 // The LeadFunc type is an adapter to allow the use of ordinary
 // function as Lead mutator.
 type LeadFunc func(context.Context, *ent.LeadMutation) (ent.Value, error)

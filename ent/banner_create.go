@@ -7,6 +7,7 @@ import (
 	"affluo/ent/bannercreative"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/creative"
 	"affluo/ent/lead"
 	"context"
 	"errors"
@@ -235,17 +236,17 @@ func (bc *BannerCreate) AddCampaigns(c ...*Campaign) *BannerCreate {
 	return bc.AddCampaignIDs(ids...)
 }
 
-// AddCreativeIDs adds the "creatives" edge to the BannerCreative entity by IDs.
+// AddCreativeIDs adds the "creatives" edge to the Creative entity by IDs.
 func (bc *BannerCreate) AddCreativeIDs(ids ...int64) *BannerCreate {
 	bc.mutation.AddCreativeIDs(ids...)
 	return bc
 }
 
-// AddCreatives adds the "creatives" edges to the BannerCreative entity.
-func (bc *BannerCreate) AddCreatives(b ...*BannerCreative) *BannerCreate {
-	ids := make([]int64, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
+// AddCreatives adds the "creatives" edges to the Creative entity.
+func (bc *BannerCreate) AddCreatives(c ...*Creative) *BannerCreate {
+	ids := make([]int64, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
 	return bc.AddCreativeIDs(ids...)
 }
@@ -278,6 +279,21 @@ func (bc *BannerCreate) AddLeads(l ...*Lead) *BannerCreate {
 		ids[i] = l[i].ID
 	}
 	return bc.AddLeadIDs(ids...)
+}
+
+// AddBannerCreativeIDs adds the "banner_creatives" edge to the BannerCreative entity by IDs.
+func (bc *BannerCreate) AddBannerCreativeIDs(ids ...int) *BannerCreate {
+	bc.mutation.AddBannerCreativeIDs(ids...)
+	return bc
+}
+
+// AddBannerCreatives adds the "banner_creatives" edges to the BannerCreative entity.
+func (bc *BannerCreate) AddBannerCreatives(b ...*BannerCreative) *BannerCreate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return bc.AddBannerCreativeIDs(ids...)
 }
 
 // Mutation returns the BannerMutation object of the builder.
@@ -498,18 +514,22 @@ func (bc *BannerCreate) createSpec() (*Banner, *sqlgraph.CreateSpec) {
 	}
 	if nodes := bc.mutation.CreativesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   banner.CreativesTable,
-			Columns: []string{banner.CreativesColumn},
+			Columns: banner.CreativesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		createE := &BannerCreativeCreate{config: bc.config, mutation: newBannerCreativeMutation(bc.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := bc.mutation.StatsIDs(); len(nodes) > 0 {
@@ -537,6 +557,22 @@ func (bc *BannerCreate) createSpec() (*Banner, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(lead.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := bc.mutation.BannerCreativesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   banner.BannerCreativesTable,
+			Columns: []string{banner.BannerCreativesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

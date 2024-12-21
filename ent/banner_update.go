@@ -7,6 +7,7 @@ import (
 	"affluo/ent/bannercreative"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/creative"
 	"affluo/ent/lead"
 	"affluo/ent/predicate"
 	"context"
@@ -330,17 +331,17 @@ func (bu *BannerUpdate) AddCampaigns(c ...*Campaign) *BannerUpdate {
 	return bu.AddCampaignIDs(ids...)
 }
 
-// AddCreativeIDs adds the "creatives" edge to the BannerCreative entity by IDs.
+// AddCreativeIDs adds the "creatives" edge to the Creative entity by IDs.
 func (bu *BannerUpdate) AddCreativeIDs(ids ...int64) *BannerUpdate {
 	bu.mutation.AddCreativeIDs(ids...)
 	return bu
 }
 
-// AddCreatives adds the "creatives" edges to the BannerCreative entity.
-func (bu *BannerUpdate) AddCreatives(b ...*BannerCreative) *BannerUpdate {
-	ids := make([]int64, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
+// AddCreatives adds the "creatives" edges to the Creative entity.
+func (bu *BannerUpdate) AddCreatives(c ...*Creative) *BannerUpdate {
+	ids := make([]int64, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
 	return bu.AddCreativeIDs(ids...)
 }
@@ -375,6 +376,21 @@ func (bu *BannerUpdate) AddLeads(l ...*Lead) *BannerUpdate {
 	return bu.AddLeadIDs(ids...)
 }
 
+// AddBannerCreativeIDs adds the "banner_creatives" edge to the BannerCreative entity by IDs.
+func (bu *BannerUpdate) AddBannerCreativeIDs(ids ...int) *BannerUpdate {
+	bu.mutation.AddBannerCreativeIDs(ids...)
+	return bu
+}
+
+// AddBannerCreatives adds the "banner_creatives" edges to the BannerCreative entity.
+func (bu *BannerUpdate) AddBannerCreatives(b ...*BannerCreative) *BannerUpdate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return bu.AddBannerCreativeIDs(ids...)
+}
+
 // Mutation returns the BannerMutation object of the builder.
 func (bu *BannerUpdate) Mutation() *BannerMutation {
 	return bu.mutation
@@ -401,23 +417,23 @@ func (bu *BannerUpdate) RemoveCampaigns(c ...*Campaign) *BannerUpdate {
 	return bu.RemoveCampaignIDs(ids...)
 }
 
-// ClearCreatives clears all "creatives" edges to the BannerCreative entity.
+// ClearCreatives clears all "creatives" edges to the Creative entity.
 func (bu *BannerUpdate) ClearCreatives() *BannerUpdate {
 	bu.mutation.ClearCreatives()
 	return bu
 }
 
-// RemoveCreativeIDs removes the "creatives" edge to BannerCreative entities by IDs.
+// RemoveCreativeIDs removes the "creatives" edge to Creative entities by IDs.
 func (bu *BannerUpdate) RemoveCreativeIDs(ids ...int64) *BannerUpdate {
 	bu.mutation.RemoveCreativeIDs(ids...)
 	return bu
 }
 
-// RemoveCreatives removes "creatives" edges to BannerCreative entities.
-func (bu *BannerUpdate) RemoveCreatives(b ...*BannerCreative) *BannerUpdate {
-	ids := make([]int64, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
+// RemoveCreatives removes "creatives" edges to Creative entities.
+func (bu *BannerUpdate) RemoveCreatives(c ...*Creative) *BannerUpdate {
+	ids := make([]int64, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
 	return bu.RemoveCreativeIDs(ids...)
 }
@@ -462,6 +478,27 @@ func (bu *BannerUpdate) RemoveLeads(l ...*Lead) *BannerUpdate {
 		ids[i] = l[i].ID
 	}
 	return bu.RemoveLeadIDs(ids...)
+}
+
+// ClearBannerCreatives clears all "banner_creatives" edges to the BannerCreative entity.
+func (bu *BannerUpdate) ClearBannerCreatives() *BannerUpdate {
+	bu.mutation.ClearBannerCreatives()
+	return bu
+}
+
+// RemoveBannerCreativeIDs removes the "banner_creatives" edge to BannerCreative entities by IDs.
+func (bu *BannerUpdate) RemoveBannerCreativeIDs(ids ...int) *BannerUpdate {
+	bu.mutation.RemoveBannerCreativeIDs(ids...)
+	return bu
+}
+
+// RemoveBannerCreatives removes "banner_creatives" edges to BannerCreative entities.
+func (bu *BannerUpdate) RemoveBannerCreatives(b ...*BannerCreative) *BannerUpdate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return bu.RemoveBannerCreativeIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -683,47 +720,59 @@ func (bu *BannerUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if bu.mutation.CreativesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   banner.CreativesTable,
-			Columns: []string{banner.CreativesColumn},
+			Columns: banner.CreativesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
 			},
 		}
+		createE := &BannerCreativeCreate{config: bu.config, mutation: newBannerCreativeMutation(bu.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := bu.mutation.RemovedCreativesIDs(); len(nodes) > 0 && !bu.mutation.CreativesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   banner.CreativesTable,
-			Columns: []string{banner.CreativesColumn},
+			Columns: banner.CreativesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		createE := &BannerCreativeCreate{config: bu.config, mutation: newBannerCreativeMutation(bu.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := bu.mutation.CreativesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   banner.CreativesTable,
-			Columns: []string{banner.CreativesColumn},
+			Columns: banner.CreativesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		createE := &BannerCreativeCreate{config: bu.config, mutation: newBannerCreativeMutation(bu.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if bu.mutation.StatsCleared() {
@@ -809,6 +858,51 @@ func (bu *BannerUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(lead.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if bu.mutation.BannerCreativesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   banner.BannerCreativesTable,
+			Columns: []string{banner.BannerCreativesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bu.mutation.RemovedBannerCreativesIDs(); len(nodes) > 0 && !bu.mutation.BannerCreativesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   banner.BannerCreativesTable,
+			Columns: []string{banner.BannerCreativesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bu.mutation.BannerCreativesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   banner.BannerCreativesTable,
+			Columns: []string{banner.BannerCreativesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1133,17 +1227,17 @@ func (buo *BannerUpdateOne) AddCampaigns(c ...*Campaign) *BannerUpdateOne {
 	return buo.AddCampaignIDs(ids...)
 }
 
-// AddCreativeIDs adds the "creatives" edge to the BannerCreative entity by IDs.
+// AddCreativeIDs adds the "creatives" edge to the Creative entity by IDs.
 func (buo *BannerUpdateOne) AddCreativeIDs(ids ...int64) *BannerUpdateOne {
 	buo.mutation.AddCreativeIDs(ids...)
 	return buo
 }
 
-// AddCreatives adds the "creatives" edges to the BannerCreative entity.
-func (buo *BannerUpdateOne) AddCreatives(b ...*BannerCreative) *BannerUpdateOne {
-	ids := make([]int64, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
+// AddCreatives adds the "creatives" edges to the Creative entity.
+func (buo *BannerUpdateOne) AddCreatives(c ...*Creative) *BannerUpdateOne {
+	ids := make([]int64, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
 	return buo.AddCreativeIDs(ids...)
 }
@@ -1178,6 +1272,21 @@ func (buo *BannerUpdateOne) AddLeads(l ...*Lead) *BannerUpdateOne {
 	return buo.AddLeadIDs(ids...)
 }
 
+// AddBannerCreativeIDs adds the "banner_creatives" edge to the BannerCreative entity by IDs.
+func (buo *BannerUpdateOne) AddBannerCreativeIDs(ids ...int) *BannerUpdateOne {
+	buo.mutation.AddBannerCreativeIDs(ids...)
+	return buo
+}
+
+// AddBannerCreatives adds the "banner_creatives" edges to the BannerCreative entity.
+func (buo *BannerUpdateOne) AddBannerCreatives(b ...*BannerCreative) *BannerUpdateOne {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return buo.AddBannerCreativeIDs(ids...)
+}
+
 // Mutation returns the BannerMutation object of the builder.
 func (buo *BannerUpdateOne) Mutation() *BannerMutation {
 	return buo.mutation
@@ -1204,23 +1313,23 @@ func (buo *BannerUpdateOne) RemoveCampaigns(c ...*Campaign) *BannerUpdateOne {
 	return buo.RemoveCampaignIDs(ids...)
 }
 
-// ClearCreatives clears all "creatives" edges to the BannerCreative entity.
+// ClearCreatives clears all "creatives" edges to the Creative entity.
 func (buo *BannerUpdateOne) ClearCreatives() *BannerUpdateOne {
 	buo.mutation.ClearCreatives()
 	return buo
 }
 
-// RemoveCreativeIDs removes the "creatives" edge to BannerCreative entities by IDs.
+// RemoveCreativeIDs removes the "creatives" edge to Creative entities by IDs.
 func (buo *BannerUpdateOne) RemoveCreativeIDs(ids ...int64) *BannerUpdateOne {
 	buo.mutation.RemoveCreativeIDs(ids...)
 	return buo
 }
 
-// RemoveCreatives removes "creatives" edges to BannerCreative entities.
-func (buo *BannerUpdateOne) RemoveCreatives(b ...*BannerCreative) *BannerUpdateOne {
-	ids := make([]int64, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
+// RemoveCreatives removes "creatives" edges to Creative entities.
+func (buo *BannerUpdateOne) RemoveCreatives(c ...*Creative) *BannerUpdateOne {
+	ids := make([]int64, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
 	return buo.RemoveCreativeIDs(ids...)
 }
@@ -1265,6 +1374,27 @@ func (buo *BannerUpdateOne) RemoveLeads(l ...*Lead) *BannerUpdateOne {
 		ids[i] = l[i].ID
 	}
 	return buo.RemoveLeadIDs(ids...)
+}
+
+// ClearBannerCreatives clears all "banner_creatives" edges to the BannerCreative entity.
+func (buo *BannerUpdateOne) ClearBannerCreatives() *BannerUpdateOne {
+	buo.mutation.ClearBannerCreatives()
+	return buo
+}
+
+// RemoveBannerCreativeIDs removes the "banner_creatives" edge to BannerCreative entities by IDs.
+func (buo *BannerUpdateOne) RemoveBannerCreativeIDs(ids ...int) *BannerUpdateOne {
+	buo.mutation.RemoveBannerCreativeIDs(ids...)
+	return buo
+}
+
+// RemoveBannerCreatives removes "banner_creatives" edges to BannerCreative entities.
+func (buo *BannerUpdateOne) RemoveBannerCreatives(b ...*BannerCreative) *BannerUpdateOne {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return buo.RemoveBannerCreativeIDs(ids...)
 }
 
 // Where appends a list predicates to the BannerUpdate builder.
@@ -1516,47 +1646,59 @@ func (buo *BannerUpdateOne) sqlSave(ctx context.Context) (_node *Banner, err err
 	}
 	if buo.mutation.CreativesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   banner.CreativesTable,
-			Columns: []string{banner.CreativesColumn},
+			Columns: banner.CreativesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
 			},
 		}
+		createE := &BannerCreativeCreate{config: buo.config, mutation: newBannerCreativeMutation(buo.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := buo.mutation.RemovedCreativesIDs(); len(nodes) > 0 && !buo.mutation.CreativesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   banner.CreativesTable,
-			Columns: []string{banner.CreativesColumn},
+			Columns: banner.CreativesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		createE := &BannerCreativeCreate{config: buo.config, mutation: newBannerCreativeMutation(buo.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := buo.mutation.CreativesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   banner.CreativesTable,
-			Columns: []string{banner.CreativesColumn},
+			Columns: banner.CreativesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		createE := &BannerCreativeCreate{config: buo.config, mutation: newBannerCreativeMutation(buo.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if buo.mutation.StatsCleared() {
@@ -1642,6 +1784,51 @@ func (buo *BannerUpdateOne) sqlSave(ctx context.Context) (_node *Banner, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(lead.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if buo.mutation.BannerCreativesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   banner.BannerCreativesTable,
+			Columns: []string{banner.BannerCreativesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := buo.mutation.RemovedBannerCreativesIDs(); len(nodes) > 0 && !buo.mutation.BannerCreativesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   banner.BannerCreativesTable,
+			Columns: []string{banner.BannerCreativesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := buo.mutation.BannerCreativesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   banner.BannerCreativesTable,
+			Columns: []string{banner.BannerCreativesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

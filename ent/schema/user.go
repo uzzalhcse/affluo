@@ -48,6 +48,7 @@ func (User) Edges() []ent.Edge {
 		edge.To("tracks", Track.Type),
 		edge.To("payouts", Payout.Type), // Add this line
 		edge.To("posts", Post.Type),     // Add this line
+		edge.To("stats", BannerStats.Type),
 	}
 }
 func (User) Indexes() []ent.Index {

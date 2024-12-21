@@ -8,6 +8,7 @@ import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/creative"
 	"affluo/ent/lead"
 	"affluo/ent/referral"
 	"affluo/ent/schema"
@@ -46,24 +47,20 @@ func init() {
 	banner.IDValidator = bannerDescID.Validators[0].(func(int64) error)
 	bannercreativeFields := schema.BannerCreative{}.Fields()
 	_ = bannercreativeFields
-	// bannercreativeDescEnabled is the schema descriptor for enabled field.
-	bannercreativeDescEnabled := bannercreativeFields[4].Descriptor()
-	// bannercreative.DefaultEnabled holds the default value on creation for the enabled field.
-	bannercreative.DefaultEnabled = bannercreativeDescEnabled.Default.(bool)
 	// bannercreativeDescCreatedAt is the schema descriptor for created_at field.
-	bannercreativeDescCreatedAt := bannercreativeFields[5].Descriptor()
+	bannercreativeDescCreatedAt := bannercreativeFields[2].Descriptor()
 	// bannercreative.DefaultCreatedAt holds the default value on creation for the created_at field.
 	bannercreative.DefaultCreatedAt = bannercreativeDescCreatedAt.Default.(func() time.Time)
 	// bannercreativeDescUpdatedAt is the schema descriptor for updated_at field.
-	bannercreativeDescUpdatedAt := bannercreativeFields[6].Descriptor()
+	bannercreativeDescUpdatedAt := bannercreativeFields[3].Descriptor()
 	// bannercreative.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	bannercreative.DefaultUpdatedAt = bannercreativeDescUpdatedAt.Default.(func() time.Time)
 	// bannercreative.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	bannercreative.UpdateDefaultUpdatedAt = bannercreativeDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// bannercreativeDescID is the schema descriptor for id field.
-	bannercreativeDescID := bannercreativeFields[0].Descriptor()
-	// bannercreative.IDValidator is a validator for the "id" field. It is called by the builders before save.
-	bannercreative.IDValidator = bannercreativeDescID.Validators[0].(func(int64) error)
+	// bannercreativeDescIsPrimary is the schema descriptor for is_primary field.
+	bannercreativeDescIsPrimary := bannercreativeFields[4].Descriptor()
+	// bannercreative.DefaultIsPrimary holds the default value on creation for the is_primary field.
+	bannercreative.DefaultIsPrimary = bannercreativeDescIsPrimary.Default.(bool)
 	bannerstatsFields := schema.BannerStats{}.Fields()
 	_ = bannerstatsFields
 	// bannerstatsDescDate is the schema descriptor for date field.
@@ -82,12 +79,16 @@ func init() {
 	bannerstatsDescLeads := bannerstatsFields[4].Descriptor()
 	// bannerstats.DefaultLeads holds the default value on creation for the leads field.
 	bannerstats.DefaultLeads = bannerstatsDescLeads.Default.(int64)
+	// bannerstatsDescEarnings is the schema descriptor for earnings field.
+	bannerstatsDescEarnings := bannerstatsFields[5].Descriptor()
+	// bannerstats.DefaultEarnings holds the default value on creation for the earnings field.
+	bannerstats.DefaultEarnings = bannerstatsDescEarnings.Default.(float64)
 	// bannerstatsDescCreatedAt is the schema descriptor for created_at field.
-	bannerstatsDescCreatedAt := bannerstatsFields[7].Descriptor()
+	bannerstatsDescCreatedAt := bannerstatsFields[11].Descriptor()
 	// bannerstats.DefaultCreatedAt holds the default value on creation for the created_at field.
 	bannerstats.DefaultCreatedAt = bannerstatsDescCreatedAt.Default.(func() time.Time)
 	// bannerstatsDescUpdatedAt is the schema descriptor for updated_at field.
-	bannerstatsDescUpdatedAt := bannerstatsFields[8].Descriptor()
+	bannerstatsDescUpdatedAt := bannerstatsFields[12].Descriptor()
 	// bannerstats.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	bannerstats.DefaultUpdatedAt = bannerstatsDescUpdatedAt.Default.(func() time.Time)
 	// bannerstats.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -146,6 +147,26 @@ func init() {
 	campaignlinkDescID := campaignlinkFields[0].Descriptor()
 	// campaignlink.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	campaignlink.IDValidator = campaignlinkDescID.Validators[0].(func(int64) error)
+	creativeFields := schema.Creative{}.Fields()
+	_ = creativeFields
+	// creativeDescEnabled is the schema descriptor for enabled field.
+	creativeDescEnabled := creativeFields[4].Descriptor()
+	// creative.DefaultEnabled holds the default value on creation for the enabled field.
+	creative.DefaultEnabled = creativeDescEnabled.Default.(bool)
+	// creativeDescCreatedAt is the schema descriptor for created_at field.
+	creativeDescCreatedAt := creativeFields[5].Descriptor()
+	// creative.DefaultCreatedAt holds the default value on creation for the created_at field.
+	creative.DefaultCreatedAt = creativeDescCreatedAt.Default.(func() time.Time)
+	// creativeDescUpdatedAt is the schema descriptor for updated_at field.
+	creativeDescUpdatedAt := creativeFields[6].Descriptor()
+	// creative.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	creative.DefaultUpdatedAt = creativeDescUpdatedAt.Default.(func() time.Time)
+	// creative.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	creative.UpdateDefaultUpdatedAt = creativeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// creativeDescID is the schema descriptor for id field.
+	creativeDescID := creativeFields[0].Descriptor()
+	// creative.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	creative.IDValidator = creativeDescID.Validators[0].(func(int64) error)
 	leadFields := schema.Lead{}.Fields()
 	_ = leadFields
 	// leadDescCurrency is the schema descriptor for currency field.

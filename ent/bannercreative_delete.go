@@ -40,7 +40,7 @@ func (bcd *BannerCreativeDelete) ExecX(ctx context.Context) int {
 }
 
 func (bcd *BannerCreativeDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(bannercreative.Table, sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64))
+	_spec := sqlgraph.NewDeleteSpec(bannercreative.Table, sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt))
 	if ps := bcd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

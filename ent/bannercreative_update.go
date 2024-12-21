@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
+	"affluo/ent/creative"
 	"affluo/ent/predicate"
 	"context"
 	"errors"
@@ -29,76 +30,30 @@ func (bcu *BannerCreativeUpdate) Where(ps ...predicate.BannerCreative) *BannerCr
 	return bcu
 }
 
-// SetName sets the "name" field.
-func (bcu *BannerCreativeUpdate) SetName(s string) *BannerCreativeUpdate {
-	bcu.mutation.SetName(s)
+// SetBannerID sets the "banner_id" field.
+func (bcu *BannerCreativeUpdate) SetBannerID(i int64) *BannerCreativeUpdate {
+	bcu.mutation.SetBannerID(i)
 	return bcu
 }
 
-// SetNillableName sets the "name" field if the given value is not nil.
-func (bcu *BannerCreativeUpdate) SetNillableName(s *string) *BannerCreativeUpdate {
-	if s != nil {
-		bcu.SetName(*s)
+// SetNillableBannerID sets the "banner_id" field if the given value is not nil.
+func (bcu *BannerCreativeUpdate) SetNillableBannerID(i *int64) *BannerCreativeUpdate {
+	if i != nil {
+		bcu.SetBannerID(*i)
 	}
 	return bcu
 }
 
-// ClearName clears the value of the "name" field.
-func (bcu *BannerCreativeUpdate) ClearName() *BannerCreativeUpdate {
-	bcu.mutation.ClearName()
+// SetCreativeID sets the "creative_id" field.
+func (bcu *BannerCreativeUpdate) SetCreativeID(i int64) *BannerCreativeUpdate {
+	bcu.mutation.SetCreativeID(i)
 	return bcu
 }
 
-// SetImageURL sets the "image_url" field.
-func (bcu *BannerCreativeUpdate) SetImageURL(s string) *BannerCreativeUpdate {
-	bcu.mutation.SetImageURL(s)
-	return bcu
-}
-
-// SetNillableImageURL sets the "image_url" field if the given value is not nil.
-func (bcu *BannerCreativeUpdate) SetNillableImageURL(s *string) *BannerCreativeUpdate {
-	if s != nil {
-		bcu.SetImageURL(*s)
-	}
-	return bcu
-}
-
-// ClearImageURL clears the value of the "image_url" field.
-func (bcu *BannerCreativeUpdate) ClearImageURL() *BannerCreativeUpdate {
-	bcu.mutation.ClearImageURL()
-	return bcu
-}
-
-// SetSize sets the "size" field.
-func (bcu *BannerCreativeUpdate) SetSize(s string) *BannerCreativeUpdate {
-	bcu.mutation.SetSize(s)
-	return bcu
-}
-
-// SetNillableSize sets the "size" field if the given value is not nil.
-func (bcu *BannerCreativeUpdate) SetNillableSize(s *string) *BannerCreativeUpdate {
-	if s != nil {
-		bcu.SetSize(*s)
-	}
-	return bcu
-}
-
-// ClearSize clears the value of the "size" field.
-func (bcu *BannerCreativeUpdate) ClearSize() *BannerCreativeUpdate {
-	bcu.mutation.ClearSize()
-	return bcu
-}
-
-// SetEnabled sets the "enabled" field.
-func (bcu *BannerCreativeUpdate) SetEnabled(b bool) *BannerCreativeUpdate {
-	bcu.mutation.SetEnabled(b)
-	return bcu
-}
-
-// SetNillableEnabled sets the "enabled" field if the given value is not nil.
-func (bcu *BannerCreativeUpdate) SetNillableEnabled(b *bool) *BannerCreativeUpdate {
-	if b != nil {
-		bcu.SetEnabled(*b)
+// SetNillableCreativeID sets the "creative_id" field if the given value is not nil.
+func (bcu *BannerCreativeUpdate) SetNillableCreativeID(i *int64) *BannerCreativeUpdate {
+	if i != nil {
+		bcu.SetCreativeID(*i)
 	}
 	return bcu
 }
@@ -109,23 +64,55 @@ func (bcu *BannerCreativeUpdate) SetUpdatedAt(t time.Time) *BannerCreativeUpdate
 	return bcu
 }
 
-// SetBannerID sets the "banner" edge to the Banner entity by ID.
-func (bcu *BannerCreativeUpdate) SetBannerID(id int64) *BannerCreativeUpdate {
-	bcu.mutation.SetBannerID(id)
+// SetIsPrimary sets the "is_primary" field.
+func (bcu *BannerCreativeUpdate) SetIsPrimary(b bool) *BannerCreativeUpdate {
+	bcu.mutation.SetIsPrimary(b)
 	return bcu
 }
 
-// SetNillableBannerID sets the "banner" edge to the Banner entity by ID if the given value is not nil.
-func (bcu *BannerCreativeUpdate) SetNillableBannerID(id *int64) *BannerCreativeUpdate {
-	if id != nil {
-		bcu = bcu.SetBannerID(*id)
+// SetNillableIsPrimary sets the "is_primary" field if the given value is not nil.
+func (bcu *BannerCreativeUpdate) SetNillableIsPrimary(b *bool) *BannerCreativeUpdate {
+	if b != nil {
+		bcu.SetIsPrimary(*b)
 	}
+	return bcu
+}
+
+// SetDisplayOrder sets the "display_order" field.
+func (bcu *BannerCreativeUpdate) SetDisplayOrder(i int) *BannerCreativeUpdate {
+	bcu.mutation.ResetDisplayOrder()
+	bcu.mutation.SetDisplayOrder(i)
+	return bcu
+}
+
+// SetNillableDisplayOrder sets the "display_order" field if the given value is not nil.
+func (bcu *BannerCreativeUpdate) SetNillableDisplayOrder(i *int) *BannerCreativeUpdate {
+	if i != nil {
+		bcu.SetDisplayOrder(*i)
+	}
+	return bcu
+}
+
+// AddDisplayOrder adds i to the "display_order" field.
+func (bcu *BannerCreativeUpdate) AddDisplayOrder(i int) *BannerCreativeUpdate {
+	bcu.mutation.AddDisplayOrder(i)
+	return bcu
+}
+
+// ClearDisplayOrder clears the value of the "display_order" field.
+func (bcu *BannerCreativeUpdate) ClearDisplayOrder() *BannerCreativeUpdate {
+	bcu.mutation.ClearDisplayOrder()
 	return bcu
 }
 
 // SetBanner sets the "banner" edge to the Banner entity.
 func (bcu *BannerCreativeUpdate) SetBanner(b *Banner) *BannerCreativeUpdate {
 	return bcu.SetBannerID(b.ID)
+}
+
+// SetCreative sets the "creative" edge to the Creative entity.
+func (bcu *BannerCreativeUpdate) SetCreative(c *Creative) *BannerCreativeUpdate {
+	return bcu.SetCreativeID(c.ID)
 }
 
 // Mutation returns the BannerCreativeMutation object of the builder.
@@ -136,6 +123,12 @@ func (bcu *BannerCreativeUpdate) Mutation() *BannerCreativeMutation {
 // ClearBanner clears the "banner" edge to the Banner entity.
 func (bcu *BannerCreativeUpdate) ClearBanner() *BannerCreativeUpdate {
 	bcu.mutation.ClearBanner()
+	return bcu
+}
+
+// ClearCreative clears the "creative" edge to the Creative entity.
+func (bcu *BannerCreativeUpdate) ClearCreative() *BannerCreativeUpdate {
+	bcu.mutation.ClearCreative()
 	return bcu
 }
 
@@ -175,8 +168,22 @@ func (bcu *BannerCreativeUpdate) defaults() {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (bcu *BannerCreativeUpdate) check() error {
+	if bcu.mutation.BannerCleared() && len(bcu.mutation.BannerIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "BannerCreative.banner"`)
+	}
+	if bcu.mutation.CreativeCleared() && len(bcu.mutation.CreativeIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "BannerCreative.creative"`)
+	}
+	return nil
+}
+
 func (bcu *BannerCreativeUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(bannercreative.Table, bannercreative.Columns, sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64))
+	if err := bcu.check(); err != nil {
+		return n, err
+	}
+	_spec := sqlgraph.NewUpdateSpec(bannercreative.Table, bannercreative.Columns, sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt))
 	if ps := bcu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -184,34 +191,25 @@ func (bcu *BannerCreativeUpdate) sqlSave(ctx context.Context) (n int, err error)
 			}
 		}
 	}
-	if value, ok := bcu.mutation.Name(); ok {
-		_spec.SetField(bannercreative.FieldName, field.TypeString, value)
-	}
-	if bcu.mutation.NameCleared() {
-		_spec.ClearField(bannercreative.FieldName, field.TypeString)
-	}
-	if value, ok := bcu.mutation.ImageURL(); ok {
-		_spec.SetField(bannercreative.FieldImageURL, field.TypeString, value)
-	}
-	if bcu.mutation.ImageURLCleared() {
-		_spec.ClearField(bannercreative.FieldImageURL, field.TypeString)
-	}
-	if value, ok := bcu.mutation.Size(); ok {
-		_spec.SetField(bannercreative.FieldSize, field.TypeString, value)
-	}
-	if bcu.mutation.SizeCleared() {
-		_spec.ClearField(bannercreative.FieldSize, field.TypeString)
-	}
-	if value, ok := bcu.mutation.Enabled(); ok {
-		_spec.SetField(bannercreative.FieldEnabled, field.TypeBool, value)
-	}
 	if value, ok := bcu.mutation.UpdatedAt(); ok {
 		_spec.SetField(bannercreative.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := bcu.mutation.IsPrimary(); ok {
+		_spec.SetField(bannercreative.FieldIsPrimary, field.TypeBool, value)
+	}
+	if value, ok := bcu.mutation.DisplayOrder(); ok {
+		_spec.SetField(bannercreative.FieldDisplayOrder, field.TypeInt, value)
+	}
+	if value, ok := bcu.mutation.AddedDisplayOrder(); ok {
+		_spec.AddField(bannercreative.FieldDisplayOrder, field.TypeInt, value)
+	}
+	if bcu.mutation.DisplayOrderCleared() {
+		_spec.ClearField(bannercreative.FieldDisplayOrder, field.TypeInt)
 	}
 	if bcu.mutation.BannerCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   bannercreative.BannerTable,
 			Columns: []string{bannercreative.BannerColumn},
 			Bidi:    false,
@@ -224,12 +222,41 @@ func (bcu *BannerCreativeUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if nodes := bcu.mutation.BannerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   bannercreative.BannerTable,
 			Columns: []string{bannercreative.BannerColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if bcu.mutation.CreativeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   bannercreative.CreativeTable,
+			Columns: []string{bannercreative.CreativeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bcu.mutation.CreativeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   bannercreative.CreativeTable,
+			Columns: []string{bannercreative.CreativeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -257,76 +284,30 @@ type BannerCreativeUpdateOne struct {
 	mutation *BannerCreativeMutation
 }
 
-// SetName sets the "name" field.
-func (bcuo *BannerCreativeUpdateOne) SetName(s string) *BannerCreativeUpdateOne {
-	bcuo.mutation.SetName(s)
+// SetBannerID sets the "banner_id" field.
+func (bcuo *BannerCreativeUpdateOne) SetBannerID(i int64) *BannerCreativeUpdateOne {
+	bcuo.mutation.SetBannerID(i)
 	return bcuo
 }
 
-// SetNillableName sets the "name" field if the given value is not nil.
-func (bcuo *BannerCreativeUpdateOne) SetNillableName(s *string) *BannerCreativeUpdateOne {
-	if s != nil {
-		bcuo.SetName(*s)
+// SetNillableBannerID sets the "banner_id" field if the given value is not nil.
+func (bcuo *BannerCreativeUpdateOne) SetNillableBannerID(i *int64) *BannerCreativeUpdateOne {
+	if i != nil {
+		bcuo.SetBannerID(*i)
 	}
 	return bcuo
 }
 
-// ClearName clears the value of the "name" field.
-func (bcuo *BannerCreativeUpdateOne) ClearName() *BannerCreativeUpdateOne {
-	bcuo.mutation.ClearName()
+// SetCreativeID sets the "creative_id" field.
+func (bcuo *BannerCreativeUpdateOne) SetCreativeID(i int64) *BannerCreativeUpdateOne {
+	bcuo.mutation.SetCreativeID(i)
 	return bcuo
 }
 
-// SetImageURL sets the "image_url" field.
-func (bcuo *BannerCreativeUpdateOne) SetImageURL(s string) *BannerCreativeUpdateOne {
-	bcuo.mutation.SetImageURL(s)
-	return bcuo
-}
-
-// SetNillableImageURL sets the "image_url" field if the given value is not nil.
-func (bcuo *BannerCreativeUpdateOne) SetNillableImageURL(s *string) *BannerCreativeUpdateOne {
-	if s != nil {
-		bcuo.SetImageURL(*s)
-	}
-	return bcuo
-}
-
-// ClearImageURL clears the value of the "image_url" field.
-func (bcuo *BannerCreativeUpdateOne) ClearImageURL() *BannerCreativeUpdateOne {
-	bcuo.mutation.ClearImageURL()
-	return bcuo
-}
-
-// SetSize sets the "size" field.
-func (bcuo *BannerCreativeUpdateOne) SetSize(s string) *BannerCreativeUpdateOne {
-	bcuo.mutation.SetSize(s)
-	return bcuo
-}
-
-// SetNillableSize sets the "size" field if the given value is not nil.
-func (bcuo *BannerCreativeUpdateOne) SetNillableSize(s *string) *BannerCreativeUpdateOne {
-	if s != nil {
-		bcuo.SetSize(*s)
-	}
-	return bcuo
-}
-
-// ClearSize clears the value of the "size" field.
-func (bcuo *BannerCreativeUpdateOne) ClearSize() *BannerCreativeUpdateOne {
-	bcuo.mutation.ClearSize()
-	return bcuo
-}
-
-// SetEnabled sets the "enabled" field.
-func (bcuo *BannerCreativeUpdateOne) SetEnabled(b bool) *BannerCreativeUpdateOne {
-	bcuo.mutation.SetEnabled(b)
-	return bcuo
-}
-
-// SetNillableEnabled sets the "enabled" field if the given value is not nil.
-func (bcuo *BannerCreativeUpdateOne) SetNillableEnabled(b *bool) *BannerCreativeUpdateOne {
-	if b != nil {
-		bcuo.SetEnabled(*b)
+// SetNillableCreativeID sets the "creative_id" field if the given value is not nil.
+func (bcuo *BannerCreativeUpdateOne) SetNillableCreativeID(i *int64) *BannerCreativeUpdateOne {
+	if i != nil {
+		bcuo.SetCreativeID(*i)
 	}
 	return bcuo
 }
@@ -337,23 +318,55 @@ func (bcuo *BannerCreativeUpdateOne) SetUpdatedAt(t time.Time) *BannerCreativeUp
 	return bcuo
 }
 
-// SetBannerID sets the "banner" edge to the Banner entity by ID.
-func (bcuo *BannerCreativeUpdateOne) SetBannerID(id int64) *BannerCreativeUpdateOne {
-	bcuo.mutation.SetBannerID(id)
+// SetIsPrimary sets the "is_primary" field.
+func (bcuo *BannerCreativeUpdateOne) SetIsPrimary(b bool) *BannerCreativeUpdateOne {
+	bcuo.mutation.SetIsPrimary(b)
 	return bcuo
 }
 
-// SetNillableBannerID sets the "banner" edge to the Banner entity by ID if the given value is not nil.
-func (bcuo *BannerCreativeUpdateOne) SetNillableBannerID(id *int64) *BannerCreativeUpdateOne {
-	if id != nil {
-		bcuo = bcuo.SetBannerID(*id)
+// SetNillableIsPrimary sets the "is_primary" field if the given value is not nil.
+func (bcuo *BannerCreativeUpdateOne) SetNillableIsPrimary(b *bool) *BannerCreativeUpdateOne {
+	if b != nil {
+		bcuo.SetIsPrimary(*b)
 	}
+	return bcuo
+}
+
+// SetDisplayOrder sets the "display_order" field.
+func (bcuo *BannerCreativeUpdateOne) SetDisplayOrder(i int) *BannerCreativeUpdateOne {
+	bcuo.mutation.ResetDisplayOrder()
+	bcuo.mutation.SetDisplayOrder(i)
+	return bcuo
+}
+
+// SetNillableDisplayOrder sets the "display_order" field if the given value is not nil.
+func (bcuo *BannerCreativeUpdateOne) SetNillableDisplayOrder(i *int) *BannerCreativeUpdateOne {
+	if i != nil {
+		bcuo.SetDisplayOrder(*i)
+	}
+	return bcuo
+}
+
+// AddDisplayOrder adds i to the "display_order" field.
+func (bcuo *BannerCreativeUpdateOne) AddDisplayOrder(i int) *BannerCreativeUpdateOne {
+	bcuo.mutation.AddDisplayOrder(i)
+	return bcuo
+}
+
+// ClearDisplayOrder clears the value of the "display_order" field.
+func (bcuo *BannerCreativeUpdateOne) ClearDisplayOrder() *BannerCreativeUpdateOne {
+	bcuo.mutation.ClearDisplayOrder()
 	return bcuo
 }
 
 // SetBanner sets the "banner" edge to the Banner entity.
 func (bcuo *BannerCreativeUpdateOne) SetBanner(b *Banner) *BannerCreativeUpdateOne {
 	return bcuo.SetBannerID(b.ID)
+}
+
+// SetCreative sets the "creative" edge to the Creative entity.
+func (bcuo *BannerCreativeUpdateOne) SetCreative(c *Creative) *BannerCreativeUpdateOne {
+	return bcuo.SetCreativeID(c.ID)
 }
 
 // Mutation returns the BannerCreativeMutation object of the builder.
@@ -364,6 +377,12 @@ func (bcuo *BannerCreativeUpdateOne) Mutation() *BannerCreativeMutation {
 // ClearBanner clears the "banner" edge to the Banner entity.
 func (bcuo *BannerCreativeUpdateOne) ClearBanner() *BannerCreativeUpdateOne {
 	bcuo.mutation.ClearBanner()
+	return bcuo
+}
+
+// ClearCreative clears the "creative" edge to the Creative entity.
+func (bcuo *BannerCreativeUpdateOne) ClearCreative() *BannerCreativeUpdateOne {
+	bcuo.mutation.ClearCreative()
 	return bcuo
 }
 
@@ -416,8 +435,22 @@ func (bcuo *BannerCreativeUpdateOne) defaults() {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (bcuo *BannerCreativeUpdateOne) check() error {
+	if bcuo.mutation.BannerCleared() && len(bcuo.mutation.BannerIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "BannerCreative.banner"`)
+	}
+	if bcuo.mutation.CreativeCleared() && len(bcuo.mutation.CreativeIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "BannerCreative.creative"`)
+	}
+	return nil
+}
+
 func (bcuo *BannerCreativeUpdateOne) sqlSave(ctx context.Context) (_node *BannerCreative, err error) {
-	_spec := sqlgraph.NewUpdateSpec(bannercreative.Table, bannercreative.Columns, sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64))
+	if err := bcuo.check(); err != nil {
+		return _node, err
+	}
+	_spec := sqlgraph.NewUpdateSpec(bannercreative.Table, bannercreative.Columns, sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt))
 	id, ok := bcuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "BannerCreative.id" for update`)}
@@ -442,34 +475,25 @@ func (bcuo *BannerCreativeUpdateOne) sqlSave(ctx context.Context) (_node *Banner
 			}
 		}
 	}
-	if value, ok := bcuo.mutation.Name(); ok {
-		_spec.SetField(bannercreative.FieldName, field.TypeString, value)
-	}
-	if bcuo.mutation.NameCleared() {
-		_spec.ClearField(bannercreative.FieldName, field.TypeString)
-	}
-	if value, ok := bcuo.mutation.ImageURL(); ok {
-		_spec.SetField(bannercreative.FieldImageURL, field.TypeString, value)
-	}
-	if bcuo.mutation.ImageURLCleared() {
-		_spec.ClearField(bannercreative.FieldImageURL, field.TypeString)
-	}
-	if value, ok := bcuo.mutation.Size(); ok {
-		_spec.SetField(bannercreative.FieldSize, field.TypeString, value)
-	}
-	if bcuo.mutation.SizeCleared() {
-		_spec.ClearField(bannercreative.FieldSize, field.TypeString)
-	}
-	if value, ok := bcuo.mutation.Enabled(); ok {
-		_spec.SetField(bannercreative.FieldEnabled, field.TypeBool, value)
-	}
 	if value, ok := bcuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(bannercreative.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := bcuo.mutation.IsPrimary(); ok {
+		_spec.SetField(bannercreative.FieldIsPrimary, field.TypeBool, value)
+	}
+	if value, ok := bcuo.mutation.DisplayOrder(); ok {
+		_spec.SetField(bannercreative.FieldDisplayOrder, field.TypeInt, value)
+	}
+	if value, ok := bcuo.mutation.AddedDisplayOrder(); ok {
+		_spec.AddField(bannercreative.FieldDisplayOrder, field.TypeInt, value)
+	}
+	if bcuo.mutation.DisplayOrderCleared() {
+		_spec.ClearField(bannercreative.FieldDisplayOrder, field.TypeInt)
 	}
 	if bcuo.mutation.BannerCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   bannercreative.BannerTable,
 			Columns: []string{bannercreative.BannerColumn},
 			Bidi:    false,
@@ -482,12 +506,41 @@ func (bcuo *BannerCreativeUpdateOne) sqlSave(ctx context.Context) (_node *Banner
 	if nodes := bcuo.mutation.BannerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   bannercreative.BannerTable,
 			Columns: []string{bannercreative.BannerColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(banner.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if bcuo.mutation.CreativeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   bannercreative.CreativeTable,
+			Columns: []string{bannercreative.CreativeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bcuo.mutation.CreativeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   bannercreative.CreativeTable,
+			Columns: []string{bannercreative.CreativeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

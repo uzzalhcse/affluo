@@ -11,68 +11,58 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int64) predicate.BannerCreative {
+func ID(id int) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int64) predicate.BannerCreative {
+func IDEQ(id int) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int64) predicate.BannerCreative {
+func IDNEQ(id int) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int64) predicate.BannerCreative {
+func IDIn(ids ...int) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int64) predicate.BannerCreative {
+func IDNotIn(ids ...int) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int64) predicate.BannerCreative {
+func IDGT(id int) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int64) predicate.BannerCreative {
+func IDGTE(id int) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int64) predicate.BannerCreative {
+func IDLT(id int) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int64) predicate.BannerCreative {
+func IDLTE(id int) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldLTE(FieldID, id))
 }
 
-// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
-func Name(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEQ(FieldName, v))
+// BannerID applies equality check predicate on the "banner_id" field. It's identical to BannerIDEQ.
+func BannerID(v int64) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldEQ(FieldBannerID, v))
 }
 
-// ImageURL applies equality check predicate on the "image_url" field. It's identical to ImageURLEQ.
-func ImageURL(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEQ(FieldImageURL, v))
-}
-
-// Size applies equality check predicate on the "size" field. It's identical to SizeEQ.
-func Size(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEQ(FieldSize, v))
-}
-
-// Enabled applies equality check predicate on the "enabled" field. It's identical to EnabledEQ.
-func Enabled(v bool) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEQ(FieldEnabled, v))
+// CreativeID applies equality check predicate on the "creative_id" field. It's identical to CreativeIDEQ.
+func CreativeID(v int64) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldEQ(FieldCreativeID, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -85,239 +75,54 @@ func UpdatedAt(v time.Time) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
-// NameEQ applies the EQ predicate on the "name" field.
-func NameEQ(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEQ(FieldName, v))
+// IsPrimary applies equality check predicate on the "is_primary" field. It's identical to IsPrimaryEQ.
+func IsPrimary(v bool) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldEQ(FieldIsPrimary, v))
 }
 
-// NameNEQ applies the NEQ predicate on the "name" field.
-func NameNEQ(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldNEQ(FieldName, v))
+// DisplayOrder applies equality check predicate on the "display_order" field. It's identical to DisplayOrderEQ.
+func DisplayOrder(v int) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldEQ(FieldDisplayOrder, v))
 }
 
-// NameIn applies the In predicate on the "name" field.
-func NameIn(vs ...string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldIn(FieldName, vs...))
+// BannerIDEQ applies the EQ predicate on the "banner_id" field.
+func BannerIDEQ(v int64) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldEQ(FieldBannerID, v))
 }
 
-// NameNotIn applies the NotIn predicate on the "name" field.
-func NameNotIn(vs ...string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldNotIn(FieldName, vs...))
+// BannerIDNEQ applies the NEQ predicate on the "banner_id" field.
+func BannerIDNEQ(v int64) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldNEQ(FieldBannerID, v))
 }
 
-// NameGT applies the GT predicate on the "name" field.
-func NameGT(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldGT(FieldName, v))
+// BannerIDIn applies the In predicate on the "banner_id" field.
+func BannerIDIn(vs ...int64) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldIn(FieldBannerID, vs...))
 }
 
-// NameGTE applies the GTE predicate on the "name" field.
-func NameGTE(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldGTE(FieldName, v))
+// BannerIDNotIn applies the NotIn predicate on the "banner_id" field.
+func BannerIDNotIn(vs ...int64) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldNotIn(FieldBannerID, vs...))
 }
 
-// NameLT applies the LT predicate on the "name" field.
-func NameLT(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldLT(FieldName, v))
+// CreativeIDEQ applies the EQ predicate on the "creative_id" field.
+func CreativeIDEQ(v int64) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldEQ(FieldCreativeID, v))
 }
 
-// NameLTE applies the LTE predicate on the "name" field.
-func NameLTE(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldLTE(FieldName, v))
+// CreativeIDNEQ applies the NEQ predicate on the "creative_id" field.
+func CreativeIDNEQ(v int64) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldNEQ(FieldCreativeID, v))
 }
 
-// NameContains applies the Contains predicate on the "name" field.
-func NameContains(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldContains(FieldName, v))
+// CreativeIDIn applies the In predicate on the "creative_id" field.
+func CreativeIDIn(vs ...int64) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldIn(FieldCreativeID, vs...))
 }
 
-// NameHasPrefix applies the HasPrefix predicate on the "name" field.
-func NameHasPrefix(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldHasPrefix(FieldName, v))
-}
-
-// NameHasSuffix applies the HasSuffix predicate on the "name" field.
-func NameHasSuffix(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldHasSuffix(FieldName, v))
-}
-
-// NameIsNil applies the IsNil predicate on the "name" field.
-func NameIsNil() predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldIsNull(FieldName))
-}
-
-// NameNotNil applies the NotNil predicate on the "name" field.
-func NameNotNil() predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldNotNull(FieldName))
-}
-
-// NameEqualFold applies the EqualFold predicate on the "name" field.
-func NameEqualFold(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEqualFold(FieldName, v))
-}
-
-// NameContainsFold applies the ContainsFold predicate on the "name" field.
-func NameContainsFold(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldContainsFold(FieldName, v))
-}
-
-// ImageURLEQ applies the EQ predicate on the "image_url" field.
-func ImageURLEQ(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEQ(FieldImageURL, v))
-}
-
-// ImageURLNEQ applies the NEQ predicate on the "image_url" field.
-func ImageURLNEQ(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldNEQ(FieldImageURL, v))
-}
-
-// ImageURLIn applies the In predicate on the "image_url" field.
-func ImageURLIn(vs ...string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldIn(FieldImageURL, vs...))
-}
-
-// ImageURLNotIn applies the NotIn predicate on the "image_url" field.
-func ImageURLNotIn(vs ...string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldNotIn(FieldImageURL, vs...))
-}
-
-// ImageURLGT applies the GT predicate on the "image_url" field.
-func ImageURLGT(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldGT(FieldImageURL, v))
-}
-
-// ImageURLGTE applies the GTE predicate on the "image_url" field.
-func ImageURLGTE(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldGTE(FieldImageURL, v))
-}
-
-// ImageURLLT applies the LT predicate on the "image_url" field.
-func ImageURLLT(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldLT(FieldImageURL, v))
-}
-
-// ImageURLLTE applies the LTE predicate on the "image_url" field.
-func ImageURLLTE(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldLTE(FieldImageURL, v))
-}
-
-// ImageURLContains applies the Contains predicate on the "image_url" field.
-func ImageURLContains(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldContains(FieldImageURL, v))
-}
-
-// ImageURLHasPrefix applies the HasPrefix predicate on the "image_url" field.
-func ImageURLHasPrefix(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldHasPrefix(FieldImageURL, v))
-}
-
-// ImageURLHasSuffix applies the HasSuffix predicate on the "image_url" field.
-func ImageURLHasSuffix(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldHasSuffix(FieldImageURL, v))
-}
-
-// ImageURLIsNil applies the IsNil predicate on the "image_url" field.
-func ImageURLIsNil() predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldIsNull(FieldImageURL))
-}
-
-// ImageURLNotNil applies the NotNil predicate on the "image_url" field.
-func ImageURLNotNil() predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldNotNull(FieldImageURL))
-}
-
-// ImageURLEqualFold applies the EqualFold predicate on the "image_url" field.
-func ImageURLEqualFold(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEqualFold(FieldImageURL, v))
-}
-
-// ImageURLContainsFold applies the ContainsFold predicate on the "image_url" field.
-func ImageURLContainsFold(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldContainsFold(FieldImageURL, v))
-}
-
-// SizeEQ applies the EQ predicate on the "size" field.
-func SizeEQ(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEQ(FieldSize, v))
-}
-
-// SizeNEQ applies the NEQ predicate on the "size" field.
-func SizeNEQ(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldNEQ(FieldSize, v))
-}
-
-// SizeIn applies the In predicate on the "size" field.
-func SizeIn(vs ...string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldIn(FieldSize, vs...))
-}
-
-// SizeNotIn applies the NotIn predicate on the "size" field.
-func SizeNotIn(vs ...string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldNotIn(FieldSize, vs...))
-}
-
-// SizeGT applies the GT predicate on the "size" field.
-func SizeGT(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldGT(FieldSize, v))
-}
-
-// SizeGTE applies the GTE predicate on the "size" field.
-func SizeGTE(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldGTE(FieldSize, v))
-}
-
-// SizeLT applies the LT predicate on the "size" field.
-func SizeLT(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldLT(FieldSize, v))
-}
-
-// SizeLTE applies the LTE predicate on the "size" field.
-func SizeLTE(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldLTE(FieldSize, v))
-}
-
-// SizeContains applies the Contains predicate on the "size" field.
-func SizeContains(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldContains(FieldSize, v))
-}
-
-// SizeHasPrefix applies the HasPrefix predicate on the "size" field.
-func SizeHasPrefix(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldHasPrefix(FieldSize, v))
-}
-
-// SizeHasSuffix applies the HasSuffix predicate on the "size" field.
-func SizeHasSuffix(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldHasSuffix(FieldSize, v))
-}
-
-// SizeIsNil applies the IsNil predicate on the "size" field.
-func SizeIsNil() predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldIsNull(FieldSize))
-}
-
-// SizeNotNil applies the NotNil predicate on the "size" field.
-func SizeNotNil() predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldNotNull(FieldSize))
-}
-
-// SizeEqualFold applies the EqualFold predicate on the "size" field.
-func SizeEqualFold(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEqualFold(FieldSize, v))
-}
-
-// SizeContainsFold applies the ContainsFold predicate on the "size" field.
-func SizeContainsFold(v string) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldContainsFold(FieldSize, v))
-}
-
-// EnabledEQ applies the EQ predicate on the "enabled" field.
-func EnabledEQ(v bool) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldEQ(FieldEnabled, v))
-}
-
-// EnabledNEQ applies the NEQ predicate on the "enabled" field.
-func EnabledNEQ(v bool) predicate.BannerCreative {
-	return predicate.BannerCreative(sql.FieldNEQ(FieldEnabled, v))
+// CreativeIDNotIn applies the NotIn predicate on the "creative_id" field.
+func CreativeIDNotIn(vs ...int64) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldNotIn(FieldCreativeID, vs...))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -400,12 +205,72 @@ func UpdatedAtLTE(v time.Time) predicate.BannerCreative {
 	return predicate.BannerCreative(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
+// IsPrimaryEQ applies the EQ predicate on the "is_primary" field.
+func IsPrimaryEQ(v bool) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldEQ(FieldIsPrimary, v))
+}
+
+// IsPrimaryNEQ applies the NEQ predicate on the "is_primary" field.
+func IsPrimaryNEQ(v bool) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldNEQ(FieldIsPrimary, v))
+}
+
+// DisplayOrderEQ applies the EQ predicate on the "display_order" field.
+func DisplayOrderEQ(v int) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldEQ(FieldDisplayOrder, v))
+}
+
+// DisplayOrderNEQ applies the NEQ predicate on the "display_order" field.
+func DisplayOrderNEQ(v int) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldNEQ(FieldDisplayOrder, v))
+}
+
+// DisplayOrderIn applies the In predicate on the "display_order" field.
+func DisplayOrderIn(vs ...int) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldIn(FieldDisplayOrder, vs...))
+}
+
+// DisplayOrderNotIn applies the NotIn predicate on the "display_order" field.
+func DisplayOrderNotIn(vs ...int) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldNotIn(FieldDisplayOrder, vs...))
+}
+
+// DisplayOrderGT applies the GT predicate on the "display_order" field.
+func DisplayOrderGT(v int) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldGT(FieldDisplayOrder, v))
+}
+
+// DisplayOrderGTE applies the GTE predicate on the "display_order" field.
+func DisplayOrderGTE(v int) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldGTE(FieldDisplayOrder, v))
+}
+
+// DisplayOrderLT applies the LT predicate on the "display_order" field.
+func DisplayOrderLT(v int) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldLT(FieldDisplayOrder, v))
+}
+
+// DisplayOrderLTE applies the LTE predicate on the "display_order" field.
+func DisplayOrderLTE(v int) predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldLTE(FieldDisplayOrder, v))
+}
+
+// DisplayOrderIsNil applies the IsNil predicate on the "display_order" field.
+func DisplayOrderIsNil() predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldIsNull(FieldDisplayOrder))
+}
+
+// DisplayOrderNotNil applies the NotNil predicate on the "display_order" field.
+func DisplayOrderNotNil() predicate.BannerCreative {
+	return predicate.BannerCreative(sql.FieldNotNull(FieldDisplayOrder))
+}
+
 // HasBanner applies the HasEdge predicate on the "banner" edge.
 func HasBanner() predicate.BannerCreative {
 	return predicate.BannerCreative(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, BannerTable, BannerColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, BannerTable, BannerColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -415,6 +280,29 @@ func HasBanner() predicate.BannerCreative {
 func HasBannerWith(preds ...predicate.Banner) predicate.BannerCreative {
 	return predicate.BannerCreative(func(s *sql.Selector) {
 		step := newBannerStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCreative applies the HasEdge predicate on the "creative" edge.
+func HasCreative() predicate.BannerCreative {
+	return predicate.BannerCreative(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, CreativeTable, CreativeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCreativeWith applies the HasEdge predicate on the "creative" edge with a given conditions (other predicates).
+func HasCreativeWith(preds ...predicate.Creative) predicate.BannerCreative {
+	return predicate.BannerCreative(func(s *sql.Selector) {
+		step := newCreativeStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

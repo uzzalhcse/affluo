@@ -16,6 +16,7 @@ import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/creative"
 	"affluo/ent/lead"
 	"affluo/ent/payout"
 	"affluo/ent/post"
@@ -45,6 +46,8 @@ type Client struct {
 	Campaign *CampaignClient
 	// CampaignLink is the client for interacting with the CampaignLink builders.
 	CampaignLink *CampaignLinkClient
+	// Creative is the client for interacting with the Creative builders.
+	Creative *CreativeClient
 	// Lead is the client for interacting with the Lead builders.
 	Lead *LeadClient
 	// Payout is the client for interacting with the Payout builders.
@@ -75,6 +78,7 @@ func (c *Client) init() {
 	c.BannerStats = NewBannerStatsClient(c.config)
 	c.Campaign = NewCampaignClient(c.config)
 	c.CampaignLink = NewCampaignLinkClient(c.config)
+	c.Creative = NewCreativeClient(c.config)
 	c.Lead = NewLeadClient(c.config)
 	c.Payout = NewPayoutClient(c.config)
 	c.Post = NewPostClient(c.config)
@@ -179,6 +183,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		BannerStats:    NewBannerStatsClient(cfg),
 		Campaign:       NewCampaignClient(cfg),
 		CampaignLink:   NewCampaignLinkClient(cfg),
+		Creative:       NewCreativeClient(cfg),
 		Lead:           NewLeadClient(cfg),
 		Payout:         NewPayoutClient(cfg),
 		Post:           NewPostClient(cfg),
@@ -210,6 +215,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		BannerStats:    NewBannerStatsClient(cfg),
 		Campaign:       NewCampaignClient(cfg),
 		CampaignLink:   NewCampaignLinkClient(cfg),
+		Creative:       NewCreativeClient(cfg),
 		Lead:           NewLeadClient(cfg),
 		Payout:         NewPayoutClient(cfg),
 		Post:           NewPostClient(cfg),
@@ -246,8 +252,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink, c.Lead,
-		c.Payout, c.Post, c.Referral, c.Test, c.Track, c.User,
+		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink,
+		c.Creative, c.Lead, c.Payout, c.Post, c.Referral, c.Test, c.Track, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -257,8 +263,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink, c.Lead,
-		c.Payout, c.Post, c.Referral, c.Test, c.Track, c.User,
+		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink,
+		c.Creative, c.Lead, c.Payout, c.Post, c.Referral, c.Test, c.Track, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -277,6 +283,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Campaign.mutate(ctx, m)
 	case *CampaignLinkMutation:
 		return c.CampaignLink.mutate(ctx, m)
+	case *CreativeMutation:
+		return c.Creative.mutate(ctx, m)
 	case *LeadMutation:
 		return c.Lead.mutate(ctx, m)
 	case *PayoutMutation:
@@ -421,14 +429,14 @@ func (c *BannerClient) QueryCampaigns(b *Banner) *CampaignQuery {
 }
 
 // QueryCreatives queries the creatives edge of a Banner.
-func (c *BannerClient) QueryCreatives(b *Banner) *BannerCreativeQuery {
-	query := (&BannerCreativeClient{config: c.config}).Query()
+func (c *BannerClient) QueryCreatives(b *Banner) *CreativeQuery {
+	query := (&CreativeClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := b.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(banner.Table, banner.FieldID, id),
-			sqlgraph.To(bannercreative.Table, bannercreative.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, banner.CreativesTable, banner.CreativesColumn),
+			sqlgraph.To(creative.Table, creative.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, banner.CreativesTable, banner.CreativesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
 		return fromV, nil
@@ -461,6 +469,22 @@ func (c *BannerClient) QueryLeads(b *Banner) *LeadQuery {
 			sqlgraph.From(banner.Table, banner.FieldID, id),
 			sqlgraph.To(lead.Table, lead.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, banner.LeadsTable, banner.LeadsColumn),
+		)
+		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBannerCreatives queries the banner_creatives edge of a Banner.
+func (c *BannerClient) QueryBannerCreatives(b *Banner) *BannerCreativeQuery {
+	query := (&BannerCreativeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := b.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(banner.Table, banner.FieldID, id),
+			sqlgraph.To(bannercreative.Table, bannercreative.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, banner.BannerCreativesTable, banner.BannerCreativesColumn),
 		)
 		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
 		return fromV, nil
@@ -554,7 +578,7 @@ func (c *BannerCreativeClient) UpdateOne(bc *BannerCreative) *BannerCreativeUpda
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *BannerCreativeClient) UpdateOneID(id int64) *BannerCreativeUpdateOne {
+func (c *BannerCreativeClient) UpdateOneID(id int) *BannerCreativeUpdateOne {
 	mutation := newBannerCreativeMutation(c.config, OpUpdateOne, withBannerCreativeID(id))
 	return &BannerCreativeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -571,7 +595,7 @@ func (c *BannerCreativeClient) DeleteOne(bc *BannerCreative) *BannerCreativeDele
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *BannerCreativeClient) DeleteOneID(id int64) *BannerCreativeDeleteOne {
+func (c *BannerCreativeClient) DeleteOneID(id int) *BannerCreativeDeleteOne {
 	builder := c.Delete().Where(bannercreative.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -588,12 +612,12 @@ func (c *BannerCreativeClient) Query() *BannerCreativeQuery {
 }
 
 // Get returns a BannerCreative entity by its id.
-func (c *BannerCreativeClient) Get(ctx context.Context, id int64) (*BannerCreative, error) {
+func (c *BannerCreativeClient) Get(ctx context.Context, id int) (*BannerCreative, error) {
 	return c.Query().Where(bannercreative.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *BannerCreativeClient) GetX(ctx context.Context, id int64) *BannerCreative {
+func (c *BannerCreativeClient) GetX(ctx context.Context, id int) *BannerCreative {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -609,7 +633,23 @@ func (c *BannerCreativeClient) QueryBanner(bc *BannerCreative) *BannerQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bannercreative.Table, bannercreative.FieldID, id),
 			sqlgraph.To(banner.Table, banner.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, bannercreative.BannerTable, bannercreative.BannerColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, bannercreative.BannerTable, bannercreative.BannerColumn),
+		)
+		fromV = sqlgraph.Neighbors(bc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCreative queries the creative edge of a BannerCreative.
+func (c *BannerCreativeClient) QueryCreative(bc *BannerCreative) *CreativeQuery {
+	query := (&CreativeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := bc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(bannercreative.Table, bannercreative.FieldID, id),
+			sqlgraph.To(creative.Table, creative.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, bannercreative.CreativeTable, bannercreative.CreativeColumn),
 		)
 		fromV = sqlgraph.Neighbors(bc.driver.Dialect(), step)
 		return fromV, nil
@@ -759,6 +799,22 @@ func (c *BannerStatsClient) QueryBanner(bs *BannerStats) *BannerQuery {
 			sqlgraph.From(bannerstats.Table, bannerstats.FieldID, id),
 			sqlgraph.To(banner.Table, banner.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, bannerstats.BannerTable, bannerstats.BannerColumn),
+		)
+		fromV = sqlgraph.Neighbors(bs.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPublisher queries the publisher edge of a BannerStats.
+func (c *BannerStatsClient) QueryPublisher(bs *BannerStats) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := bs.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(bannerstats.Table, bannerstats.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, bannerstats.PublisherTable, bannerstats.PublisherColumn),
 		)
 		fromV = sqlgraph.Neighbors(bs.driver.Dialect(), step)
 		return fromV, nil
@@ -1166,6 +1222,171 @@ func (c *CampaignLinkClient) mutate(ctx context.Context, m *CampaignLinkMutation
 		return (&CampaignLinkDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CampaignLink mutation op: %q", m.Op())
+	}
+}
+
+// CreativeClient is a client for the Creative schema.
+type CreativeClient struct {
+	config
+}
+
+// NewCreativeClient returns a client for the Creative from the given config.
+func NewCreativeClient(c config) *CreativeClient {
+	return &CreativeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `creative.Hooks(f(g(h())))`.
+func (c *CreativeClient) Use(hooks ...Hook) {
+	c.hooks.Creative = append(c.hooks.Creative, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `creative.Intercept(f(g(h())))`.
+func (c *CreativeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Creative = append(c.inters.Creative, interceptors...)
+}
+
+// Create returns a builder for creating a Creative entity.
+func (c *CreativeClient) Create() *CreativeCreate {
+	mutation := newCreativeMutation(c.config, OpCreate)
+	return &CreativeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Creative entities.
+func (c *CreativeClient) CreateBulk(builders ...*CreativeCreate) *CreativeCreateBulk {
+	return &CreativeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CreativeClient) MapCreateBulk(slice any, setFunc func(*CreativeCreate, int)) *CreativeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CreativeCreateBulk{err: fmt.Errorf("calling to CreativeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CreativeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CreativeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Creative.
+func (c *CreativeClient) Update() *CreativeUpdate {
+	mutation := newCreativeMutation(c.config, OpUpdate)
+	return &CreativeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CreativeClient) UpdateOne(cr *Creative) *CreativeUpdateOne {
+	mutation := newCreativeMutation(c.config, OpUpdateOne, withCreative(cr))
+	return &CreativeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CreativeClient) UpdateOneID(id int64) *CreativeUpdateOne {
+	mutation := newCreativeMutation(c.config, OpUpdateOne, withCreativeID(id))
+	return &CreativeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Creative.
+func (c *CreativeClient) Delete() *CreativeDelete {
+	mutation := newCreativeMutation(c.config, OpDelete)
+	return &CreativeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CreativeClient) DeleteOne(cr *Creative) *CreativeDeleteOne {
+	return c.DeleteOneID(cr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CreativeClient) DeleteOneID(id int64) *CreativeDeleteOne {
+	builder := c.Delete().Where(creative.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CreativeDeleteOne{builder}
+}
+
+// Query returns a query builder for Creative.
+func (c *CreativeClient) Query() *CreativeQuery {
+	return &CreativeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCreative},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Creative entity by its id.
+func (c *CreativeClient) Get(ctx context.Context, id int64) (*Creative, error) {
+	return c.Query().Where(creative.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CreativeClient) GetX(ctx context.Context, id int64) *Creative {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryBanners queries the banners edge of a Creative.
+func (c *CreativeClient) QueryBanners(cr *Creative) *BannerQuery {
+	query := (&BannerClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := cr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(creative.Table, creative.FieldID, id),
+			sqlgraph.To(banner.Table, banner.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, creative.BannersTable, creative.BannersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBannerCreatives queries the banner_creatives edge of a Creative.
+func (c *CreativeClient) QueryBannerCreatives(cr *Creative) *BannerCreativeQuery {
+	query := (&BannerCreativeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := cr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(creative.Table, creative.FieldID, id),
+			sqlgraph.To(bannercreative.Table, bannercreative.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, creative.BannerCreativesTable, creative.BannerCreativesColumn),
+		)
+		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CreativeClient) Hooks() []Hook {
+	return c.hooks.Creative
+}
+
+// Interceptors returns the client interceptors.
+func (c *CreativeClient) Interceptors() []Interceptor {
+	return c.inters.Creative
+}
+
+func (c *CreativeClient) mutate(ctx context.Context, m *CreativeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CreativeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CreativeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CreativeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CreativeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Creative mutation op: %q", m.Op())
 	}
 }
 
@@ -2283,6 +2504,22 @@ func (c *UserClient) QueryPosts(u *User) *PostQuery {
 	return query
 }
 
+// QueryStats queries the stats edge of a User.
+func (c *UserClient) QueryStats(u *User) *BannerStatsQuery {
+	query := (&BannerStatsClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(bannerstats.Table, bannerstats.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.StatsTable, user.StatsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -2311,11 +2548,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Lead, Payout, Post,
-		Referral, Test, Track, User []ent.Hook
+		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Creative, Lead,
+		Payout, Post, Referral, Test, Track, User []ent.Hook
 	}
 	inters struct {
-		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Lead, Payout, Post,
-		Referral, Test, Track, User []ent.Interceptor
+		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Creative, Lead,
+		Payout, Post, Referral, Test, Track, User []ent.Interceptor
 	}
 )

@@ -1,3 +1,4 @@
+// banner.go
 package schema
 
 import (
@@ -20,28 +21,23 @@ func (Banner) Fields() []ent.Field {
 			"static",
 			"dynamic",
 		).Default("static"),
-
 		// Content fields
 		field.String("click_url").Optional(),
-
 		// Dimensions and styling
 		field.String("size"),
-
 		// Status and tracking
 		field.Enum("status").Values(
 			"draft",
 			"active",
 			"inactive",
 		).Default("draft"),
-
 		// Geo-targeting
 		field.JSON("allowed_countries", []string{}).Optional(),
 		field.Int("weight").Default(1),
-		field.Float("smart_weight").Optional(), // For smart rotation based on performance
+		field.Float("smart_weight").Optional(),
 		field.Time("last_impression").Optional(),
 		field.Time("start_date").Optional(),
 		field.Time("end_date").Optional(),
-
 		// Device targeting
 		field.JSON("allowed_devices", []string{}).Optional(),
 		field.JSON("allowed_browsers", []string{}).Optional(),
@@ -57,10 +53,9 @@ func (Banner) Edges() []ent.Edge {
 		// Many-to-many relationship with Campaigns
 		edge.From("campaigns", Campaign.Type).
 			Ref("banners"),
-
-		// One-to-many relationship with BannerCreatives
-		edge.To("creatives", BannerCreative.Type),
-
+		// Many-to-many relationship with Creatives
+		edge.To("creatives", Creative.Type).
+			Through("banner_creatives", BannerCreative.Type),
 		edge.To("stats", BannerStats.Type),
 		edge.To("leads", Lead.Type),
 	}

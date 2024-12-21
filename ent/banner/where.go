@@ -818,14 +818,14 @@ func HasCreatives() predicate.Banner {
 	return predicate.Banner(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CreativesTable, CreativesColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, CreativesTable, CreativesPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
 // HasCreativesWith applies the HasEdge predicate on the "creatives" edge with a given conditions (other predicates).
-func HasCreativesWith(preds ...predicate.BannerCreative) predicate.Banner {
+func HasCreativesWith(preds ...predicate.Creative) predicate.Banner {
 	return predicate.Banner(func(s *sql.Selector) {
 		step := newCreativesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
@@ -874,6 +874,29 @@ func HasLeads() predicate.Banner {
 func HasLeadsWith(preds ...predicate.Lead) predicate.Banner {
 	return predicate.Banner(func(s *sql.Selector) {
 		step := newLeadsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasBannerCreatives applies the HasEdge predicate on the "banner_creatives" edge.
+func HasBannerCreatives() predicate.Banner {
+	return predicate.Banner(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, BannerCreativesTable, BannerCreativesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBannerCreativesWith applies the HasEdge predicate on the "banner_creatives" edge with a given conditions (other predicates).
+func HasBannerCreativesWith(preds ...predicate.BannerCreative) predicate.Banner {
+	return predicate.Banner(func(s *sql.Selector) {
+		step := newBannerCreativesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/payout"
 	"affluo/ent/post"
@@ -298,6 +299,21 @@ func (uu *UserUpdate) AddPosts(p ...*Post) *UserUpdate {
 	return uu.AddPostIDs(ids...)
 }
 
+// AddStatIDs adds the "stats" edge to the BannerStats entity by IDs.
+func (uu *UserUpdate) AddStatIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddStatIDs(ids...)
+	return uu
+}
+
+// AddStats adds the "stats" edges to the BannerStats entity.
+func (uu *UserUpdate) AddStats(b ...*BannerStats) *UserUpdate {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return uu.AddStatIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -406,6 +422,27 @@ func (uu *UserUpdate) RemovePosts(p ...*Post) *UserUpdate {
 		ids[i] = p[i].ID
 	}
 	return uu.RemovePostIDs(ids...)
+}
+
+// ClearStats clears all "stats" edges to the BannerStats entity.
+func (uu *UserUpdate) ClearStats() *UserUpdate {
+	uu.mutation.ClearStats()
+	return uu
+}
+
+// RemoveStatIDs removes the "stats" edge to BannerStats entities by IDs.
+func (uu *UserUpdate) RemoveStatIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveStatIDs(ids...)
+	return uu
+}
+
+// RemoveStats removes "stats" edges to BannerStats entities.
+func (uu *UserUpdate) RemoveStats(b ...*BannerStats) *UserUpdate {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return uu.RemoveStatIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -747,6 +784,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.StatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatsTable,
+			Columns: []string{user.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedStatsIDs(); len(nodes) > 0 && !uu.mutation.StatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatsTable,
+			Columns: []string{user.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.StatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatsTable,
+			Columns: []string{user.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -1032,6 +1114,21 @@ func (uuo *UserUpdateOne) AddPosts(p ...*Post) *UserUpdateOne {
 	return uuo.AddPostIDs(ids...)
 }
 
+// AddStatIDs adds the "stats" edge to the BannerStats entity by IDs.
+func (uuo *UserUpdateOne) AddStatIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddStatIDs(ids...)
+	return uuo
+}
+
+// AddStats adds the "stats" edges to the BannerStats entity.
+func (uuo *UserUpdateOne) AddStats(b ...*BannerStats) *UserUpdateOne {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return uuo.AddStatIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -1140,6 +1237,27 @@ func (uuo *UserUpdateOne) RemovePosts(p ...*Post) *UserUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return uuo.RemovePostIDs(ids...)
+}
+
+// ClearStats clears all "stats" edges to the BannerStats entity.
+func (uuo *UserUpdateOne) ClearStats() *UserUpdateOne {
+	uuo.mutation.ClearStats()
+	return uuo
+}
+
+// RemoveStatIDs removes the "stats" edge to BannerStats entities by IDs.
+func (uuo *UserUpdateOne) RemoveStatIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveStatIDs(ids...)
+	return uuo
+}
+
+// RemoveStats removes "stats" edges to BannerStats entities.
+func (uuo *UserUpdateOne) RemoveStats(b ...*BannerStats) *UserUpdateOne {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return uuo.RemoveStatIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1504,6 +1622,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.StatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatsTable,
+			Columns: []string{user.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedStatsIDs(); len(nodes) > 0 && !uuo.mutation.StatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatsTable,
+			Columns: []string{user.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.StatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatsTable,
+			Columns: []string{user.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

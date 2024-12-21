@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannerstats"
+	"affluo/ent/user"
 	"context"
 	"errors"
 	"fmt"
@@ -77,6 +78,20 @@ func (bsc *BannerStatsCreate) SetNillableLeads(i *int64) *BannerStatsCreate {
 	return bsc
 }
 
+// SetEarnings sets the "earnings" field.
+func (bsc *BannerStatsCreate) SetEarnings(f float64) *BannerStatsCreate {
+	bsc.mutation.SetEarnings(f)
+	return bsc
+}
+
+// SetNillableEarnings sets the "earnings" field if the given value is not nil.
+func (bsc *BannerStatsCreate) SetNillableEarnings(f *float64) *BannerStatsCreate {
+	if f != nil {
+		bsc.SetEarnings(*f)
+	}
+	return bsc
+}
+
 // SetCtr sets the "ctr" field.
 func (bsc *BannerStatsCreate) SetCtr(f float64) *BannerStatsCreate {
 	bsc.mutation.SetCtr(f)
@@ -101,6 +116,48 @@ func (bsc *BannerStatsCreate) SetConversionRate(f float64) *BannerStatsCreate {
 func (bsc *BannerStatsCreate) SetNillableConversionRate(f *float64) *BannerStatsCreate {
 	if f != nil {
 		bsc.SetConversionRate(*f)
+	}
+	return bsc
+}
+
+// SetDeviceType sets the "device_type" field.
+func (bsc *BannerStatsCreate) SetDeviceType(s string) *BannerStatsCreate {
+	bsc.mutation.SetDeviceType(s)
+	return bsc
+}
+
+// SetNillableDeviceType sets the "device_type" field if the given value is not nil.
+func (bsc *BannerStatsCreate) SetNillableDeviceType(s *string) *BannerStatsCreate {
+	if s != nil {
+		bsc.SetDeviceType(*s)
+	}
+	return bsc
+}
+
+// SetBrowser sets the "browser" field.
+func (bsc *BannerStatsCreate) SetBrowser(s string) *BannerStatsCreate {
+	bsc.mutation.SetBrowser(s)
+	return bsc
+}
+
+// SetNillableBrowser sets the "browser" field if the given value is not nil.
+func (bsc *BannerStatsCreate) SetNillableBrowser(s *string) *BannerStatsCreate {
+	if s != nil {
+		bsc.SetBrowser(*s)
+	}
+	return bsc
+}
+
+// SetOs sets the "os" field.
+func (bsc *BannerStatsCreate) SetOs(s string) *BannerStatsCreate {
+	bsc.mutation.SetOs(s)
+	return bsc
+}
+
+// SetNillableOs sets the "os" field if the given value is not nil.
+func (bsc *BannerStatsCreate) SetNillableOs(s *string) *BannerStatsCreate {
+	if s != nil {
+		bsc.SetOs(*s)
 	}
 	return bsc
 }
@@ -158,6 +215,25 @@ func (bsc *BannerStatsCreate) SetBanner(b *Banner) *BannerStatsCreate {
 	return bsc.SetBannerID(b.ID)
 }
 
+// SetPublisherID sets the "publisher" edge to the User entity by ID.
+func (bsc *BannerStatsCreate) SetPublisherID(id int64) *BannerStatsCreate {
+	bsc.mutation.SetPublisherID(id)
+	return bsc
+}
+
+// SetNillablePublisherID sets the "publisher" edge to the User entity by ID if the given value is not nil.
+func (bsc *BannerStatsCreate) SetNillablePublisherID(id *int64) *BannerStatsCreate {
+	if id != nil {
+		bsc = bsc.SetPublisherID(*id)
+	}
+	return bsc
+}
+
+// SetPublisher sets the "publisher" edge to the User entity.
+func (bsc *BannerStatsCreate) SetPublisher(u *User) *BannerStatsCreate {
+	return bsc.SetPublisherID(u.ID)
+}
+
 // Mutation returns the BannerStatsMutation object of the builder.
 func (bsc *BannerStatsCreate) Mutation() *BannerStatsMutation {
 	return bsc.mutation
@@ -209,6 +285,10 @@ func (bsc *BannerStatsCreate) defaults() {
 		v := bannerstats.DefaultLeads
 		bsc.mutation.SetLeads(v)
 	}
+	if _, ok := bsc.mutation.Earnings(); !ok {
+		v := bannerstats.DefaultEarnings
+		bsc.mutation.SetEarnings(v)
+	}
 	if _, ok := bsc.mutation.CreatedAt(); !ok {
 		v := bannerstats.DefaultCreatedAt()
 		bsc.mutation.SetCreatedAt(v)
@@ -232,6 +312,9 @@ func (bsc *BannerStatsCreate) check() error {
 	}
 	if _, ok := bsc.mutation.Leads(); !ok {
 		return &ValidationError{Name: "leads", err: errors.New(`ent: missing required field "BannerStats.leads"`)}
+	}
+	if _, ok := bsc.mutation.Earnings(); !ok {
+		return &ValidationError{Name: "earnings", err: errors.New(`ent: missing required field "BannerStats.earnings"`)}
 	}
 	if _, ok := bsc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "BannerStats.created_at"`)}
@@ -287,6 +370,10 @@ func (bsc *BannerStatsCreate) createSpec() (*BannerStats, *sqlgraph.CreateSpec) 
 		_spec.SetField(bannerstats.FieldLeads, field.TypeInt64, value)
 		_node.Leads = value
 	}
+	if value, ok := bsc.mutation.Earnings(); ok {
+		_spec.SetField(bannerstats.FieldEarnings, field.TypeFloat64, value)
+		_node.Earnings = value
+	}
 	if value, ok := bsc.mutation.Ctr(); ok {
 		_spec.SetField(bannerstats.FieldCtr, field.TypeFloat64, value)
 		_node.Ctr = value
@@ -294,6 +381,18 @@ func (bsc *BannerStatsCreate) createSpec() (*BannerStats, *sqlgraph.CreateSpec) 
 	if value, ok := bsc.mutation.ConversionRate(); ok {
 		_spec.SetField(bannerstats.FieldConversionRate, field.TypeFloat64, value)
 		_node.ConversionRate = value
+	}
+	if value, ok := bsc.mutation.DeviceType(); ok {
+		_spec.SetField(bannerstats.FieldDeviceType, field.TypeString, value)
+		_node.DeviceType = value
+	}
+	if value, ok := bsc.mutation.Browser(); ok {
+		_spec.SetField(bannerstats.FieldBrowser, field.TypeString, value)
+		_node.Browser = value
+	}
+	if value, ok := bsc.mutation.Os(); ok {
+		_spec.SetField(bannerstats.FieldOs, field.TypeString, value)
+		_node.Os = value
 	}
 	if value, ok := bsc.mutation.CreatedAt(); ok {
 		_spec.SetField(bannerstats.FieldCreatedAt, field.TypeTime, value)
@@ -318,6 +417,23 @@ func (bsc *BannerStatsCreate) createSpec() (*BannerStats, *sqlgraph.CreateSpec) 
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.banner_stats = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := bsc.mutation.PublisherIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   bannerstats.PublisherTable,
+			Columns: []string{bannerstats.PublisherColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_stats = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

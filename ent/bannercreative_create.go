@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
+	"affluo/ent/creative"
 	"context"
 	"errors"
 	"fmt"
@@ -21,59 +22,15 @@ type BannerCreativeCreate struct {
 	hooks    []Hook
 }
 
-// SetName sets the "name" field.
-func (bcc *BannerCreativeCreate) SetName(s string) *BannerCreativeCreate {
-	bcc.mutation.SetName(s)
+// SetBannerID sets the "banner_id" field.
+func (bcc *BannerCreativeCreate) SetBannerID(i int64) *BannerCreativeCreate {
+	bcc.mutation.SetBannerID(i)
 	return bcc
 }
 
-// SetNillableName sets the "name" field if the given value is not nil.
-func (bcc *BannerCreativeCreate) SetNillableName(s *string) *BannerCreativeCreate {
-	if s != nil {
-		bcc.SetName(*s)
-	}
-	return bcc
-}
-
-// SetImageURL sets the "image_url" field.
-func (bcc *BannerCreativeCreate) SetImageURL(s string) *BannerCreativeCreate {
-	bcc.mutation.SetImageURL(s)
-	return bcc
-}
-
-// SetNillableImageURL sets the "image_url" field if the given value is not nil.
-func (bcc *BannerCreativeCreate) SetNillableImageURL(s *string) *BannerCreativeCreate {
-	if s != nil {
-		bcc.SetImageURL(*s)
-	}
-	return bcc
-}
-
-// SetSize sets the "size" field.
-func (bcc *BannerCreativeCreate) SetSize(s string) *BannerCreativeCreate {
-	bcc.mutation.SetSize(s)
-	return bcc
-}
-
-// SetNillableSize sets the "size" field if the given value is not nil.
-func (bcc *BannerCreativeCreate) SetNillableSize(s *string) *BannerCreativeCreate {
-	if s != nil {
-		bcc.SetSize(*s)
-	}
-	return bcc
-}
-
-// SetEnabled sets the "enabled" field.
-func (bcc *BannerCreativeCreate) SetEnabled(b bool) *BannerCreativeCreate {
-	bcc.mutation.SetEnabled(b)
-	return bcc
-}
-
-// SetNillableEnabled sets the "enabled" field if the given value is not nil.
-func (bcc *BannerCreativeCreate) SetNillableEnabled(b *bool) *BannerCreativeCreate {
-	if b != nil {
-		bcc.SetEnabled(*b)
-	}
+// SetCreativeID sets the "creative_id" field.
+func (bcc *BannerCreativeCreate) SetCreativeID(i int64) *BannerCreativeCreate {
+	bcc.mutation.SetCreativeID(i)
 	return bcc
 }
 
@@ -105,22 +62,30 @@ func (bcc *BannerCreativeCreate) SetNillableUpdatedAt(t *time.Time) *BannerCreat
 	return bcc
 }
 
-// SetID sets the "id" field.
-func (bcc *BannerCreativeCreate) SetID(i int64) *BannerCreativeCreate {
-	bcc.mutation.SetID(i)
+// SetIsPrimary sets the "is_primary" field.
+func (bcc *BannerCreativeCreate) SetIsPrimary(b bool) *BannerCreativeCreate {
+	bcc.mutation.SetIsPrimary(b)
 	return bcc
 }
 
-// SetBannerID sets the "banner" edge to the Banner entity by ID.
-func (bcc *BannerCreativeCreate) SetBannerID(id int64) *BannerCreativeCreate {
-	bcc.mutation.SetBannerID(id)
+// SetNillableIsPrimary sets the "is_primary" field if the given value is not nil.
+func (bcc *BannerCreativeCreate) SetNillableIsPrimary(b *bool) *BannerCreativeCreate {
+	if b != nil {
+		bcc.SetIsPrimary(*b)
+	}
 	return bcc
 }
 
-// SetNillableBannerID sets the "banner" edge to the Banner entity by ID if the given value is not nil.
-func (bcc *BannerCreativeCreate) SetNillableBannerID(id *int64) *BannerCreativeCreate {
-	if id != nil {
-		bcc = bcc.SetBannerID(*id)
+// SetDisplayOrder sets the "display_order" field.
+func (bcc *BannerCreativeCreate) SetDisplayOrder(i int) *BannerCreativeCreate {
+	bcc.mutation.SetDisplayOrder(i)
+	return bcc
+}
+
+// SetNillableDisplayOrder sets the "display_order" field if the given value is not nil.
+func (bcc *BannerCreativeCreate) SetNillableDisplayOrder(i *int) *BannerCreativeCreate {
+	if i != nil {
+		bcc.SetDisplayOrder(*i)
 	}
 	return bcc
 }
@@ -128,6 +93,11 @@ func (bcc *BannerCreativeCreate) SetNillableBannerID(id *int64) *BannerCreativeC
 // SetBanner sets the "banner" edge to the Banner entity.
 func (bcc *BannerCreativeCreate) SetBanner(b *Banner) *BannerCreativeCreate {
 	return bcc.SetBannerID(b.ID)
+}
+
+// SetCreative sets the "creative" edge to the Creative entity.
+func (bcc *BannerCreativeCreate) SetCreative(c *Creative) *BannerCreativeCreate {
+	return bcc.SetCreativeID(c.ID)
 }
 
 // Mutation returns the BannerCreativeMutation object of the builder.
@@ -165,10 +135,6 @@ func (bcc *BannerCreativeCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (bcc *BannerCreativeCreate) defaults() {
-	if _, ok := bcc.mutation.Enabled(); !ok {
-		v := bannercreative.DefaultEnabled
-		bcc.mutation.SetEnabled(v)
-	}
 	if _, ok := bcc.mutation.CreatedAt(); !ok {
 		v := bannercreative.DefaultCreatedAt()
 		bcc.mutation.SetCreatedAt(v)
@@ -177,12 +143,19 @@ func (bcc *BannerCreativeCreate) defaults() {
 		v := bannercreative.DefaultUpdatedAt()
 		bcc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := bcc.mutation.IsPrimary(); !ok {
+		v := bannercreative.DefaultIsPrimary
+		bcc.mutation.SetIsPrimary(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (bcc *BannerCreativeCreate) check() error {
-	if _, ok := bcc.mutation.Enabled(); !ok {
-		return &ValidationError{Name: "enabled", err: errors.New(`ent: missing required field "BannerCreative.enabled"`)}
+	if _, ok := bcc.mutation.BannerID(); !ok {
+		return &ValidationError{Name: "banner_id", err: errors.New(`ent: missing required field "BannerCreative.banner_id"`)}
+	}
+	if _, ok := bcc.mutation.CreativeID(); !ok {
+		return &ValidationError{Name: "creative_id", err: errors.New(`ent: missing required field "BannerCreative.creative_id"`)}
 	}
 	if _, ok := bcc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "BannerCreative.created_at"`)}
@@ -190,10 +163,14 @@ func (bcc *BannerCreativeCreate) check() error {
 	if _, ok := bcc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "BannerCreative.updated_at"`)}
 	}
-	if v, ok := bcc.mutation.ID(); ok {
-		if err := bannercreative.IDValidator(v); err != nil {
-			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "BannerCreative.id": %w`, err)}
-		}
+	if _, ok := bcc.mutation.IsPrimary(); !ok {
+		return &ValidationError{Name: "is_primary", err: errors.New(`ent: missing required field "BannerCreative.is_primary"`)}
+	}
+	if len(bcc.mutation.BannerIDs()) == 0 {
+		return &ValidationError{Name: "banner", err: errors.New(`ent: missing required edge "BannerCreative.banner"`)}
+	}
+	if len(bcc.mutation.CreativeIDs()) == 0 {
+		return &ValidationError{Name: "creative", err: errors.New(`ent: missing required edge "BannerCreative.creative"`)}
 	}
 	return nil
 }
@@ -209,10 +186,8 @@ func (bcc *BannerCreativeCreate) sqlSave(ctx context.Context) (*BannerCreative, 
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != _node.ID {
-		id := _spec.ID.Value.(int64)
-		_node.ID = int64(id)
-	}
+	id := _spec.ID.Value.(int64)
+	_node.ID = int(id)
 	bcc.mutation.id = &_node.ID
 	bcc.mutation.done = true
 	return _node, nil
@@ -221,28 +196,8 @@ func (bcc *BannerCreativeCreate) sqlSave(ctx context.Context) (*BannerCreative, 
 func (bcc *BannerCreativeCreate) createSpec() (*BannerCreative, *sqlgraph.CreateSpec) {
 	var (
 		_node = &BannerCreative{config: bcc.config}
-		_spec = sqlgraph.NewCreateSpec(bannercreative.Table, sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64))
+		_spec = sqlgraph.NewCreateSpec(bannercreative.Table, sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt))
 	)
-	if id, ok := bcc.mutation.ID(); ok {
-		_node.ID = id
-		_spec.ID.Value = id
-	}
-	if value, ok := bcc.mutation.Name(); ok {
-		_spec.SetField(bannercreative.FieldName, field.TypeString, value)
-		_node.Name = value
-	}
-	if value, ok := bcc.mutation.ImageURL(); ok {
-		_spec.SetField(bannercreative.FieldImageURL, field.TypeString, value)
-		_node.ImageURL = value
-	}
-	if value, ok := bcc.mutation.Size(); ok {
-		_spec.SetField(bannercreative.FieldSize, field.TypeString, value)
-		_node.Size = value
-	}
-	if value, ok := bcc.mutation.Enabled(); ok {
-		_spec.SetField(bannercreative.FieldEnabled, field.TypeBool, value)
-		_node.Enabled = value
-	}
 	if value, ok := bcc.mutation.CreatedAt(); ok {
 		_spec.SetField(bannercreative.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -251,10 +206,18 @@ func (bcc *BannerCreativeCreate) createSpec() (*BannerCreative, *sqlgraph.Create
 		_spec.SetField(bannercreative.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := bcc.mutation.IsPrimary(); ok {
+		_spec.SetField(bannercreative.FieldIsPrimary, field.TypeBool, value)
+		_node.IsPrimary = value
+	}
+	if value, ok := bcc.mutation.DisplayOrder(); ok {
+		_spec.SetField(bannercreative.FieldDisplayOrder, field.TypeInt, value)
+		_node.DisplayOrder = value
+	}
 	if nodes := bcc.mutation.BannerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   bannercreative.BannerTable,
 			Columns: []string{bannercreative.BannerColumn},
 			Bidi:    false,
@@ -265,7 +228,24 @@ func (bcc *BannerCreativeCreate) createSpec() (*BannerCreative, *sqlgraph.Create
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.banner_creatives = &nodes[0]
+		_node.BannerID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := bcc.mutation.CreativeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   bannercreative.CreativeTable,
+			Columns: []string{bannercreative.CreativeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(creative.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.CreativeID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -316,9 +296,9 @@ func (bccb *BannerCreativeCreateBulk) Save(ctx context.Context) ([]*BannerCreati
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
+				if specs[i].ID.Value != nil {
 					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int64(id)
+					nodes[i].ID = int(id)
 				}
 				mutation.done = true
 				return nodes[i], nil
