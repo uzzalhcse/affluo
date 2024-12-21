@@ -34,7 +34,7 @@ type LeadRequest struct {
 }
 
 type StatsResponse struct {
-	BannerID       int64     `json:"banner_id"`
+	BannerName     string    `json:"banner_name"`
 	Date           time.Time `json:"date"`
 	Impressions    int64     `json:"impressions"`
 	Clicks         int64     `json:"clicks"`
@@ -49,5 +49,5 @@ type StatsAggregateResponse struct {
 	TotalLeads       int64           `json:"total_leads"`
 	AverageCTR       float64         `json:"average_ctr"`
 	AverageConvRate  float64         `json:"average_conv_rate"`
-	DailyStats       []StatsResponse `json:"daily_stats"`
+	Items            []StatsResponse `json:"items"`
 }

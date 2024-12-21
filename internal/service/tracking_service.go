@@ -322,10 +322,11 @@ func (s *TrackingService) GetStats(ctx context.Context, bannerID int64, startDat
 	// Query stats for the date range
 	stats, err := s.client.BannerStats.Query().
 		Where(
-			bannerstats.HasBannerWith(banner.IDEQ(bannerID)),
+			//bannerstats.HasBannerWith(banner.IDEQ(bannerID)),
 			bannerstats.DateGTE(startDate),
 			bannerstats.DateLTE(endDate),
 		).
+		WithBanner().
 		Order(ent.Asc(bannerstats.FieldDate)).
 		All(ctx)
 	if err != nil {
@@ -334,7 +335,7 @@ func (s *TrackingService) GetStats(ctx context.Context, bannerID int64, startDat
 
 	// Prepare response
 	response := &dto.StatsAggregateResponse{
-		DailyStats: make([]dto.StatsResponse, len(stats)),
+		Items: make([]dto.StatsResponse, len(stats)),
 	}
 
 	// Calculate totals and averages
@@ -344,8 +345,8 @@ func (s *TrackingService) GetStats(ctx context.Context, bannerID int64, startDat
 		response.TotalLeads += stat.Leads
 
 		// Convert to response format
-		response.DailyStats[i] = dto.StatsResponse{
-			BannerID:       bannerID,
+		response.Items[i] = dto.StatsResponse{
+			BannerName:     stat.Edges.Banner.Name,
 			Date:           stat.Date,
 			Impressions:    stat.Impressions,
 			Clicks:         stat.Clicks,

@@ -89,10 +89,7 @@ func (h *TrackingHandler) SelectBanner(c *fiber.Ctx) error {
 }
 
 func (h *TrackingHandler) GetStats(c *fiber.Ctx) error {
-	bannerID, err := c.ParamsInt("id")
-	if err != nil {
-		return Error(c, "Invalid banner ID", err.Error())
-	}
+	bannerID := c.QueryInt("id")
 
 	// Parse date range from query parameters
 	startDate := c.Query("start_date")
@@ -103,7 +100,7 @@ func (h *TrackingHandler) GetStats(c *fiber.Ctx) error {
 		return Error(c, "Failed to get stats", err.Error())
 	}
 
-	return Success(c, stats)
+	return Success(c, fiber.Map{"stats": stats})
 }
 
 // handler/tracking_handler.go

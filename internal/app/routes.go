@@ -72,7 +72,7 @@ func (a *Application) SetupRoutes() {
 	// Stats endpoints (require authentication)
 	statsGroup := a.App.Group("/api/stats")
 	{
-		statsGroup.Get("/banner/:id", a.Middleware.Auth.Authenticate(), a.Handlers.Tracking.GetStats)
+		statsGroup.Get("/banner", a.Middleware.Auth.Authenticate(), a.Handlers.Tracking.GetStats)
 	}
 
 }
