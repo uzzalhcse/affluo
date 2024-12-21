@@ -1,11 +1,9 @@
 // internal/app/routes.go
 package app
 
+import "affluo/internal/middleware"
+
 func (a *Application) SetupRoutes() {
-	// Existing routes...
-	tracking := a.App.Group("/api/track")
-	tracking.Post("/", a.Handlers.Tracking.HandleTrack)
-	tracking.Get("/script/:campaign_id", a.Handlers.Tracking.GenerateTrackingScript)
 
 	campaigns := a.App.Group("/api/campaigns")
 	campaigns.Use(a.Middleware.Auth.Authenticate())
@@ -57,6 +55,24 @@ func (a *Application) SetupRoutes() {
 	publisherGroup := a.App.Group("/api/publisher")
 	{
 		publisherGroup.Get("/banners", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetPublisherBanners)
+	}
+	trackingGroup := a.App.Group("/api/tracking")
+	{
+		trackingGroup.Use(middleware.AntiFraud(a.Services.AntiFraud))
+		trackingGroup.Post("/impression/:id", a.Handlers.Tracking.RecordImpression)
+		trackingGroup.Post("/click/:id", a.Handlers.Tracking.RecordClick)
+		trackingGroup.Post("/lead/:id", a.Handlers.Tracking.RecordLead)
+
+		trackingGroup.Get("/pixel/:id", a.Handlers.Tracking.PixelTracking)
+
+		// Banner selection endpoint
+		trackingGroup.Get("/select/:campaign_id", a.Handlers.Tracking.SelectBanner)
+	}
+
+	// Stats endpoints (require authentication)
+	statsGroup := a.App.Group("/api/stats")
+	{
+		statsGroup.Get("/banner/:id", a.Middleware.Auth.Authenticate(), a.Handlers.Tracking.GetStats)
 	}
 
 }

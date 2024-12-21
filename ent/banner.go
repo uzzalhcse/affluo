@@ -32,6 +32,22 @@ type Banner struct {
 	Status banner.Status `json:"status,omitempty"`
 	// AllowedCountries holds the value of the "allowed_countries" field.
 	AllowedCountries []string `json:"allowed_countries,omitempty"`
+	// Weight holds the value of the "weight" field.
+	Weight int `json:"weight,omitempty"`
+	// SmartWeight holds the value of the "smart_weight" field.
+	SmartWeight float64 `json:"smart_weight,omitempty"`
+	// LastImpression holds the value of the "last_impression" field.
+	LastImpression time.Time `json:"last_impression,omitempty"`
+	// StartDate holds the value of the "start_date" field.
+	StartDate time.Time `json:"start_date,omitempty"`
+	// EndDate holds the value of the "end_date" field.
+	EndDate time.Time `json:"end_date,omitempty"`
+	// AllowedDevices holds the value of the "allowed_devices" field.
+	AllowedDevices []string `json:"allowed_devices,omitempty"`
+	// AllowedBrowsers holds the value of the "allowed_browsers" field.
+	AllowedBrowsers []string `json:"allowed_browsers,omitempty"`
+	// AllowedOs holds the value of the "allowed_os" field.
+	AllowedOs []string `json:"allowed_os,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -48,9 +64,13 @@ type BannerEdges struct {
 	Campaigns []*Campaign `json:"campaigns,omitempty"`
 	// Creatives holds the value of the creatives edge.
 	Creatives []*BannerCreative `json:"creatives,omitempty"`
+	// Stats holds the value of the stats edge.
+	Stats []*BannerStats `json:"stats,omitempty"`
+	// Leads holds the value of the leads edge.
+	Leads []*Lead `json:"leads,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
 }
 
 // CampaignsOrErr returns the Campaigns value or an error if the edge
@@ -71,18 +91,38 @@ func (e BannerEdges) CreativesOrErr() ([]*BannerCreative, error) {
 	return nil, &NotLoadedError{edge: "creatives"}
 }
 
+// StatsOrErr returns the Stats value or an error if the edge
+// was not loaded in eager-loading.
+func (e BannerEdges) StatsOrErr() ([]*BannerStats, error) {
+	if e.loadedTypes[2] {
+		return e.Stats, nil
+	}
+	return nil, &NotLoadedError{edge: "stats"}
+}
+
+// LeadsOrErr returns the Leads value or an error if the edge
+// was not loaded in eager-loading.
+func (e BannerEdges) LeadsOrErr() ([]*Lead, error) {
+	if e.loadedTypes[3] {
+		return e.Leads, nil
+	}
+	return nil, &NotLoadedError{edge: "leads"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Banner) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case banner.FieldAllowedCountries:
+		case banner.FieldAllowedCountries, banner.FieldAllowedDevices, banner.FieldAllowedBrowsers, banner.FieldAllowedOs:
 			values[i] = new([]byte)
-		case banner.FieldID:
+		case banner.FieldSmartWeight:
+			values[i] = new(sql.NullFloat64)
+		case banner.FieldID, banner.FieldWeight:
 			values[i] = new(sql.NullInt64)
 		case banner.FieldName, banner.FieldDescription, banner.FieldType, banner.FieldClickURL, banner.FieldSize, banner.FieldStatus:
 			values[i] = new(sql.NullString)
-		case banner.FieldCreatedAt, banner.FieldUpdatedAt:
+		case banner.FieldLastImpression, banner.FieldStartDate, banner.FieldEndDate, banner.FieldCreatedAt, banner.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -149,6 +189,60 @@ func (b *Banner) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field allowed_countries: %w", err)
 				}
 			}
+		case banner.FieldWeight:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field weight", values[i])
+			} else if value.Valid {
+				b.Weight = int(value.Int64)
+			}
+		case banner.FieldSmartWeight:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field smart_weight", values[i])
+			} else if value.Valid {
+				b.SmartWeight = value.Float64
+			}
+		case banner.FieldLastImpression:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_impression", values[i])
+			} else if value.Valid {
+				b.LastImpression = value.Time
+			}
+		case banner.FieldStartDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field start_date", values[i])
+			} else if value.Valid {
+				b.StartDate = value.Time
+			}
+		case banner.FieldEndDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field end_date", values[i])
+			} else if value.Valid {
+				b.EndDate = value.Time
+			}
+		case banner.FieldAllowedDevices:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field allowed_devices", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &b.AllowedDevices); err != nil {
+					return fmt.Errorf("unmarshal field allowed_devices: %w", err)
+				}
+			}
+		case banner.FieldAllowedBrowsers:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field allowed_browsers", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &b.AllowedBrowsers); err != nil {
+					return fmt.Errorf("unmarshal field allowed_browsers: %w", err)
+				}
+			}
+		case banner.FieldAllowedOs:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field allowed_os", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &b.AllowedOs); err != nil {
+					return fmt.Errorf("unmarshal field allowed_os: %w", err)
+				}
+			}
 		case banner.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -182,6 +276,16 @@ func (b *Banner) QueryCampaigns() *CampaignQuery {
 // QueryCreatives queries the "creatives" edge of the Banner entity.
 func (b *Banner) QueryCreatives() *BannerCreativeQuery {
 	return NewBannerClient(b.config).QueryCreatives(b)
+}
+
+// QueryStats queries the "stats" edge of the Banner entity.
+func (b *Banner) QueryStats() *BannerStatsQuery {
+	return NewBannerClient(b.config).QueryStats(b)
+}
+
+// QueryLeads queries the "leads" edge of the Banner entity.
+func (b *Banner) QueryLeads() *LeadQuery {
+	return NewBannerClient(b.config).QueryLeads(b)
 }
 
 // Update returns a builder for updating this Banner.
@@ -227,6 +331,30 @@ func (b *Banner) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("allowed_countries=")
 	builder.WriteString(fmt.Sprintf("%v", b.AllowedCountries))
+	builder.WriteString(", ")
+	builder.WriteString("weight=")
+	builder.WriteString(fmt.Sprintf("%v", b.Weight))
+	builder.WriteString(", ")
+	builder.WriteString("smart_weight=")
+	builder.WriteString(fmt.Sprintf("%v", b.SmartWeight))
+	builder.WriteString(", ")
+	builder.WriteString("last_impression=")
+	builder.WriteString(b.LastImpression.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("start_date=")
+	builder.WriteString(b.StartDate.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("end_date=")
+	builder.WriteString(b.EndDate.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("allowed_devices=")
+	builder.WriteString(fmt.Sprintf("%v", b.AllowedDevices))
+	builder.WriteString(", ")
+	builder.WriteString("allowed_browsers=")
+	builder.WriteString(fmt.Sprintf("%v", b.AllowedBrowsers))
+	builder.WriteString(", ")
+	builder.WriteString("allowed_os=")
+	builder.WriteString(fmt.Sprintf("%v", b.AllowedOs))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(b.CreatedAt.Format(time.ANSIC))

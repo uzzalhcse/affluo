@@ -18,6 +18,14 @@ var (
 		{Name: "size", Type: field.TypeString},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "active", "inactive"}, Default: "draft"},
 		{Name: "allowed_countries", Type: field.TypeJSON, Nullable: true},
+		{Name: "weight", Type: field.TypeInt, Default: 1},
+		{Name: "smart_weight", Type: field.TypeFloat64, Nullable: true},
+		{Name: "last_impression", Type: field.TypeTime, Nullable: true},
+		{Name: "start_date", Type: field.TypeTime, Nullable: true},
+		{Name: "end_date", Type: field.TypeTime, Nullable: true},
+		{Name: "allowed_devices", Type: field.TypeJSON, Nullable: true},
+		{Name: "allowed_browsers", Type: field.TypeJSON, Nullable: true},
+		{Name: "allowed_os", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -49,6 +57,45 @@ var (
 				Columns:    []*schema.Column{BannerCreativesColumns[7]},
 				RefColumns: []*schema.Column{BannersColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// BannerStatsColumns holds the columns for the "banner_stats" table.
+	BannerStatsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "date", Type: field.TypeTime},
+		{Name: "impressions", Type: field.TypeInt64, Default: 0},
+		{Name: "clicks", Type: field.TypeInt64, Default: 0},
+		{Name: "leads", Type: field.TypeInt64, Default: 0},
+		{Name: "ctr", Type: field.TypeFloat64, Nullable: true},
+		{Name: "conversion_rate", Type: field.TypeFloat64, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "banner_stats", Type: field.TypeInt64, Nullable: true},
+	}
+	// BannerStatsTable holds the schema information for the "banner_stats" table.
+	BannerStatsTable = &schema.Table{
+		Name:       "banner_stats",
+		Columns:    BannerStatsColumns,
+		PrimaryKey: []*schema.Column{BannerStatsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "banner_stats_banners_stats",
+				Columns:    []*schema.Column{BannerStatsColumns[9]},
+				RefColumns: []*schema.Column{BannersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "bannerstats_date",
+				Unique:  false,
+				Columns: []*schema.Column{BannerStatsColumns[1]},
+			},
+			{
+				Name:    "bannerstats_date_banner_stats",
+				Unique:  true,
+				Columns: []*schema.Column{BannerStatsColumns[1], BannerStatsColumns[9]},
 			},
 		},
 	}
@@ -132,6 +179,33 @@ var (
 				Symbol:     "campaign_links_campaigns_links",
 				Columns:    []*schema.Column{CampaignLinksColumns[6]},
 				RefColumns: []*schema.Column{CampaignsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// LeadsColumns holds the columns for the "leads" table.
+	LeadsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "reference_id", Type: field.TypeString, Nullable: true},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"product", "service"}},
+		{Name: "amount", Type: field.TypeFloat64, Nullable: true},
+		{Name: "currency", Type: field.TypeString, Default: "USD"},
+		{Name: "ip_address", Type: field.TypeString, Nullable: true},
+		{Name: "user_agent", Type: field.TypeString, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "banner_leads", Type: field.TypeInt64, Nullable: true},
+	}
+	// LeadsTable holds the schema information for the "leads" table.
+	LeadsTable = &schema.Table{
+		Name:       "leads",
+		Columns:    LeadsColumns,
+		PrimaryKey: []*schema.Column{LeadsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "leads_banners_leads",
+				Columns:    []*schema.Column{LeadsColumns[9]},
+				RefColumns: []*schema.Column{BannersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -321,8 +395,10 @@ var (
 	Tables = []*schema.Table{
 		BannersTable,
 		BannerCreativesTable,
+		BannerStatsTable,
 		CampaignsTable,
 		CampaignLinksTable,
+		LeadsTable,
 		PayoutsTable,
 		PostsTable,
 		ReferralsTable,
@@ -335,8 +411,10 @@ var (
 
 func init() {
 	BannerCreativesTable.ForeignKeys[0].RefTable = BannersTable
+	BannerStatsTable.ForeignKeys[0].RefTable = BannersTable
 	CampaignsTable.ForeignKeys[0].RefTable = UsersTable
 	CampaignLinksTable.ForeignKeys[0].RefTable = CampaignsTable
+	LeadsTable.ForeignKeys[0].RefTable = BannersTable
 	PayoutsTable.ForeignKeys[0].RefTable = UsersTable
 	PostsTable.ForeignKeys[0].RefTable = UsersTable
 	ReferralsTable.ForeignKeys[0].RefTable = CampaignsTable

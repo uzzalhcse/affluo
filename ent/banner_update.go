@@ -5,7 +5,9 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
+	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/lead"
 	"affluo/ent/predicate"
 	"context"
 	"errors"
@@ -145,6 +147,168 @@ func (bu *BannerUpdate) ClearAllowedCountries() *BannerUpdate {
 	return bu
 }
 
+// SetWeight sets the "weight" field.
+func (bu *BannerUpdate) SetWeight(i int) *BannerUpdate {
+	bu.mutation.ResetWeight()
+	bu.mutation.SetWeight(i)
+	return bu
+}
+
+// SetNillableWeight sets the "weight" field if the given value is not nil.
+func (bu *BannerUpdate) SetNillableWeight(i *int) *BannerUpdate {
+	if i != nil {
+		bu.SetWeight(*i)
+	}
+	return bu
+}
+
+// AddWeight adds i to the "weight" field.
+func (bu *BannerUpdate) AddWeight(i int) *BannerUpdate {
+	bu.mutation.AddWeight(i)
+	return bu
+}
+
+// SetSmartWeight sets the "smart_weight" field.
+func (bu *BannerUpdate) SetSmartWeight(f float64) *BannerUpdate {
+	bu.mutation.ResetSmartWeight()
+	bu.mutation.SetSmartWeight(f)
+	return bu
+}
+
+// SetNillableSmartWeight sets the "smart_weight" field if the given value is not nil.
+func (bu *BannerUpdate) SetNillableSmartWeight(f *float64) *BannerUpdate {
+	if f != nil {
+		bu.SetSmartWeight(*f)
+	}
+	return bu
+}
+
+// AddSmartWeight adds f to the "smart_weight" field.
+func (bu *BannerUpdate) AddSmartWeight(f float64) *BannerUpdate {
+	bu.mutation.AddSmartWeight(f)
+	return bu
+}
+
+// ClearSmartWeight clears the value of the "smart_weight" field.
+func (bu *BannerUpdate) ClearSmartWeight() *BannerUpdate {
+	bu.mutation.ClearSmartWeight()
+	return bu
+}
+
+// SetLastImpression sets the "last_impression" field.
+func (bu *BannerUpdate) SetLastImpression(t time.Time) *BannerUpdate {
+	bu.mutation.SetLastImpression(t)
+	return bu
+}
+
+// SetNillableLastImpression sets the "last_impression" field if the given value is not nil.
+func (bu *BannerUpdate) SetNillableLastImpression(t *time.Time) *BannerUpdate {
+	if t != nil {
+		bu.SetLastImpression(*t)
+	}
+	return bu
+}
+
+// ClearLastImpression clears the value of the "last_impression" field.
+func (bu *BannerUpdate) ClearLastImpression() *BannerUpdate {
+	bu.mutation.ClearLastImpression()
+	return bu
+}
+
+// SetStartDate sets the "start_date" field.
+func (bu *BannerUpdate) SetStartDate(t time.Time) *BannerUpdate {
+	bu.mutation.SetStartDate(t)
+	return bu
+}
+
+// SetNillableStartDate sets the "start_date" field if the given value is not nil.
+func (bu *BannerUpdate) SetNillableStartDate(t *time.Time) *BannerUpdate {
+	if t != nil {
+		bu.SetStartDate(*t)
+	}
+	return bu
+}
+
+// ClearStartDate clears the value of the "start_date" field.
+func (bu *BannerUpdate) ClearStartDate() *BannerUpdate {
+	bu.mutation.ClearStartDate()
+	return bu
+}
+
+// SetEndDate sets the "end_date" field.
+func (bu *BannerUpdate) SetEndDate(t time.Time) *BannerUpdate {
+	bu.mutation.SetEndDate(t)
+	return bu
+}
+
+// SetNillableEndDate sets the "end_date" field if the given value is not nil.
+func (bu *BannerUpdate) SetNillableEndDate(t *time.Time) *BannerUpdate {
+	if t != nil {
+		bu.SetEndDate(*t)
+	}
+	return bu
+}
+
+// ClearEndDate clears the value of the "end_date" field.
+func (bu *BannerUpdate) ClearEndDate() *BannerUpdate {
+	bu.mutation.ClearEndDate()
+	return bu
+}
+
+// SetAllowedDevices sets the "allowed_devices" field.
+func (bu *BannerUpdate) SetAllowedDevices(s []string) *BannerUpdate {
+	bu.mutation.SetAllowedDevices(s)
+	return bu
+}
+
+// AppendAllowedDevices appends s to the "allowed_devices" field.
+func (bu *BannerUpdate) AppendAllowedDevices(s []string) *BannerUpdate {
+	bu.mutation.AppendAllowedDevices(s)
+	return bu
+}
+
+// ClearAllowedDevices clears the value of the "allowed_devices" field.
+func (bu *BannerUpdate) ClearAllowedDevices() *BannerUpdate {
+	bu.mutation.ClearAllowedDevices()
+	return bu
+}
+
+// SetAllowedBrowsers sets the "allowed_browsers" field.
+func (bu *BannerUpdate) SetAllowedBrowsers(s []string) *BannerUpdate {
+	bu.mutation.SetAllowedBrowsers(s)
+	return bu
+}
+
+// AppendAllowedBrowsers appends s to the "allowed_browsers" field.
+func (bu *BannerUpdate) AppendAllowedBrowsers(s []string) *BannerUpdate {
+	bu.mutation.AppendAllowedBrowsers(s)
+	return bu
+}
+
+// ClearAllowedBrowsers clears the value of the "allowed_browsers" field.
+func (bu *BannerUpdate) ClearAllowedBrowsers() *BannerUpdate {
+	bu.mutation.ClearAllowedBrowsers()
+	return bu
+}
+
+// SetAllowedOs sets the "allowed_os" field.
+func (bu *BannerUpdate) SetAllowedOs(s []string) *BannerUpdate {
+	bu.mutation.SetAllowedOs(s)
+	return bu
+}
+
+// AppendAllowedOs appends s to the "allowed_os" field.
+func (bu *BannerUpdate) AppendAllowedOs(s []string) *BannerUpdate {
+	bu.mutation.AppendAllowedOs(s)
+	return bu
+}
+
+// ClearAllowedOs clears the value of the "allowed_os" field.
+func (bu *BannerUpdate) ClearAllowedOs() *BannerUpdate {
+	bu.mutation.ClearAllowedOs()
+	return bu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (bu *BannerUpdate) SetUpdatedAt(t time.Time) *BannerUpdate {
 	bu.mutation.SetUpdatedAt(t)
@@ -179,6 +343,36 @@ func (bu *BannerUpdate) AddCreatives(b ...*BannerCreative) *BannerUpdate {
 		ids[i] = b[i].ID
 	}
 	return bu.AddCreativeIDs(ids...)
+}
+
+// AddStatIDs adds the "stats" edge to the BannerStats entity by IDs.
+func (bu *BannerUpdate) AddStatIDs(ids ...int64) *BannerUpdate {
+	bu.mutation.AddStatIDs(ids...)
+	return bu
+}
+
+// AddStats adds the "stats" edges to the BannerStats entity.
+func (bu *BannerUpdate) AddStats(b ...*BannerStats) *BannerUpdate {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return bu.AddStatIDs(ids...)
+}
+
+// AddLeadIDs adds the "leads" edge to the Lead entity by IDs.
+func (bu *BannerUpdate) AddLeadIDs(ids ...int64) *BannerUpdate {
+	bu.mutation.AddLeadIDs(ids...)
+	return bu
+}
+
+// AddLeads adds the "leads" edges to the Lead entity.
+func (bu *BannerUpdate) AddLeads(l ...*Lead) *BannerUpdate {
+	ids := make([]int64, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return bu.AddLeadIDs(ids...)
 }
 
 // Mutation returns the BannerMutation object of the builder.
@@ -226,6 +420,48 @@ func (bu *BannerUpdate) RemoveCreatives(b ...*BannerCreative) *BannerUpdate {
 		ids[i] = b[i].ID
 	}
 	return bu.RemoveCreativeIDs(ids...)
+}
+
+// ClearStats clears all "stats" edges to the BannerStats entity.
+func (bu *BannerUpdate) ClearStats() *BannerUpdate {
+	bu.mutation.ClearStats()
+	return bu
+}
+
+// RemoveStatIDs removes the "stats" edge to BannerStats entities by IDs.
+func (bu *BannerUpdate) RemoveStatIDs(ids ...int64) *BannerUpdate {
+	bu.mutation.RemoveStatIDs(ids...)
+	return bu
+}
+
+// RemoveStats removes "stats" edges to BannerStats entities.
+func (bu *BannerUpdate) RemoveStats(b ...*BannerStats) *BannerUpdate {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return bu.RemoveStatIDs(ids...)
+}
+
+// ClearLeads clears all "leads" edges to the Lead entity.
+func (bu *BannerUpdate) ClearLeads() *BannerUpdate {
+	bu.mutation.ClearLeads()
+	return bu
+}
+
+// RemoveLeadIDs removes the "leads" edge to Lead entities by IDs.
+func (bu *BannerUpdate) RemoveLeadIDs(ids ...int64) *BannerUpdate {
+	bu.mutation.RemoveLeadIDs(ids...)
+	return bu
+}
+
+// RemoveLeads removes "leads" edges to Lead entities.
+func (bu *BannerUpdate) RemoveLeads(l ...*Lead) *BannerUpdate {
+	ids := make([]int64, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return bu.RemoveLeadIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -331,6 +567,72 @@ func (bu *BannerUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if bu.mutation.AllowedCountriesCleared() {
 		_spec.ClearField(banner.FieldAllowedCountries, field.TypeJSON)
 	}
+	if value, ok := bu.mutation.Weight(); ok {
+		_spec.SetField(banner.FieldWeight, field.TypeInt, value)
+	}
+	if value, ok := bu.mutation.AddedWeight(); ok {
+		_spec.AddField(banner.FieldWeight, field.TypeInt, value)
+	}
+	if value, ok := bu.mutation.SmartWeight(); ok {
+		_spec.SetField(banner.FieldSmartWeight, field.TypeFloat64, value)
+	}
+	if value, ok := bu.mutation.AddedSmartWeight(); ok {
+		_spec.AddField(banner.FieldSmartWeight, field.TypeFloat64, value)
+	}
+	if bu.mutation.SmartWeightCleared() {
+		_spec.ClearField(banner.FieldSmartWeight, field.TypeFloat64)
+	}
+	if value, ok := bu.mutation.LastImpression(); ok {
+		_spec.SetField(banner.FieldLastImpression, field.TypeTime, value)
+	}
+	if bu.mutation.LastImpressionCleared() {
+		_spec.ClearField(banner.FieldLastImpression, field.TypeTime)
+	}
+	if value, ok := bu.mutation.StartDate(); ok {
+		_spec.SetField(banner.FieldStartDate, field.TypeTime, value)
+	}
+	if bu.mutation.StartDateCleared() {
+		_spec.ClearField(banner.FieldStartDate, field.TypeTime)
+	}
+	if value, ok := bu.mutation.EndDate(); ok {
+		_spec.SetField(banner.FieldEndDate, field.TypeTime, value)
+	}
+	if bu.mutation.EndDateCleared() {
+		_spec.ClearField(banner.FieldEndDate, field.TypeTime)
+	}
+	if value, ok := bu.mutation.AllowedDevices(); ok {
+		_spec.SetField(banner.FieldAllowedDevices, field.TypeJSON, value)
+	}
+	if value, ok := bu.mutation.AppendedAllowedDevices(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, banner.FieldAllowedDevices, value)
+		})
+	}
+	if bu.mutation.AllowedDevicesCleared() {
+		_spec.ClearField(banner.FieldAllowedDevices, field.TypeJSON)
+	}
+	if value, ok := bu.mutation.AllowedBrowsers(); ok {
+		_spec.SetField(banner.FieldAllowedBrowsers, field.TypeJSON, value)
+	}
+	if value, ok := bu.mutation.AppendedAllowedBrowsers(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, banner.FieldAllowedBrowsers, value)
+		})
+	}
+	if bu.mutation.AllowedBrowsersCleared() {
+		_spec.ClearField(banner.FieldAllowedBrowsers, field.TypeJSON)
+	}
+	if value, ok := bu.mutation.AllowedOs(); ok {
+		_spec.SetField(banner.FieldAllowedOs, field.TypeJSON, value)
+	}
+	if value, ok := bu.mutation.AppendedAllowedOs(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, banner.FieldAllowedOs, value)
+		})
+	}
+	if bu.mutation.AllowedOsCleared() {
+		_spec.ClearField(banner.FieldAllowedOs, field.TypeJSON)
+	}
 	if value, ok := bu.mutation.UpdatedAt(); ok {
 		_spec.SetField(banner.FieldUpdatedAt, field.TypeTime, value)
 	}
@@ -417,6 +719,96 @@ func (bu *BannerUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if bu.mutation.StatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.StatsTable,
+			Columns: []string{banner.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bu.mutation.RemovedStatsIDs(); len(nodes) > 0 && !bu.mutation.StatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.StatsTable,
+			Columns: []string{banner.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bu.mutation.StatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.StatsTable,
+			Columns: []string{banner.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if bu.mutation.LeadsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.LeadsTable,
+			Columns: []string{banner.LeadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(lead.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bu.mutation.RemovedLeadsIDs(); len(nodes) > 0 && !bu.mutation.LeadsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.LeadsTable,
+			Columns: []string{banner.LeadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(lead.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bu.mutation.LeadsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.LeadsTable,
+			Columns: []string{banner.LeadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(lead.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -558,6 +950,168 @@ func (buo *BannerUpdateOne) ClearAllowedCountries() *BannerUpdateOne {
 	return buo
 }
 
+// SetWeight sets the "weight" field.
+func (buo *BannerUpdateOne) SetWeight(i int) *BannerUpdateOne {
+	buo.mutation.ResetWeight()
+	buo.mutation.SetWeight(i)
+	return buo
+}
+
+// SetNillableWeight sets the "weight" field if the given value is not nil.
+func (buo *BannerUpdateOne) SetNillableWeight(i *int) *BannerUpdateOne {
+	if i != nil {
+		buo.SetWeight(*i)
+	}
+	return buo
+}
+
+// AddWeight adds i to the "weight" field.
+func (buo *BannerUpdateOne) AddWeight(i int) *BannerUpdateOne {
+	buo.mutation.AddWeight(i)
+	return buo
+}
+
+// SetSmartWeight sets the "smart_weight" field.
+func (buo *BannerUpdateOne) SetSmartWeight(f float64) *BannerUpdateOne {
+	buo.mutation.ResetSmartWeight()
+	buo.mutation.SetSmartWeight(f)
+	return buo
+}
+
+// SetNillableSmartWeight sets the "smart_weight" field if the given value is not nil.
+func (buo *BannerUpdateOne) SetNillableSmartWeight(f *float64) *BannerUpdateOne {
+	if f != nil {
+		buo.SetSmartWeight(*f)
+	}
+	return buo
+}
+
+// AddSmartWeight adds f to the "smart_weight" field.
+func (buo *BannerUpdateOne) AddSmartWeight(f float64) *BannerUpdateOne {
+	buo.mutation.AddSmartWeight(f)
+	return buo
+}
+
+// ClearSmartWeight clears the value of the "smart_weight" field.
+func (buo *BannerUpdateOne) ClearSmartWeight() *BannerUpdateOne {
+	buo.mutation.ClearSmartWeight()
+	return buo
+}
+
+// SetLastImpression sets the "last_impression" field.
+func (buo *BannerUpdateOne) SetLastImpression(t time.Time) *BannerUpdateOne {
+	buo.mutation.SetLastImpression(t)
+	return buo
+}
+
+// SetNillableLastImpression sets the "last_impression" field if the given value is not nil.
+func (buo *BannerUpdateOne) SetNillableLastImpression(t *time.Time) *BannerUpdateOne {
+	if t != nil {
+		buo.SetLastImpression(*t)
+	}
+	return buo
+}
+
+// ClearLastImpression clears the value of the "last_impression" field.
+func (buo *BannerUpdateOne) ClearLastImpression() *BannerUpdateOne {
+	buo.mutation.ClearLastImpression()
+	return buo
+}
+
+// SetStartDate sets the "start_date" field.
+func (buo *BannerUpdateOne) SetStartDate(t time.Time) *BannerUpdateOne {
+	buo.mutation.SetStartDate(t)
+	return buo
+}
+
+// SetNillableStartDate sets the "start_date" field if the given value is not nil.
+func (buo *BannerUpdateOne) SetNillableStartDate(t *time.Time) *BannerUpdateOne {
+	if t != nil {
+		buo.SetStartDate(*t)
+	}
+	return buo
+}
+
+// ClearStartDate clears the value of the "start_date" field.
+func (buo *BannerUpdateOne) ClearStartDate() *BannerUpdateOne {
+	buo.mutation.ClearStartDate()
+	return buo
+}
+
+// SetEndDate sets the "end_date" field.
+func (buo *BannerUpdateOne) SetEndDate(t time.Time) *BannerUpdateOne {
+	buo.mutation.SetEndDate(t)
+	return buo
+}
+
+// SetNillableEndDate sets the "end_date" field if the given value is not nil.
+func (buo *BannerUpdateOne) SetNillableEndDate(t *time.Time) *BannerUpdateOne {
+	if t != nil {
+		buo.SetEndDate(*t)
+	}
+	return buo
+}
+
+// ClearEndDate clears the value of the "end_date" field.
+func (buo *BannerUpdateOne) ClearEndDate() *BannerUpdateOne {
+	buo.mutation.ClearEndDate()
+	return buo
+}
+
+// SetAllowedDevices sets the "allowed_devices" field.
+func (buo *BannerUpdateOne) SetAllowedDevices(s []string) *BannerUpdateOne {
+	buo.mutation.SetAllowedDevices(s)
+	return buo
+}
+
+// AppendAllowedDevices appends s to the "allowed_devices" field.
+func (buo *BannerUpdateOne) AppendAllowedDevices(s []string) *BannerUpdateOne {
+	buo.mutation.AppendAllowedDevices(s)
+	return buo
+}
+
+// ClearAllowedDevices clears the value of the "allowed_devices" field.
+func (buo *BannerUpdateOne) ClearAllowedDevices() *BannerUpdateOne {
+	buo.mutation.ClearAllowedDevices()
+	return buo
+}
+
+// SetAllowedBrowsers sets the "allowed_browsers" field.
+func (buo *BannerUpdateOne) SetAllowedBrowsers(s []string) *BannerUpdateOne {
+	buo.mutation.SetAllowedBrowsers(s)
+	return buo
+}
+
+// AppendAllowedBrowsers appends s to the "allowed_browsers" field.
+func (buo *BannerUpdateOne) AppendAllowedBrowsers(s []string) *BannerUpdateOne {
+	buo.mutation.AppendAllowedBrowsers(s)
+	return buo
+}
+
+// ClearAllowedBrowsers clears the value of the "allowed_browsers" field.
+func (buo *BannerUpdateOne) ClearAllowedBrowsers() *BannerUpdateOne {
+	buo.mutation.ClearAllowedBrowsers()
+	return buo
+}
+
+// SetAllowedOs sets the "allowed_os" field.
+func (buo *BannerUpdateOne) SetAllowedOs(s []string) *BannerUpdateOne {
+	buo.mutation.SetAllowedOs(s)
+	return buo
+}
+
+// AppendAllowedOs appends s to the "allowed_os" field.
+func (buo *BannerUpdateOne) AppendAllowedOs(s []string) *BannerUpdateOne {
+	buo.mutation.AppendAllowedOs(s)
+	return buo
+}
+
+// ClearAllowedOs clears the value of the "allowed_os" field.
+func (buo *BannerUpdateOne) ClearAllowedOs() *BannerUpdateOne {
+	buo.mutation.ClearAllowedOs()
+	return buo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (buo *BannerUpdateOne) SetUpdatedAt(t time.Time) *BannerUpdateOne {
 	buo.mutation.SetUpdatedAt(t)
@@ -592,6 +1146,36 @@ func (buo *BannerUpdateOne) AddCreatives(b ...*BannerCreative) *BannerUpdateOne 
 		ids[i] = b[i].ID
 	}
 	return buo.AddCreativeIDs(ids...)
+}
+
+// AddStatIDs adds the "stats" edge to the BannerStats entity by IDs.
+func (buo *BannerUpdateOne) AddStatIDs(ids ...int64) *BannerUpdateOne {
+	buo.mutation.AddStatIDs(ids...)
+	return buo
+}
+
+// AddStats adds the "stats" edges to the BannerStats entity.
+func (buo *BannerUpdateOne) AddStats(b ...*BannerStats) *BannerUpdateOne {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return buo.AddStatIDs(ids...)
+}
+
+// AddLeadIDs adds the "leads" edge to the Lead entity by IDs.
+func (buo *BannerUpdateOne) AddLeadIDs(ids ...int64) *BannerUpdateOne {
+	buo.mutation.AddLeadIDs(ids...)
+	return buo
+}
+
+// AddLeads adds the "leads" edges to the Lead entity.
+func (buo *BannerUpdateOne) AddLeads(l ...*Lead) *BannerUpdateOne {
+	ids := make([]int64, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return buo.AddLeadIDs(ids...)
 }
 
 // Mutation returns the BannerMutation object of the builder.
@@ -639,6 +1223,48 @@ func (buo *BannerUpdateOne) RemoveCreatives(b ...*BannerCreative) *BannerUpdateO
 		ids[i] = b[i].ID
 	}
 	return buo.RemoveCreativeIDs(ids...)
+}
+
+// ClearStats clears all "stats" edges to the BannerStats entity.
+func (buo *BannerUpdateOne) ClearStats() *BannerUpdateOne {
+	buo.mutation.ClearStats()
+	return buo
+}
+
+// RemoveStatIDs removes the "stats" edge to BannerStats entities by IDs.
+func (buo *BannerUpdateOne) RemoveStatIDs(ids ...int64) *BannerUpdateOne {
+	buo.mutation.RemoveStatIDs(ids...)
+	return buo
+}
+
+// RemoveStats removes "stats" edges to BannerStats entities.
+func (buo *BannerUpdateOne) RemoveStats(b ...*BannerStats) *BannerUpdateOne {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return buo.RemoveStatIDs(ids...)
+}
+
+// ClearLeads clears all "leads" edges to the Lead entity.
+func (buo *BannerUpdateOne) ClearLeads() *BannerUpdateOne {
+	buo.mutation.ClearLeads()
+	return buo
+}
+
+// RemoveLeadIDs removes the "leads" edge to Lead entities by IDs.
+func (buo *BannerUpdateOne) RemoveLeadIDs(ids ...int64) *BannerUpdateOne {
+	buo.mutation.RemoveLeadIDs(ids...)
+	return buo
+}
+
+// RemoveLeads removes "leads" edges to Lead entities.
+func (buo *BannerUpdateOne) RemoveLeads(l ...*Lead) *BannerUpdateOne {
+	ids := make([]int64, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return buo.RemoveLeadIDs(ids...)
 }
 
 // Where appends a list predicates to the BannerUpdate builder.
@@ -774,6 +1400,72 @@ func (buo *BannerUpdateOne) sqlSave(ctx context.Context) (_node *Banner, err err
 	if buo.mutation.AllowedCountriesCleared() {
 		_spec.ClearField(banner.FieldAllowedCountries, field.TypeJSON)
 	}
+	if value, ok := buo.mutation.Weight(); ok {
+		_spec.SetField(banner.FieldWeight, field.TypeInt, value)
+	}
+	if value, ok := buo.mutation.AddedWeight(); ok {
+		_spec.AddField(banner.FieldWeight, field.TypeInt, value)
+	}
+	if value, ok := buo.mutation.SmartWeight(); ok {
+		_spec.SetField(banner.FieldSmartWeight, field.TypeFloat64, value)
+	}
+	if value, ok := buo.mutation.AddedSmartWeight(); ok {
+		_spec.AddField(banner.FieldSmartWeight, field.TypeFloat64, value)
+	}
+	if buo.mutation.SmartWeightCleared() {
+		_spec.ClearField(banner.FieldSmartWeight, field.TypeFloat64)
+	}
+	if value, ok := buo.mutation.LastImpression(); ok {
+		_spec.SetField(banner.FieldLastImpression, field.TypeTime, value)
+	}
+	if buo.mutation.LastImpressionCleared() {
+		_spec.ClearField(banner.FieldLastImpression, field.TypeTime)
+	}
+	if value, ok := buo.mutation.StartDate(); ok {
+		_spec.SetField(banner.FieldStartDate, field.TypeTime, value)
+	}
+	if buo.mutation.StartDateCleared() {
+		_spec.ClearField(banner.FieldStartDate, field.TypeTime)
+	}
+	if value, ok := buo.mutation.EndDate(); ok {
+		_spec.SetField(banner.FieldEndDate, field.TypeTime, value)
+	}
+	if buo.mutation.EndDateCleared() {
+		_spec.ClearField(banner.FieldEndDate, field.TypeTime)
+	}
+	if value, ok := buo.mutation.AllowedDevices(); ok {
+		_spec.SetField(banner.FieldAllowedDevices, field.TypeJSON, value)
+	}
+	if value, ok := buo.mutation.AppendedAllowedDevices(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, banner.FieldAllowedDevices, value)
+		})
+	}
+	if buo.mutation.AllowedDevicesCleared() {
+		_spec.ClearField(banner.FieldAllowedDevices, field.TypeJSON)
+	}
+	if value, ok := buo.mutation.AllowedBrowsers(); ok {
+		_spec.SetField(banner.FieldAllowedBrowsers, field.TypeJSON, value)
+	}
+	if value, ok := buo.mutation.AppendedAllowedBrowsers(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, banner.FieldAllowedBrowsers, value)
+		})
+	}
+	if buo.mutation.AllowedBrowsersCleared() {
+		_spec.ClearField(banner.FieldAllowedBrowsers, field.TypeJSON)
+	}
+	if value, ok := buo.mutation.AllowedOs(); ok {
+		_spec.SetField(banner.FieldAllowedOs, field.TypeJSON, value)
+	}
+	if value, ok := buo.mutation.AppendedAllowedOs(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, banner.FieldAllowedOs, value)
+		})
+	}
+	if buo.mutation.AllowedOsCleared() {
+		_spec.ClearField(banner.FieldAllowedOs, field.TypeJSON)
+	}
 	if value, ok := buo.mutation.UpdatedAt(); ok {
 		_spec.SetField(banner.FieldUpdatedAt, field.TypeTime, value)
 	}
@@ -860,6 +1552,96 @@ func (buo *BannerUpdateOne) sqlSave(ctx context.Context) (_node *Banner, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if buo.mutation.StatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.StatsTable,
+			Columns: []string{banner.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := buo.mutation.RemovedStatsIDs(); len(nodes) > 0 && !buo.mutation.StatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.StatsTable,
+			Columns: []string{banner.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := buo.mutation.StatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.StatsTable,
+			Columns: []string{banner.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if buo.mutation.LeadsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.LeadsTable,
+			Columns: []string{banner.LeadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(lead.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := buo.mutation.RemovedLeadsIDs(); len(nodes) > 0 && !buo.mutation.LeadsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.LeadsTable,
+			Columns: []string{banner.LeadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(lead.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := buo.mutation.LeadsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.LeadsTable,
+			Columns: []string{banner.LeadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(lead.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

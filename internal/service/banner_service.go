@@ -168,35 +168,161 @@ func (s *BannerService) GetBannerCreativesByBannerID(ctx context.Context, banner
 }
 
 func (s *BannerService) generateTrackingURL(banner *ent.Banner) string {
-	return fmt.Sprintf("https://%s/click/%d",
+	return fmt.Sprintf("%s/click/%d",
 		constant.TrackingDomain,
 		banner.ID)
 }
 
+// service/banner_service.go
+
+func (s *BannerService) generateTrackingScript(banner *ent.Banner) string {
+	return fmt.Sprintf(`
+    (function() {
+        // Configuration
+        const config = {
+            trackingDomain: '%s',
+            bannerID: %d,
+            clickURL: '%s',
+            debug: false
+        };
+
+        // Utility functions
+        function generateUID() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function getDeviceInfo() {
+            return {
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                screenSize: window.screen.width + 'x' + window.screen.height,
+                viewportSize: window.innerWidth + 'x' + window.innerHeight,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+        }
+
+        // Tracking function
+        async function track(eventType, extraData = {}) {
+            try {
+                const baseData = {
+                    timestamp: new Date().toISOString(),
+                    eventID: generateUID(),
+                    bannerID: config.bannerID,
+                    url: window.location.href,
+                    referer: document.referrer,
+                    ...getDeviceInfo(),
+                    ...extraData
+                };
+
+                const response = await fetch(config.trackingDomain + '/api/tracking/' + eventType + '/' + config.bannerID, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(baseData),
+                    keepalive: true // Ensures the request completes even if page changes
+                });
+
+                if (!response.ok && config.debug) {
+                    console.error('Tracking failed:', response.statusText);
+                }
+            } catch (error) {
+                if (config.debug) {
+                    console.error('Tracking error:', error);
+                }
+                
+                // Fallback to image pixel for impression tracking
+                if (eventType === 'impression') {
+                    new Image().src = config.trackingDomain + '/api/tracking/pixel/' + config.bannerID + '?t=' + Date.now();
+                }
+            }
+        }
+
+        // Handle impression
+        function trackImpression() {
+            if (window.IntersectionObserver) {
+                // Use Intersection Observer for viewability
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            track('impression');
+                            observer.disconnect();
+                        }
+                    });
+                }, {
+                    threshold: 0.5 // 50% visibility required
+                });
+                
+				const container = document.currentScript?.parentElement || document.querySelector('.aff-banner');
+				if (!container) {
+					console.error('Container element not found');
+					return;
+				}
+                observer.observe(container);
+            } else {
+                // Fallback for older browsers
+                track('impression');
+            }
+        }
+
+        // Handle click
+        function handleClick(e) {
+            e.preventDefault();
+            
+            track('click').then(() => {
+                window.open(config.clickURL, '_blank');
+            }).catch(() => {
+                // Fallback: direct navigation if tracking fails
+                window.open(config.clickURL, '_blank');
+            });
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+			const container = document.currentScript?.parentElement || document.querySelector('.aff-banner');
+			if (!container) {
+				console.error('Container element not found');
+				return;
+			}
+            const link = container.querySelector('a');
+            
+            // Set up click handler
+            if (link) {
+                link.addEventListener('click', handleClick);
+            }
+            
+            // Track impression
+            trackImpression();
+        });
+    })();`, constant.TrackingDomain, banner.ID, banner.ClickURL)
+}
+
 func (s *BannerService) generateHTMLCode(banner *ent.Banner, creative *ent.BannerCreative) string {
-	// Parse size for width and height
 	dimensions := strings.Split(banner.Size, "x")
 	width, height := dimensions[0], dimensions[1]
 
-	// Generate the HTML code with tracking
-	html := fmt.Sprintf(`<a href="%s" target="_blank" rel="noopener">
-    <img src="%s" 
-         width="%s" 
-         height="%s" 
-         alt="%s" 
-         style="border:none;display:block" 
-    />
-</a>`,
-		s.generateTrackingURL(banner),
+	// Generate the HTML with embedded tracking script
+	html := fmt.Sprintf(`
+    <div class="aff-banner" style="position:relative;display:inline-block">
+        <a href="javascript:void(0);" style="text-decoration:none">
+            <img src="%s" 
+                width="%s" 
+                height="%s" 
+                alt="%s" 
+                style="border:none;display:block" 
+            />
+        </a>
+        <script>%s</script>
+    </div>`,
 		creative.ImageURL,
 		width,
 		height,
 		banner.Name,
+		s.generateTrackingScript(banner),
 	)
 
 	return html
 }
-
 func (s *BannerService) enrichBannerResponse(ctx context.Context, banner *ent.Banner) (*dto.BannerResponse, error) {
 	// Get the first creative for the banner where enabled = true
 	creative, err := banner.QueryCreatives().

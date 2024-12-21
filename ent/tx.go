@@ -16,10 +16,14 @@ type Tx struct {
 	Banner *BannerClient
 	// BannerCreative is the client for interacting with the BannerCreative builders.
 	BannerCreative *BannerCreativeClient
+	// BannerStats is the client for interacting with the BannerStats builders.
+	BannerStats *BannerStatsClient
 	// Campaign is the client for interacting with the Campaign builders.
 	Campaign *CampaignClient
 	// CampaignLink is the client for interacting with the CampaignLink builders.
 	CampaignLink *CampaignLinkClient
+	// Lead is the client for interacting with the Lead builders.
+	Lead *LeadClient
 	// Payout is the client for interacting with the Payout builders.
 	Payout *PayoutClient
 	// Post is the client for interacting with the Post builders.
@@ -165,8 +169,10 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Banner = NewBannerClient(tx.config)
 	tx.BannerCreative = NewBannerCreativeClient(tx.config)
+	tx.BannerStats = NewBannerStatsClient(tx.config)
 	tx.Campaign = NewCampaignClient(tx.config)
 	tx.CampaignLink = NewCampaignLinkClient(tx.config)
+	tx.Lead = NewLeadClient(tx.config)
 	tx.Payout = NewPayoutClient(tx.config)
 	tx.Post = NewPostClient(tx.config)
 	tx.Referral = NewReferralClient(tx.config)

@@ -5,7 +5,9 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
+	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/lead"
 	"affluo/ent/predicate"
 	"context"
 	"database/sql/driver"
@@ -27,6 +29,8 @@ type BannerQuery struct {
 	predicates    []predicate.Banner
 	withCampaigns *CampaignQuery
 	withCreatives *BannerCreativeQuery
+	withStats     *BannerStatsQuery
+	withLeads     *LeadQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -100,6 +104,50 @@ func (bq *BannerQuery) QueryCreatives() *BannerCreativeQuery {
 			sqlgraph.From(banner.Table, banner.FieldID, selector),
 			sqlgraph.To(bannercreative.Table, bannercreative.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, banner.CreativesTable, banner.CreativesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(bq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryStats chains the current query on the "stats" edge.
+func (bq *BannerQuery) QueryStats() *BannerStatsQuery {
+	query := (&BannerStatsClient{config: bq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := bq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := bq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(banner.Table, banner.FieldID, selector),
+			sqlgraph.To(bannerstats.Table, bannerstats.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, banner.StatsTable, banner.StatsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(bq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryLeads chains the current query on the "leads" edge.
+func (bq *BannerQuery) QueryLeads() *LeadQuery {
+	query := (&LeadClient{config: bq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := bq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := bq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(banner.Table, banner.FieldID, selector),
+			sqlgraph.To(lead.Table, lead.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, banner.LeadsTable, banner.LeadsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(bq.driver.Dialect(), step)
 		return fromU, nil
@@ -301,6 +349,8 @@ func (bq *BannerQuery) Clone() *BannerQuery {
 		predicates:    append([]predicate.Banner{}, bq.predicates...),
 		withCampaigns: bq.withCampaigns.Clone(),
 		withCreatives: bq.withCreatives.Clone(),
+		withStats:     bq.withStats.Clone(),
+		withLeads:     bq.withLeads.Clone(),
 		// clone intermediate query.
 		sql:  bq.sql.Clone(),
 		path: bq.path,
@@ -326,6 +376,28 @@ func (bq *BannerQuery) WithCreatives(opts ...func(*BannerCreativeQuery)) *Banner
 		opt(query)
 	}
 	bq.withCreatives = query
+	return bq
+}
+
+// WithStats tells the query-builder to eager-load the nodes that are connected to
+// the "stats" edge. The optional arguments are used to configure the query builder of the edge.
+func (bq *BannerQuery) WithStats(opts ...func(*BannerStatsQuery)) *BannerQuery {
+	query := (&BannerStatsClient{config: bq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	bq.withStats = query
+	return bq
+}
+
+// WithLeads tells the query-builder to eager-load the nodes that are connected to
+// the "leads" edge. The optional arguments are used to configure the query builder of the edge.
+func (bq *BannerQuery) WithLeads(opts ...func(*LeadQuery)) *BannerQuery {
+	query := (&LeadClient{config: bq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	bq.withLeads = query
 	return bq
 }
 
@@ -407,9 +479,11 @@ func (bq *BannerQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Banne
 	var (
 		nodes       = []*Banner{}
 		_spec       = bq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [4]bool{
 			bq.withCampaigns != nil,
 			bq.withCreatives != nil,
+			bq.withStats != nil,
+			bq.withLeads != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -441,6 +515,20 @@ func (bq *BannerQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Banne
 		if err := bq.loadCreatives(ctx, query, nodes,
 			func(n *Banner) { n.Edges.Creatives = []*BannerCreative{} },
 			func(n *Banner, e *BannerCreative) { n.Edges.Creatives = append(n.Edges.Creatives, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := bq.withStats; query != nil {
+		if err := bq.loadStats(ctx, query, nodes,
+			func(n *Banner) { n.Edges.Stats = []*BannerStats{} },
+			func(n *Banner, e *BannerStats) { n.Edges.Stats = append(n.Edges.Stats, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := bq.withLeads; query != nil {
+		if err := bq.loadLeads(ctx, query, nodes,
+			func(n *Banner) { n.Edges.Leads = []*Lead{} },
+			func(n *Banner, e *Lead) { n.Edges.Leads = append(n.Edges.Leads, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -534,6 +622,68 @@ func (bq *BannerQuery) loadCreatives(ctx context.Context, query *BannerCreativeQ
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "banner_creatives" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (bq *BannerQuery) loadStats(ctx context.Context, query *BannerStatsQuery, nodes []*Banner, init func(*Banner), assign func(*Banner, *BannerStats)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*Banner)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.BannerStats(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(banner.StatsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.banner_stats
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "banner_stats" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "banner_stats" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (bq *BannerQuery) loadLeads(ctx context.Context, query *LeadQuery, nodes []*Banner, init func(*Banner), assign func(*Banner, *Lead)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*Banner)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Lead(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(banner.LeadsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.banner_leads
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "banner_leads" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "banner_leads" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

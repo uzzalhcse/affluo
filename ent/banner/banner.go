@@ -29,6 +29,22 @@ const (
 	FieldStatus = "status"
 	// FieldAllowedCountries holds the string denoting the allowed_countries field in the database.
 	FieldAllowedCountries = "allowed_countries"
+	// FieldWeight holds the string denoting the weight field in the database.
+	FieldWeight = "weight"
+	// FieldSmartWeight holds the string denoting the smart_weight field in the database.
+	FieldSmartWeight = "smart_weight"
+	// FieldLastImpression holds the string denoting the last_impression field in the database.
+	FieldLastImpression = "last_impression"
+	// FieldStartDate holds the string denoting the start_date field in the database.
+	FieldStartDate = "start_date"
+	// FieldEndDate holds the string denoting the end_date field in the database.
+	FieldEndDate = "end_date"
+	// FieldAllowedDevices holds the string denoting the allowed_devices field in the database.
+	FieldAllowedDevices = "allowed_devices"
+	// FieldAllowedBrowsers holds the string denoting the allowed_browsers field in the database.
+	FieldAllowedBrowsers = "allowed_browsers"
+	// FieldAllowedOs holds the string denoting the allowed_os field in the database.
+	FieldAllowedOs = "allowed_os"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -37,6 +53,10 @@ const (
 	EdgeCampaigns = "campaigns"
 	// EdgeCreatives holds the string denoting the creatives edge name in mutations.
 	EdgeCreatives = "creatives"
+	// EdgeStats holds the string denoting the stats edge name in mutations.
+	EdgeStats = "stats"
+	// EdgeLeads holds the string denoting the leads edge name in mutations.
+	EdgeLeads = "leads"
 	// Table holds the table name of the banner in the database.
 	Table = "banners"
 	// CampaignsTable is the table that holds the campaigns relation/edge. The primary key declared below.
@@ -51,6 +71,20 @@ const (
 	CreativesInverseTable = "banner_creatives"
 	// CreativesColumn is the table column denoting the creatives relation/edge.
 	CreativesColumn = "banner_creatives"
+	// StatsTable is the table that holds the stats relation/edge.
+	StatsTable = "banner_stats"
+	// StatsInverseTable is the table name for the BannerStats entity.
+	// It exists in this package in order to avoid circular dependency with the "bannerstats" package.
+	StatsInverseTable = "banner_stats"
+	// StatsColumn is the table column denoting the stats relation/edge.
+	StatsColumn = "banner_stats"
+	// LeadsTable is the table that holds the leads relation/edge.
+	LeadsTable = "leads"
+	// LeadsInverseTable is the table name for the Lead entity.
+	// It exists in this package in order to avoid circular dependency with the "lead" package.
+	LeadsInverseTable = "leads"
+	// LeadsColumn is the table column denoting the leads relation/edge.
+	LeadsColumn = "banner_leads"
 )
 
 // Columns holds all SQL columns for banner fields.
@@ -63,6 +97,14 @@ var Columns = []string{
 	FieldSize,
 	FieldStatus,
 	FieldAllowedCountries,
+	FieldWeight,
+	FieldSmartWeight,
+	FieldLastImpression,
+	FieldStartDate,
+	FieldEndDate,
+	FieldAllowedDevices,
+	FieldAllowedBrowsers,
+	FieldAllowedOs,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -86,6 +128,8 @@ func ValidColumn(column string) bool {
 var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DefaultWeight holds the default value on creation for the "weight" field.
+	DefaultWeight int
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -187,6 +231,31 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
+// ByWeight orders the results by the weight field.
+func ByWeight(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWeight, opts...).ToFunc()
+}
+
+// BySmartWeight orders the results by the smart_weight field.
+func BySmartWeight(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSmartWeight, opts...).ToFunc()
+}
+
+// ByLastImpression orders the results by the last_impression field.
+func ByLastImpression(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastImpression, opts...).ToFunc()
+}
+
+// ByStartDate orders the results by the start_date field.
+func ByStartDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStartDate, opts...).ToFunc()
+}
+
+// ByEndDate orders the results by the end_date field.
+func ByEndDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEndDate, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -224,6 +293,34 @@ func ByCreatives(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCreativesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByStatsCount orders the results by stats count.
+func ByStatsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newStatsStep(), opts...)
+	}
+}
+
+// ByStats orders the results by stats terms.
+func ByStats(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStatsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByLeadsCount orders the results by leads count.
+func ByLeadsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newLeadsStep(), opts...)
+	}
+}
+
+// ByLeads orders the results by leads terms.
+func ByLeads(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newLeadsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newCampaignsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -236,5 +333,19 @@ func newCreativesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CreativesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CreativesTable, CreativesColumn),
+	)
+}
+func newStatsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StatsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, StatsTable, StatsColumn),
+	)
+}
+func newLeadsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(LeadsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, LeadsTable, LeadsColumn),
 	)
 }

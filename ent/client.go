@@ -13,8 +13,10 @@ import (
 
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
+	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/lead"
 	"affluo/ent/payout"
 	"affluo/ent/post"
 	"affluo/ent/referral"
@@ -37,10 +39,14 @@ type Client struct {
 	Banner *BannerClient
 	// BannerCreative is the client for interacting with the BannerCreative builders.
 	BannerCreative *BannerCreativeClient
+	// BannerStats is the client for interacting with the BannerStats builders.
+	BannerStats *BannerStatsClient
 	// Campaign is the client for interacting with the Campaign builders.
 	Campaign *CampaignClient
 	// CampaignLink is the client for interacting with the CampaignLink builders.
 	CampaignLink *CampaignLinkClient
+	// Lead is the client for interacting with the Lead builders.
+	Lead *LeadClient
 	// Payout is the client for interacting with the Payout builders.
 	Payout *PayoutClient
 	// Post is the client for interacting with the Post builders.
@@ -66,8 +72,10 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Banner = NewBannerClient(c.config)
 	c.BannerCreative = NewBannerCreativeClient(c.config)
+	c.BannerStats = NewBannerStatsClient(c.config)
 	c.Campaign = NewCampaignClient(c.config)
 	c.CampaignLink = NewCampaignLinkClient(c.config)
+	c.Lead = NewLeadClient(c.config)
 	c.Payout = NewPayoutClient(c.config)
 	c.Post = NewPostClient(c.config)
 	c.Referral = NewReferralClient(c.config)
@@ -168,8 +176,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config:         cfg,
 		Banner:         NewBannerClient(cfg),
 		BannerCreative: NewBannerCreativeClient(cfg),
+		BannerStats:    NewBannerStatsClient(cfg),
 		Campaign:       NewCampaignClient(cfg),
 		CampaignLink:   NewCampaignLinkClient(cfg),
+		Lead:           NewLeadClient(cfg),
 		Payout:         NewPayoutClient(cfg),
 		Post:           NewPostClient(cfg),
 		Referral:       NewReferralClient(cfg),
@@ -197,8 +207,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config:         cfg,
 		Banner:         NewBannerClient(cfg),
 		BannerCreative: NewBannerCreativeClient(cfg),
+		BannerStats:    NewBannerStatsClient(cfg),
 		Campaign:       NewCampaignClient(cfg),
 		CampaignLink:   NewCampaignLinkClient(cfg),
+		Lead:           NewLeadClient(cfg),
 		Payout:         NewPayoutClient(cfg),
 		Post:           NewPostClient(cfg),
 		Referral:       NewReferralClient(cfg),
@@ -234,8 +246,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Banner, c.BannerCreative, c.Campaign, c.CampaignLink, c.Payout, c.Post,
-		c.Referral, c.Test, c.Track, c.User,
+		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink, c.Lead,
+		c.Payout, c.Post, c.Referral, c.Test, c.Track, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -245,8 +257,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Banner, c.BannerCreative, c.Campaign, c.CampaignLink, c.Payout, c.Post,
-		c.Referral, c.Test, c.Track, c.User,
+		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink, c.Lead,
+		c.Payout, c.Post, c.Referral, c.Test, c.Track, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -259,10 +271,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Banner.mutate(ctx, m)
 	case *BannerCreativeMutation:
 		return c.BannerCreative.mutate(ctx, m)
+	case *BannerStatsMutation:
+		return c.BannerStats.mutate(ctx, m)
 	case *CampaignMutation:
 		return c.Campaign.mutate(ctx, m)
 	case *CampaignLinkMutation:
 		return c.CampaignLink.mutate(ctx, m)
+	case *LeadMutation:
+		return c.Lead.mutate(ctx, m)
 	case *PayoutMutation:
 		return c.Payout.mutate(ctx, m)
 	case *PostMutation:
@@ -413,6 +429,38 @@ func (c *BannerClient) QueryCreatives(b *Banner) *BannerCreativeQuery {
 			sqlgraph.From(banner.Table, banner.FieldID, id),
 			sqlgraph.To(bannercreative.Table, bannercreative.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, banner.CreativesTable, banner.CreativesColumn),
+		)
+		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStats queries the stats edge of a Banner.
+func (c *BannerClient) QueryStats(b *Banner) *BannerStatsQuery {
+	query := (&BannerStatsClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := b.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(banner.Table, banner.FieldID, id),
+			sqlgraph.To(bannerstats.Table, bannerstats.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, banner.StatsTable, banner.StatsColumn),
+		)
+		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryLeads queries the leads edge of a Banner.
+func (c *BannerClient) QueryLeads(b *Banner) *LeadQuery {
+	query := (&LeadClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := b.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(banner.Table, banner.FieldID, id),
+			sqlgraph.To(lead.Table, lead.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, banner.LeadsTable, banner.LeadsColumn),
 		)
 		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
 		return fromV, nil
@@ -591,6 +639,155 @@ func (c *BannerCreativeClient) mutate(ctx context.Context, m *BannerCreativeMuta
 		return (&BannerCreativeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown BannerCreative mutation op: %q", m.Op())
+	}
+}
+
+// BannerStatsClient is a client for the BannerStats schema.
+type BannerStatsClient struct {
+	config
+}
+
+// NewBannerStatsClient returns a client for the BannerStats from the given config.
+func NewBannerStatsClient(c config) *BannerStatsClient {
+	return &BannerStatsClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `bannerstats.Hooks(f(g(h())))`.
+func (c *BannerStatsClient) Use(hooks ...Hook) {
+	c.hooks.BannerStats = append(c.hooks.BannerStats, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `bannerstats.Intercept(f(g(h())))`.
+func (c *BannerStatsClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BannerStats = append(c.inters.BannerStats, interceptors...)
+}
+
+// Create returns a builder for creating a BannerStats entity.
+func (c *BannerStatsClient) Create() *BannerStatsCreate {
+	mutation := newBannerStatsMutation(c.config, OpCreate)
+	return &BannerStatsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BannerStats entities.
+func (c *BannerStatsClient) CreateBulk(builders ...*BannerStatsCreate) *BannerStatsCreateBulk {
+	return &BannerStatsCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BannerStatsClient) MapCreateBulk(slice any, setFunc func(*BannerStatsCreate, int)) *BannerStatsCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BannerStatsCreateBulk{err: fmt.Errorf("calling to BannerStatsClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BannerStatsCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BannerStatsCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BannerStats.
+func (c *BannerStatsClient) Update() *BannerStatsUpdate {
+	mutation := newBannerStatsMutation(c.config, OpUpdate)
+	return &BannerStatsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BannerStatsClient) UpdateOne(bs *BannerStats) *BannerStatsUpdateOne {
+	mutation := newBannerStatsMutation(c.config, OpUpdateOne, withBannerStats(bs))
+	return &BannerStatsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BannerStatsClient) UpdateOneID(id int64) *BannerStatsUpdateOne {
+	mutation := newBannerStatsMutation(c.config, OpUpdateOne, withBannerStatsID(id))
+	return &BannerStatsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BannerStats.
+func (c *BannerStatsClient) Delete() *BannerStatsDelete {
+	mutation := newBannerStatsMutation(c.config, OpDelete)
+	return &BannerStatsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BannerStatsClient) DeleteOne(bs *BannerStats) *BannerStatsDeleteOne {
+	return c.DeleteOneID(bs.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BannerStatsClient) DeleteOneID(id int64) *BannerStatsDeleteOne {
+	builder := c.Delete().Where(bannerstats.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BannerStatsDeleteOne{builder}
+}
+
+// Query returns a query builder for BannerStats.
+func (c *BannerStatsClient) Query() *BannerStatsQuery {
+	return &BannerStatsQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBannerStats},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BannerStats entity by its id.
+func (c *BannerStatsClient) Get(ctx context.Context, id int64) (*BannerStats, error) {
+	return c.Query().Where(bannerstats.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BannerStatsClient) GetX(ctx context.Context, id int64) *BannerStats {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryBanner queries the banner edge of a BannerStats.
+func (c *BannerStatsClient) QueryBanner(bs *BannerStats) *BannerQuery {
+	query := (&BannerClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := bs.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(bannerstats.Table, bannerstats.FieldID, id),
+			sqlgraph.To(banner.Table, banner.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, bannerstats.BannerTable, bannerstats.BannerColumn),
+		)
+		fromV = sqlgraph.Neighbors(bs.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *BannerStatsClient) Hooks() []Hook {
+	return c.hooks.BannerStats
+}
+
+// Interceptors returns the client interceptors.
+func (c *BannerStatsClient) Interceptors() []Interceptor {
+	return c.inters.BannerStats
+}
+
+func (c *BannerStatsClient) mutate(ctx context.Context, m *BannerStatsMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BannerStatsCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BannerStatsUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BannerStatsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BannerStatsDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BannerStats mutation op: %q", m.Op())
 	}
 }
 
@@ -969,6 +1166,155 @@ func (c *CampaignLinkClient) mutate(ctx context.Context, m *CampaignLinkMutation
 		return (&CampaignLinkDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CampaignLink mutation op: %q", m.Op())
+	}
+}
+
+// LeadClient is a client for the Lead schema.
+type LeadClient struct {
+	config
+}
+
+// NewLeadClient returns a client for the Lead from the given config.
+func NewLeadClient(c config) *LeadClient {
+	return &LeadClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `lead.Hooks(f(g(h())))`.
+func (c *LeadClient) Use(hooks ...Hook) {
+	c.hooks.Lead = append(c.hooks.Lead, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `lead.Intercept(f(g(h())))`.
+func (c *LeadClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Lead = append(c.inters.Lead, interceptors...)
+}
+
+// Create returns a builder for creating a Lead entity.
+func (c *LeadClient) Create() *LeadCreate {
+	mutation := newLeadMutation(c.config, OpCreate)
+	return &LeadCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Lead entities.
+func (c *LeadClient) CreateBulk(builders ...*LeadCreate) *LeadCreateBulk {
+	return &LeadCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LeadClient) MapCreateBulk(slice any, setFunc func(*LeadCreate, int)) *LeadCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LeadCreateBulk{err: fmt.Errorf("calling to LeadClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LeadCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LeadCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Lead.
+func (c *LeadClient) Update() *LeadUpdate {
+	mutation := newLeadMutation(c.config, OpUpdate)
+	return &LeadUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LeadClient) UpdateOne(l *Lead) *LeadUpdateOne {
+	mutation := newLeadMutation(c.config, OpUpdateOne, withLead(l))
+	return &LeadUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LeadClient) UpdateOneID(id int64) *LeadUpdateOne {
+	mutation := newLeadMutation(c.config, OpUpdateOne, withLeadID(id))
+	return &LeadUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Lead.
+func (c *LeadClient) Delete() *LeadDelete {
+	mutation := newLeadMutation(c.config, OpDelete)
+	return &LeadDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LeadClient) DeleteOne(l *Lead) *LeadDeleteOne {
+	return c.DeleteOneID(l.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LeadClient) DeleteOneID(id int64) *LeadDeleteOne {
+	builder := c.Delete().Where(lead.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LeadDeleteOne{builder}
+}
+
+// Query returns a query builder for Lead.
+func (c *LeadClient) Query() *LeadQuery {
+	return &LeadQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLead},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Lead entity by its id.
+func (c *LeadClient) Get(ctx context.Context, id int64) (*Lead, error) {
+	return c.Query().Where(lead.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LeadClient) GetX(ctx context.Context, id int64) *Lead {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryBanner queries the banner edge of a Lead.
+func (c *LeadClient) QueryBanner(l *Lead) *BannerQuery {
+	query := (&BannerClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := l.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(lead.Table, lead.FieldID, id),
+			sqlgraph.To(banner.Table, banner.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, lead.BannerTable, lead.BannerColumn),
+		)
+		fromV = sqlgraph.Neighbors(l.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *LeadClient) Hooks() []Hook {
+	return c.hooks.Lead
+}
+
+// Interceptors returns the client interceptors.
+func (c *LeadClient) Interceptors() []Interceptor {
+	return c.inters.Lead
+}
+
+func (c *LeadClient) mutate(ctx context.Context, m *LeadMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LeadCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LeadUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LeadUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LeadDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Lead mutation op: %q", m.Op())
 	}
 }
 
@@ -1965,11 +2311,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Banner, BannerCreative, Campaign, CampaignLink, Payout, Post, Referral, Test,
-		Track, User []ent.Hook
+		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Lead, Payout, Post,
+		Referral, Test, Track, User []ent.Hook
 	}
 	inters struct {
-		Banner, BannerCreative, Campaign, CampaignLink, Payout, Post, Referral, Test,
-		Track, User []ent.Interceptor
+		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Lead, Payout, Post,
+		Referral, Test, Track, User []ent.Interceptor
 	}
 )

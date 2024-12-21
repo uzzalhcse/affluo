@@ -1,11 +1,11 @@
+// handler/tracking_handler.go
 package handler
 
 import (
 	"affluo/internal/dto"
 	"affluo/internal/service"
-	"errors"
-
 	"github.com/gofiber/fiber/v2"
+	"log"
 )
 
 type TrackingHandler struct {
@@ -13,69 +13,129 @@ type TrackingHandler struct {
 }
 
 func NewTrackingHandler(trackingService *service.TrackingService) *TrackingHandler {
-	return &TrackingHandler{
-		trackingService: trackingService,
-	}
+	return &TrackingHandler{trackingService: trackingService}
 }
 
-// HandleTrack processes tracking events
-func (h *TrackingHandler) HandleTrack(c *fiber.Ctx) error {
-	var trackRequest dto.TrackingRequest
-
-	// Bind request data
-	if err := c.BodyParser(&trackRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid tracking request",
-		})
-	}
-
-	// Validate request
-	if err := validateTrackingRequest(&trackRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	// Extract client details
-	trackRequest.IPAddress = c.IP()
-	trackRequest.UserAgent = string(c.Context().UserAgent())
-
-	// Track the event
-	track, err := h.trackingService.Track(c.Context(), &trackRequest)
+func (h *TrackingHandler) RecordImpression(c *fiber.Ctx) error {
+	bannerID, err := c.ParamsInt("id")
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to track event",
-		})
+		return Error(c, "Invalid banner ID", err.Error())
 	}
 
-	// Return tracking response
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"track_id": track.ID,
-		"status":   track.Status,
-	})
+	req := new(dto.ImpressionRequest)
+	if err := c.BodyParser(req); err != nil {
+		return Error(c, "Invalid request body", err.Error())
+	}
+
+	err = h.trackingService.RecordImpression(c.Context(), int64(bannerID), req)
+	if err != nil {
+		return Error(c, "Failed to record impression", err.Error())
+	}
+
+	return Success(c, fiber.Map{"status": "recorded"})
 }
 
-// GenerateTrackingScript creates a secure client-side tracking script
-func (h *TrackingHandler) GenerateTrackingScript(c *fiber.Ctx) error {
-	campaignID := c.Params("campaign_id")
+func (h *TrackingHandler) RecordClick(c *fiber.Ctx) error {
+	bannerID, err := c.ParamsInt("id")
+	if err != nil {
+		return Error(c, "Invalid banner ID", err.Error())
+	}
 
-	// Generate secure tracking script
-	script := h.trackingService.GenerateTrackingScript(campaignID)
+	req := new(dto.ClickRequest)
+	if err := c.BodyParser(req); err != nil {
+		return Error(c, "Invalid request body", err.Error())
+	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"tracking_script": script,
-	})
+	err = h.trackingService.RecordClick(c.Context(), int64(bannerID), req)
+	if err != nil {
+		return Error(c, "Failed to record click", err.Error())
+	}
+
+	return Success(c, fiber.Map{"status": "recorded"})
 }
 
-// validateTrackingRequest checks request integrity
-func validateTrackingRequest(req *dto.TrackingRequest) error {
-	if req.CampaignID == "" {
-		return errors.New("campaign ID is required")
+func (h *TrackingHandler) RecordLead(c *fiber.Ctx) error {
+	bannerID, err := c.ParamsInt("id")
+	if err != nil {
+		return Error(c, "Invalid banner ID", err.Error())
 	}
 
-	if req.TrackType == "" {
-		return errors.New("tracking type is required")
+	req := new(dto.LeadRequest)
+
+	if err := c.BodyParser(req); err != nil {
+		return Error(c, "Invalid request body", err.Error())
 	}
 
-	return nil
+	err = h.trackingService.RecordLead(c.Context(), int64(bannerID), req)
+	if err != nil {
+		return Error(c, "Failed to record lead", err.Error())
+	}
+
+	return Success(c, fiber.Map{"status": "recorded"})
+}
+
+func (h *TrackingHandler) SelectBanner(c *fiber.Ctx) error {
+	campaignID, err := c.ParamsInt("campaign_id")
+	if err != nil {
+		return Error(c, "Invalid campaign ID", err.Error())
+	}
+
+	banner, err := h.trackingService.SelectBanner(c.Context(), int64(campaignID))
+	if err != nil {
+		return Error(c, "Failed to select banner", err.Error())
+	}
+
+	return Success(c, banner)
+}
+
+func (h *TrackingHandler) GetStats(c *fiber.Ctx) error {
+	bannerID, err := c.ParamsInt("id")
+	if err != nil {
+		return Error(c, "Invalid banner ID", err.Error())
+	}
+
+	// Parse date range from query parameters
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+
+	stats, err := h.trackingService.GetStats(c.Context(), int64(bannerID), startDate, endDate)
+	if err != nil {
+		return Error(c, "Failed to get stats", err.Error())
+	}
+
+	return Success(c, stats)
+}
+
+// handler/tracking_handler.go
+
+func (h *TrackingHandler) PixelTracking(c *fiber.Ctx) error {
+	bannerID, err := c.ParamsInt("id")
+	if err != nil {
+		return Error(c, "Invalid banner ID", err.Error())
+	}
+
+	// Record impression
+	err = h.trackingService.RecordImpression(c.Context(), int64(bannerID), &dto.ImpressionRequest{
+		IPAddress: c.IP(),
+		UserAgent: c.Get("User-Agent"),
+		Referer:   c.Get("Referer"),
+	})
+	if err != nil {
+		// Log error but don't return it
+		log.Printf("Failed to record pixel impression: %v", err)
+	}
+
+	// Return a transparent 1x1 GIF
+	c.Set("Content-Type", "image/gif")
+	c.Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	c.Set("Pragma", "no-cache")
+	c.Set("Expires", "0")
+
+	// Transparent 1x1 GIF
+	return c.Send([]byte{
+		0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x80, 0x00,
+		0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x21, 0xF9, 0x04, 0x01, 0x00,
+		0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00,
+		0x00, 0x02, 0x02, 0x44, 0x01, 0x00, 0x3B,
+	})
 }

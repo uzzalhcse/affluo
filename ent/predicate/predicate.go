@@ -12,11 +12,17 @@ type Banner func(*sql.Selector)
 // BannerCreative is the predicate function for bannercreative builders.
 type BannerCreative func(*sql.Selector)
 
+// BannerStats is the predicate function for bannerstats builders.
+type BannerStats func(*sql.Selector)
+
 // Campaign is the predicate function for campaign builders.
 type Campaign func(*sql.Selector)
 
 // CampaignLink is the predicate function for campaignlink builders.
 type CampaignLink func(*sql.Selector)
+
+// Lead is the predicate function for lead builders.
+type Lead func(*sql.Selector)
 
 // Payout is the predicate function for payout builders.
 type Payout func(*sql.Selector)

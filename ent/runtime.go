@@ -5,8 +5,10 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
+	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/lead"
 	"affluo/ent/referral"
 	"affluo/ent/schema"
 	"affluo/ent/track"
@@ -24,12 +26,16 @@ func init() {
 	bannerDescName := bannerFields[1].Descriptor()
 	// banner.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	banner.NameValidator = bannerDescName.Validators[0].(func(string) error)
+	// bannerDescWeight is the schema descriptor for weight field.
+	bannerDescWeight := bannerFields[8].Descriptor()
+	// banner.DefaultWeight holds the default value on creation for the weight field.
+	banner.DefaultWeight = bannerDescWeight.Default.(int)
 	// bannerDescCreatedAt is the schema descriptor for created_at field.
-	bannerDescCreatedAt := bannerFields[8].Descriptor()
+	bannerDescCreatedAt := bannerFields[16].Descriptor()
 	// banner.DefaultCreatedAt holds the default value on creation for the created_at field.
 	banner.DefaultCreatedAt = bannerDescCreatedAt.Default.(func() time.Time)
 	// bannerDescUpdatedAt is the schema descriptor for updated_at field.
-	bannerDescUpdatedAt := bannerFields[9].Descriptor()
+	bannerDescUpdatedAt := bannerFields[17].Descriptor()
 	// banner.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	banner.DefaultUpdatedAt = bannerDescUpdatedAt.Default.(func() time.Time)
 	// banner.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -58,6 +64,34 @@ func init() {
 	bannercreativeDescID := bannercreativeFields[0].Descriptor()
 	// bannercreative.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	bannercreative.IDValidator = bannercreativeDescID.Validators[0].(func(int64) error)
+	bannerstatsFields := schema.BannerStats{}.Fields()
+	_ = bannerstatsFields
+	// bannerstatsDescDate is the schema descriptor for date field.
+	bannerstatsDescDate := bannerstatsFields[1].Descriptor()
+	// bannerstats.DefaultDate holds the default value on creation for the date field.
+	bannerstats.DefaultDate = bannerstatsDescDate.Default.(func() time.Time)
+	// bannerstatsDescImpressions is the schema descriptor for impressions field.
+	bannerstatsDescImpressions := bannerstatsFields[2].Descriptor()
+	// bannerstats.DefaultImpressions holds the default value on creation for the impressions field.
+	bannerstats.DefaultImpressions = bannerstatsDescImpressions.Default.(int64)
+	// bannerstatsDescClicks is the schema descriptor for clicks field.
+	bannerstatsDescClicks := bannerstatsFields[3].Descriptor()
+	// bannerstats.DefaultClicks holds the default value on creation for the clicks field.
+	bannerstats.DefaultClicks = bannerstatsDescClicks.Default.(int64)
+	// bannerstatsDescLeads is the schema descriptor for leads field.
+	bannerstatsDescLeads := bannerstatsFields[4].Descriptor()
+	// bannerstats.DefaultLeads holds the default value on creation for the leads field.
+	bannerstats.DefaultLeads = bannerstatsDescLeads.Default.(int64)
+	// bannerstatsDescCreatedAt is the schema descriptor for created_at field.
+	bannerstatsDescCreatedAt := bannerstatsFields[7].Descriptor()
+	// bannerstats.DefaultCreatedAt holds the default value on creation for the created_at field.
+	bannerstats.DefaultCreatedAt = bannerstatsDescCreatedAt.Default.(func() time.Time)
+	// bannerstatsDescUpdatedAt is the schema descriptor for updated_at field.
+	bannerstatsDescUpdatedAt := bannerstatsFields[8].Descriptor()
+	// bannerstats.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	bannerstats.DefaultUpdatedAt = bannerstatsDescUpdatedAt.Default.(func() time.Time)
+	// bannerstats.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	bannerstats.UpdateDefaultUpdatedAt = bannerstatsDescUpdatedAt.UpdateDefault.(func() time.Time)
 	campaignFields := schema.Campaign{}.Fields()
 	_ = campaignFields
 	// campaignDescName is the schema descriptor for name field.
@@ -112,6 +146,16 @@ func init() {
 	campaignlinkDescID := campaignlinkFields[0].Descriptor()
 	// campaignlink.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	campaignlink.IDValidator = campaignlinkDescID.Validators[0].(func(int64) error)
+	leadFields := schema.Lead{}.Fields()
+	_ = leadFields
+	// leadDescCurrency is the schema descriptor for currency field.
+	leadDescCurrency := leadFields[4].Descriptor()
+	// lead.DefaultCurrency holds the default value on creation for the currency field.
+	lead.DefaultCurrency = leadDescCurrency.Default.(string)
+	// leadDescCreatedAt is the schema descriptor for created_at field.
+	leadDescCreatedAt := leadFields[8].Descriptor()
+	// lead.DefaultCreatedAt holds the default value on creation for the created_at field.
+	lead.DefaultCreatedAt = leadDescCreatedAt.Default.(func() time.Time)
 	referralFields := schema.Referral{}.Fields()
 	_ = referralFields
 	// referralDescCreatedAt is the schema descriptor for created_at field.

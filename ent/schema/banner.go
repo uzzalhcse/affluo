@@ -36,7 +36,16 @@ func (Banner) Fields() []ent.Field {
 
 		// Geo-targeting
 		field.JSON("allowed_countries", []string{}).Optional(),
+		field.Int("weight").Default(1),
+		field.Float("smart_weight").Optional(), // For smart rotation based on performance
+		field.Time("last_impression").Optional(),
+		field.Time("start_date").Optional(),
+		field.Time("end_date").Optional(),
 
+		// Device targeting
+		field.JSON("allowed_devices", []string{}).Optional(),
+		field.JSON("allowed_browsers", []string{}).Optional(),
+		field.JSON("allowed_os", []string{}).Optional(),
 		// Timestamps
 		field.Time("created_at").Immutable().Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
@@ -51,5 +60,8 @@ func (Banner) Edges() []ent.Edge {
 
 		// One-to-many relationship with BannerCreatives
 		edge.To("creatives", BannerCreative.Type),
+
+		edge.To("stats", BannerStats.Type),
+		edge.To("leads", Lead.Type),
 	}
 }

@@ -1,0 +1,113 @@
+be my software architech who have over 10 years of  experience and worked with afffiliate marketing platform with tech stack like golang, go fiber, ent orm, postgresql database, redis and backend.
+please read this requirement and prove me proper ent schema for this project.
+
+
+Affiliate Marketing Platform - Software Requirements Specification
+1. System Overview
+A comprehensive affiliate marketing platform designed to facilitate seamless tracking, commission management, and performance optimization for advertisers and affiliates.
+2. User Roles and Access Levels
+2.1 Admin
+
+Full platform management and control
+Advanced analytics and reporting
+User and payment management
+
+2.2 Affiliate
+
+Marketing and referral capabilities
+Earnings tracking
+Performance monitoring
+
+3. Admin Panel Capabilities
+3.1 Campaign Management
+Key Functionalities
+
+Create and configure marketing campaigns
+Manage campaign lifecycle
+Design dynamic commission structures
+Implement advanced targeting options
+
+Geotargeting
+Device-specific tracking
+Audience segmentation
+
+
+
+3.2 Performance Tracking and Analytics
+Tracking Dimensions
+
+Campaign-level performance metrics
+Banner-specific conversion rates
+Individual affiliate performance
+
+Analytical Features
+
+Graphical performance visualizations
+Detailed conversion rate analysis
+Comparative performance reporting
+Predictive performance insights
+
+3.3 User and Payment Management
+
+Affiliate account administration
+Performance-based commission processing
+Compliance and verification workflows
+Payment method configuration
+
+4. Affiliate Platform Features
+4.1 Referral and Monetization Tools
+Referral Management
+
+Unique referral link generation
+Custom UTM parameter support
+Multi-channel tracking
+Comprehensive conversion attribution
+
+Monetization Capabilities
+
+Commission earning mechanisms
+Transparent earnings calculation
+Flexible payout options
+Performance-based bonus structures
+
+Marketing Resource Center
+
+Banner and creative browsing
+Gig ads widget creation
+
+Multi-product/service selection
+Customizable widget configurations
+
+
+
+4.2 Comprehensive Reporting
+Reporting Categories
+
+Referral performance
+Traffic source analysis
+Detailed earnings breakdown
+Comparative performance metrics
+
+5. Fraud Prevention and Security
+5.1 Advanced Fraud Detection
+Detection Mechanisms
+
+IP-based fraud identification
+Click fraud prevention algorithms
+Machine learning-powered bot filtering
+Suspicious activity monitoring
+
+Security Measures
+
+Automated risk scoring
+Adaptive detection thresholds
+Comprehensive activity logging
+Proactive threat mitigation
+
+6. Technical Architecture
+6.1 Technology Stack
+
+Backend Framework: Go Fiber
+ORM: Ent
+Database: PostgreSQL
+Caching Layer: Redis

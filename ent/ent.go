@@ -5,8 +5,10 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
+	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/lead"
 	"affluo/ent/payout"
 	"affluo/ent/post"
 	"affluo/ent/referral"
@@ -84,8 +86,10 @@ func checkColumn(table, column string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			banner.Table:         banner.ValidColumn,
 			bannercreative.Table: bannercreative.ValidColumn,
+			bannerstats.Table:    bannerstats.ValidColumn,
 			campaign.Table:       campaign.ValidColumn,
 			campaignlink.Table:   campaignlink.ValidColumn,
+			lead.Table:           lead.ValidColumn,
 			payout.Table:         payout.ValidColumn,
 			post.Table:           post.ValidColumn,
 			referral.Table:       referral.ValidColumn,

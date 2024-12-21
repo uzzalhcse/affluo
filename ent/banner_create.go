@@ -5,7 +5,9 @@ package ent
 import (
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
+	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/lead"
 	"context"
 	"errors"
 	"fmt"
@@ -96,6 +98,94 @@ func (bc *BannerCreate) SetAllowedCountries(s []string) *BannerCreate {
 	return bc
 }
 
+// SetWeight sets the "weight" field.
+func (bc *BannerCreate) SetWeight(i int) *BannerCreate {
+	bc.mutation.SetWeight(i)
+	return bc
+}
+
+// SetNillableWeight sets the "weight" field if the given value is not nil.
+func (bc *BannerCreate) SetNillableWeight(i *int) *BannerCreate {
+	if i != nil {
+		bc.SetWeight(*i)
+	}
+	return bc
+}
+
+// SetSmartWeight sets the "smart_weight" field.
+func (bc *BannerCreate) SetSmartWeight(f float64) *BannerCreate {
+	bc.mutation.SetSmartWeight(f)
+	return bc
+}
+
+// SetNillableSmartWeight sets the "smart_weight" field if the given value is not nil.
+func (bc *BannerCreate) SetNillableSmartWeight(f *float64) *BannerCreate {
+	if f != nil {
+		bc.SetSmartWeight(*f)
+	}
+	return bc
+}
+
+// SetLastImpression sets the "last_impression" field.
+func (bc *BannerCreate) SetLastImpression(t time.Time) *BannerCreate {
+	bc.mutation.SetLastImpression(t)
+	return bc
+}
+
+// SetNillableLastImpression sets the "last_impression" field if the given value is not nil.
+func (bc *BannerCreate) SetNillableLastImpression(t *time.Time) *BannerCreate {
+	if t != nil {
+		bc.SetLastImpression(*t)
+	}
+	return bc
+}
+
+// SetStartDate sets the "start_date" field.
+func (bc *BannerCreate) SetStartDate(t time.Time) *BannerCreate {
+	bc.mutation.SetStartDate(t)
+	return bc
+}
+
+// SetNillableStartDate sets the "start_date" field if the given value is not nil.
+func (bc *BannerCreate) SetNillableStartDate(t *time.Time) *BannerCreate {
+	if t != nil {
+		bc.SetStartDate(*t)
+	}
+	return bc
+}
+
+// SetEndDate sets the "end_date" field.
+func (bc *BannerCreate) SetEndDate(t time.Time) *BannerCreate {
+	bc.mutation.SetEndDate(t)
+	return bc
+}
+
+// SetNillableEndDate sets the "end_date" field if the given value is not nil.
+func (bc *BannerCreate) SetNillableEndDate(t *time.Time) *BannerCreate {
+	if t != nil {
+		bc.SetEndDate(*t)
+	}
+	return bc
+}
+
+// SetAllowedDevices sets the "allowed_devices" field.
+func (bc *BannerCreate) SetAllowedDevices(s []string) *BannerCreate {
+	bc.mutation.SetAllowedDevices(s)
+	return bc
+}
+
+// SetAllowedBrowsers sets the "allowed_browsers" field.
+func (bc *BannerCreate) SetAllowedBrowsers(s []string) *BannerCreate {
+	bc.mutation.SetAllowedBrowsers(s)
+	return bc
+}
+
+// SetAllowedOs sets the "allowed_os" field.
+func (bc *BannerCreate) SetAllowedOs(s []string) *BannerCreate {
+	bc.mutation.SetAllowedOs(s)
+	return bc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (bc *BannerCreate) SetCreatedAt(t time.Time) *BannerCreate {
 	bc.mutation.SetCreatedAt(t)
@@ -160,6 +250,36 @@ func (bc *BannerCreate) AddCreatives(b ...*BannerCreative) *BannerCreate {
 	return bc.AddCreativeIDs(ids...)
 }
 
+// AddStatIDs adds the "stats" edge to the BannerStats entity by IDs.
+func (bc *BannerCreate) AddStatIDs(ids ...int64) *BannerCreate {
+	bc.mutation.AddStatIDs(ids...)
+	return bc
+}
+
+// AddStats adds the "stats" edges to the BannerStats entity.
+func (bc *BannerCreate) AddStats(b ...*BannerStats) *BannerCreate {
+	ids := make([]int64, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return bc.AddStatIDs(ids...)
+}
+
+// AddLeadIDs adds the "leads" edge to the Lead entity by IDs.
+func (bc *BannerCreate) AddLeadIDs(ids ...int64) *BannerCreate {
+	bc.mutation.AddLeadIDs(ids...)
+	return bc
+}
+
+// AddLeads adds the "leads" edges to the Lead entity.
+func (bc *BannerCreate) AddLeads(l ...*Lead) *BannerCreate {
+	ids := make([]int64, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return bc.AddLeadIDs(ids...)
+}
+
 // Mutation returns the BannerMutation object of the builder.
 func (bc *BannerCreate) Mutation() *BannerMutation {
 	return bc.mutation
@@ -203,6 +323,10 @@ func (bc *BannerCreate) defaults() {
 		v := banner.DefaultStatus
 		bc.mutation.SetStatus(v)
 	}
+	if _, ok := bc.mutation.Weight(); !ok {
+		v := banner.DefaultWeight
+		bc.mutation.SetWeight(v)
+	}
 	if _, ok := bc.mutation.CreatedAt(); !ok {
 		v := banner.DefaultCreatedAt()
 		bc.mutation.SetCreatedAt(v)
@@ -241,6 +365,9 @@ func (bc *BannerCreate) check() error {
 		if err := banner.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Banner.status": %w`, err)}
 		}
+	}
+	if _, ok := bc.mutation.Weight(); !ok {
+		return &ValidationError{Name: "weight", err: errors.New(`ent: missing required field "Banner.weight"`)}
 	}
 	if _, ok := bc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Banner.created_at"`)}
@@ -313,6 +440,38 @@ func (bc *BannerCreate) createSpec() (*Banner, *sqlgraph.CreateSpec) {
 		_spec.SetField(banner.FieldAllowedCountries, field.TypeJSON, value)
 		_node.AllowedCountries = value
 	}
+	if value, ok := bc.mutation.Weight(); ok {
+		_spec.SetField(banner.FieldWeight, field.TypeInt, value)
+		_node.Weight = value
+	}
+	if value, ok := bc.mutation.SmartWeight(); ok {
+		_spec.SetField(banner.FieldSmartWeight, field.TypeFloat64, value)
+		_node.SmartWeight = value
+	}
+	if value, ok := bc.mutation.LastImpression(); ok {
+		_spec.SetField(banner.FieldLastImpression, field.TypeTime, value)
+		_node.LastImpression = value
+	}
+	if value, ok := bc.mutation.StartDate(); ok {
+		_spec.SetField(banner.FieldStartDate, field.TypeTime, value)
+		_node.StartDate = value
+	}
+	if value, ok := bc.mutation.EndDate(); ok {
+		_spec.SetField(banner.FieldEndDate, field.TypeTime, value)
+		_node.EndDate = value
+	}
+	if value, ok := bc.mutation.AllowedDevices(); ok {
+		_spec.SetField(banner.FieldAllowedDevices, field.TypeJSON, value)
+		_node.AllowedDevices = value
+	}
+	if value, ok := bc.mutation.AllowedBrowsers(); ok {
+		_spec.SetField(banner.FieldAllowedBrowsers, field.TypeJSON, value)
+		_node.AllowedBrowsers = value
+	}
+	if value, ok := bc.mutation.AllowedOs(); ok {
+		_spec.SetField(banner.FieldAllowedOs, field.TypeJSON, value)
+		_node.AllowedOs = value
+	}
 	if value, ok := bc.mutation.CreatedAt(); ok {
 		_spec.SetField(banner.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -346,6 +505,38 @@ func (bc *BannerCreate) createSpec() (*Banner, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bannercreative.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := bc.mutation.StatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.StatsTable,
+			Columns: []string{banner.StatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := bc.mutation.LeadsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   banner.LeadsTable,
+			Columns: []string{banner.LeadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(lead.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

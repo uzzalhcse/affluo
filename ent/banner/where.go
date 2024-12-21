@@ -75,6 +75,31 @@ func Size(v string) predicate.Banner {
 	return predicate.Banner(sql.FieldEQ(FieldSize, v))
 }
 
+// Weight applies equality check predicate on the "weight" field. It's identical to WeightEQ.
+func Weight(v int) predicate.Banner {
+	return predicate.Banner(sql.FieldEQ(FieldWeight, v))
+}
+
+// SmartWeight applies equality check predicate on the "smart_weight" field. It's identical to SmartWeightEQ.
+func SmartWeight(v float64) predicate.Banner {
+	return predicate.Banner(sql.FieldEQ(FieldSmartWeight, v))
+}
+
+// LastImpression applies equality check predicate on the "last_impression" field. It's identical to LastImpressionEQ.
+func LastImpression(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldEQ(FieldLastImpression, v))
+}
+
+// StartDate applies equality check predicate on the "start_date" field. It's identical to StartDateEQ.
+func StartDate(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldEQ(FieldStartDate, v))
+}
+
+// EndDate applies equality check predicate on the "end_date" field. It's identical to EndDateEQ.
+func EndDate(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldEQ(FieldEndDate, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Banner {
 	return predicate.Banner(sql.FieldEQ(FieldCreatedAt, v))
@@ -415,6 +440,276 @@ func AllowedCountriesNotNil() predicate.Banner {
 	return predicate.Banner(sql.FieldNotNull(FieldAllowedCountries))
 }
 
+// WeightEQ applies the EQ predicate on the "weight" field.
+func WeightEQ(v int) predicate.Banner {
+	return predicate.Banner(sql.FieldEQ(FieldWeight, v))
+}
+
+// WeightNEQ applies the NEQ predicate on the "weight" field.
+func WeightNEQ(v int) predicate.Banner {
+	return predicate.Banner(sql.FieldNEQ(FieldWeight, v))
+}
+
+// WeightIn applies the In predicate on the "weight" field.
+func WeightIn(vs ...int) predicate.Banner {
+	return predicate.Banner(sql.FieldIn(FieldWeight, vs...))
+}
+
+// WeightNotIn applies the NotIn predicate on the "weight" field.
+func WeightNotIn(vs ...int) predicate.Banner {
+	return predicate.Banner(sql.FieldNotIn(FieldWeight, vs...))
+}
+
+// WeightGT applies the GT predicate on the "weight" field.
+func WeightGT(v int) predicate.Banner {
+	return predicate.Banner(sql.FieldGT(FieldWeight, v))
+}
+
+// WeightGTE applies the GTE predicate on the "weight" field.
+func WeightGTE(v int) predicate.Banner {
+	return predicate.Banner(sql.FieldGTE(FieldWeight, v))
+}
+
+// WeightLT applies the LT predicate on the "weight" field.
+func WeightLT(v int) predicate.Banner {
+	return predicate.Banner(sql.FieldLT(FieldWeight, v))
+}
+
+// WeightLTE applies the LTE predicate on the "weight" field.
+func WeightLTE(v int) predicate.Banner {
+	return predicate.Banner(sql.FieldLTE(FieldWeight, v))
+}
+
+// SmartWeightEQ applies the EQ predicate on the "smart_weight" field.
+func SmartWeightEQ(v float64) predicate.Banner {
+	return predicate.Banner(sql.FieldEQ(FieldSmartWeight, v))
+}
+
+// SmartWeightNEQ applies the NEQ predicate on the "smart_weight" field.
+func SmartWeightNEQ(v float64) predicate.Banner {
+	return predicate.Banner(sql.FieldNEQ(FieldSmartWeight, v))
+}
+
+// SmartWeightIn applies the In predicate on the "smart_weight" field.
+func SmartWeightIn(vs ...float64) predicate.Banner {
+	return predicate.Banner(sql.FieldIn(FieldSmartWeight, vs...))
+}
+
+// SmartWeightNotIn applies the NotIn predicate on the "smart_weight" field.
+func SmartWeightNotIn(vs ...float64) predicate.Banner {
+	return predicate.Banner(sql.FieldNotIn(FieldSmartWeight, vs...))
+}
+
+// SmartWeightGT applies the GT predicate on the "smart_weight" field.
+func SmartWeightGT(v float64) predicate.Banner {
+	return predicate.Banner(sql.FieldGT(FieldSmartWeight, v))
+}
+
+// SmartWeightGTE applies the GTE predicate on the "smart_weight" field.
+func SmartWeightGTE(v float64) predicate.Banner {
+	return predicate.Banner(sql.FieldGTE(FieldSmartWeight, v))
+}
+
+// SmartWeightLT applies the LT predicate on the "smart_weight" field.
+func SmartWeightLT(v float64) predicate.Banner {
+	return predicate.Banner(sql.FieldLT(FieldSmartWeight, v))
+}
+
+// SmartWeightLTE applies the LTE predicate on the "smart_weight" field.
+func SmartWeightLTE(v float64) predicate.Banner {
+	return predicate.Banner(sql.FieldLTE(FieldSmartWeight, v))
+}
+
+// SmartWeightIsNil applies the IsNil predicate on the "smart_weight" field.
+func SmartWeightIsNil() predicate.Banner {
+	return predicate.Banner(sql.FieldIsNull(FieldSmartWeight))
+}
+
+// SmartWeightNotNil applies the NotNil predicate on the "smart_weight" field.
+func SmartWeightNotNil() predicate.Banner {
+	return predicate.Banner(sql.FieldNotNull(FieldSmartWeight))
+}
+
+// LastImpressionEQ applies the EQ predicate on the "last_impression" field.
+func LastImpressionEQ(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldEQ(FieldLastImpression, v))
+}
+
+// LastImpressionNEQ applies the NEQ predicate on the "last_impression" field.
+func LastImpressionNEQ(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldNEQ(FieldLastImpression, v))
+}
+
+// LastImpressionIn applies the In predicate on the "last_impression" field.
+func LastImpressionIn(vs ...time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldIn(FieldLastImpression, vs...))
+}
+
+// LastImpressionNotIn applies the NotIn predicate on the "last_impression" field.
+func LastImpressionNotIn(vs ...time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldNotIn(FieldLastImpression, vs...))
+}
+
+// LastImpressionGT applies the GT predicate on the "last_impression" field.
+func LastImpressionGT(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldGT(FieldLastImpression, v))
+}
+
+// LastImpressionGTE applies the GTE predicate on the "last_impression" field.
+func LastImpressionGTE(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldGTE(FieldLastImpression, v))
+}
+
+// LastImpressionLT applies the LT predicate on the "last_impression" field.
+func LastImpressionLT(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldLT(FieldLastImpression, v))
+}
+
+// LastImpressionLTE applies the LTE predicate on the "last_impression" field.
+func LastImpressionLTE(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldLTE(FieldLastImpression, v))
+}
+
+// LastImpressionIsNil applies the IsNil predicate on the "last_impression" field.
+func LastImpressionIsNil() predicate.Banner {
+	return predicate.Banner(sql.FieldIsNull(FieldLastImpression))
+}
+
+// LastImpressionNotNil applies the NotNil predicate on the "last_impression" field.
+func LastImpressionNotNil() predicate.Banner {
+	return predicate.Banner(sql.FieldNotNull(FieldLastImpression))
+}
+
+// StartDateEQ applies the EQ predicate on the "start_date" field.
+func StartDateEQ(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldEQ(FieldStartDate, v))
+}
+
+// StartDateNEQ applies the NEQ predicate on the "start_date" field.
+func StartDateNEQ(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldNEQ(FieldStartDate, v))
+}
+
+// StartDateIn applies the In predicate on the "start_date" field.
+func StartDateIn(vs ...time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldIn(FieldStartDate, vs...))
+}
+
+// StartDateNotIn applies the NotIn predicate on the "start_date" field.
+func StartDateNotIn(vs ...time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldNotIn(FieldStartDate, vs...))
+}
+
+// StartDateGT applies the GT predicate on the "start_date" field.
+func StartDateGT(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldGT(FieldStartDate, v))
+}
+
+// StartDateGTE applies the GTE predicate on the "start_date" field.
+func StartDateGTE(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldGTE(FieldStartDate, v))
+}
+
+// StartDateLT applies the LT predicate on the "start_date" field.
+func StartDateLT(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldLT(FieldStartDate, v))
+}
+
+// StartDateLTE applies the LTE predicate on the "start_date" field.
+func StartDateLTE(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldLTE(FieldStartDate, v))
+}
+
+// StartDateIsNil applies the IsNil predicate on the "start_date" field.
+func StartDateIsNil() predicate.Banner {
+	return predicate.Banner(sql.FieldIsNull(FieldStartDate))
+}
+
+// StartDateNotNil applies the NotNil predicate on the "start_date" field.
+func StartDateNotNil() predicate.Banner {
+	return predicate.Banner(sql.FieldNotNull(FieldStartDate))
+}
+
+// EndDateEQ applies the EQ predicate on the "end_date" field.
+func EndDateEQ(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldEQ(FieldEndDate, v))
+}
+
+// EndDateNEQ applies the NEQ predicate on the "end_date" field.
+func EndDateNEQ(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldNEQ(FieldEndDate, v))
+}
+
+// EndDateIn applies the In predicate on the "end_date" field.
+func EndDateIn(vs ...time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldIn(FieldEndDate, vs...))
+}
+
+// EndDateNotIn applies the NotIn predicate on the "end_date" field.
+func EndDateNotIn(vs ...time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldNotIn(FieldEndDate, vs...))
+}
+
+// EndDateGT applies the GT predicate on the "end_date" field.
+func EndDateGT(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldGT(FieldEndDate, v))
+}
+
+// EndDateGTE applies the GTE predicate on the "end_date" field.
+func EndDateGTE(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldGTE(FieldEndDate, v))
+}
+
+// EndDateLT applies the LT predicate on the "end_date" field.
+func EndDateLT(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldLT(FieldEndDate, v))
+}
+
+// EndDateLTE applies the LTE predicate on the "end_date" field.
+func EndDateLTE(v time.Time) predicate.Banner {
+	return predicate.Banner(sql.FieldLTE(FieldEndDate, v))
+}
+
+// EndDateIsNil applies the IsNil predicate on the "end_date" field.
+func EndDateIsNil() predicate.Banner {
+	return predicate.Banner(sql.FieldIsNull(FieldEndDate))
+}
+
+// EndDateNotNil applies the NotNil predicate on the "end_date" field.
+func EndDateNotNil() predicate.Banner {
+	return predicate.Banner(sql.FieldNotNull(FieldEndDate))
+}
+
+// AllowedDevicesIsNil applies the IsNil predicate on the "allowed_devices" field.
+func AllowedDevicesIsNil() predicate.Banner {
+	return predicate.Banner(sql.FieldIsNull(FieldAllowedDevices))
+}
+
+// AllowedDevicesNotNil applies the NotNil predicate on the "allowed_devices" field.
+func AllowedDevicesNotNil() predicate.Banner {
+	return predicate.Banner(sql.FieldNotNull(FieldAllowedDevices))
+}
+
+// AllowedBrowsersIsNil applies the IsNil predicate on the "allowed_browsers" field.
+func AllowedBrowsersIsNil() predicate.Banner {
+	return predicate.Banner(sql.FieldIsNull(FieldAllowedBrowsers))
+}
+
+// AllowedBrowsersNotNil applies the NotNil predicate on the "allowed_browsers" field.
+func AllowedBrowsersNotNil() predicate.Banner {
+	return predicate.Banner(sql.FieldNotNull(FieldAllowedBrowsers))
+}
+
+// AllowedOsIsNil applies the IsNil predicate on the "allowed_os" field.
+func AllowedOsIsNil() predicate.Banner {
+	return predicate.Banner(sql.FieldIsNull(FieldAllowedOs))
+}
+
+// AllowedOsNotNil applies the NotNil predicate on the "allowed_os" field.
+func AllowedOsNotNil() predicate.Banner {
+	return predicate.Banner(sql.FieldNotNull(FieldAllowedOs))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Banner {
 	return predicate.Banner(sql.FieldEQ(FieldCreatedAt, v))
@@ -533,6 +828,52 @@ func HasCreatives() predicate.Banner {
 func HasCreativesWith(preds ...predicate.BannerCreative) predicate.Banner {
 	return predicate.Banner(func(s *sql.Selector) {
 		step := newCreativesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasStats applies the HasEdge predicate on the "stats" edge.
+func HasStats() predicate.Banner {
+	return predicate.Banner(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, StatsTable, StatsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasStatsWith applies the HasEdge predicate on the "stats" edge with a given conditions (other predicates).
+func HasStatsWith(preds ...predicate.BannerStats) predicate.Banner {
+	return predicate.Banner(func(s *sql.Selector) {
+		step := newStatsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasLeads applies the HasEdge predicate on the "leads" edge.
+func HasLeads() predicate.Banner {
+	return predicate.Banner(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, LeadsTable, LeadsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasLeadsWith applies the HasEdge predicate on the "leads" edge with a given conditions (other predicates).
+func HasLeadsWith(preds ...predicate.Lead) predicate.Banner {
+	return predicate.Banner(func(s *sql.Selector) {
+		step := newLeadsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

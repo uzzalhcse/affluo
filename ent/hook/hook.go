@@ -32,6 +32,18 @@ func (f BannerCreativeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BannerCreativeMutation", m)
 }
 
+// The BannerStatsFunc type is an adapter to allow the use of ordinary
+// function as BannerStats mutator.
+type BannerStatsFunc func(context.Context, *ent.BannerStatsMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BannerStatsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BannerStatsMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BannerStatsMutation", m)
+}
+
 // The CampaignFunc type is an adapter to allow the use of ordinary
 // function as Campaign mutator.
 type CampaignFunc func(context.Context, *ent.CampaignMutation) (ent.Value, error)
@@ -54,6 +66,18 @@ func (f CampaignLinkFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CampaignLinkMutation", m)
+}
+
+// The LeadFunc type is an adapter to allow the use of ordinary
+// function as Lead mutator.
+type LeadFunc func(context.Context, *ent.LeadMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LeadFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LeadMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LeadMutation", m)
 }
 
 // The PayoutFunc type is an adapter to allow the use of ordinary
