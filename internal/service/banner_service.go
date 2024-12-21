@@ -227,6 +227,7 @@ func (s *BannerService) enrichBannerResponse(ctx context.Context, banner *ent.Ba
 func (s *BannerService) GetAllPublisherBanners(ctx context.Context) ([]*dto.BannerResponse, error) {
 	banners, err := s.client.Banner.Query().
 		WithCreatives().
+		Where(banner.StatusEQ(constant.StatusActive)).
 		All(ctx)
 	if err != nil {
 		return nil, err
