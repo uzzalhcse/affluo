@@ -26,7 +26,7 @@ type CreateBannerRequest struct {
 	Size             string   `json:"size" validate:"required"`
 	Status           string   `json:"status" validate:"oneof=draft active inactive"`
 	AllowedCountries []string `json:"allowed_countries,omitempty"`
-	CreativeIDs      []int64  `json:"creative_ids,omitempty"` // Add this field
+	CreativeIDs      []int64  `json:"creative_ids,omitempty"`
 }
 
 // Modify BannerCreativeResponse to include relationship metadata

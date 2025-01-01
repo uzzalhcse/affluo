@@ -250,20 +250,75 @@ func (s *BannerService) GetActiveBanners(ctx context.Context) ([]*dto.BannerResp
 
 // UpdateBanner updates a banner's details
 func (s *BannerService) UpdateBanner(ctx context.Context, id int64, req *dto.CreateBannerRequest) (*dto.BannerResponse, error) {
-	mutation := s.client.Banner.UpdateOneID(id).
+	// Start a transaction
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Debug log the current banner state
+	currentBanner, err := s.client.Banner.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current banner: %w", err)
+	}
+	fmt.Printf("Current banner state: %+v\n", currentBanner)
+
+	// Create update mutation
+	mutation := tx.Banner.UpdateOneID(id).
 		SetName(req.Name).
 		SetDescription(req.Description).
-		SetClickURL(req.ClickURL).
 		SetType(banner.Type(req.Type)).
 		SetSize(req.Size).
 		SetStatus(banner.Status(req.Status)).
 		SetAllowedCountries(req.AllowedCountries)
 
-	b, err := mutation.Save(ctx)
-	if err != nil {
-		return nil, err
+	// Add click URL if provided
+	if req.ClickURL != "" {
+		mutation.SetClickURL(req.ClickURL)
 	}
 
+	// Save banner updates
+	b, err := mutation.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed updating banner: %w", err)
+	}
+	fmt.Printf("Updated banner state: %+v\n", b)
+
+	// Update creative relationships if provided
+	if len(req.CreativeIDs) > 0 {
+		// Remove existing relationships
+		_, err = tx.BannerCreative.Delete().
+			Where(bannercreative.BannerIDEQ(id)).
+			Exec(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed removing existing creatives: %w", err)
+		}
+
+		// Add new relationships
+		for i, creativeID := range req.CreativeIDs {
+			_, err := tx.BannerCreative.Create().
+				SetBannerID(b.ID).
+				SetCreativeID(creativeID).
+				SetDisplayOrder(i + 1).
+				SetIsPrimary(i == 0).
+				Save(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("failed creating banner-creative relationship: %w", err)
+			}
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Return updated banner
 	return s.GetBannerByID(ctx, b.ID)
 }
 

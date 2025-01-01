@@ -40,6 +40,7 @@ func (a *Application) SetupRoutes() {
 		bannerGroup.Post("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.CreateBanner)
 		bannerGroup.Get("/", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetAllBanners)
 		bannerGroup.Get("/:id", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetBanner)
+		bannerGroup.Put("/:id", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.UpdateBanner)
 
 		// New routes for banner-creative relationship management
 		bannerGroup.Post("/:id/creatives", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.AssignCreative)

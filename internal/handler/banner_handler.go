@@ -3,6 +3,7 @@ package handler
 import (
 	"affluo/internal/dto"
 	"affluo/internal/service"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -53,7 +54,30 @@ func (h *BannerHandler) CreateBanner(c *fiber.Ctx) error {
 
 	return Success(c, banner)
 }
+func (h *BannerHandler) UpdateBanner(c *fiber.Ctx) error {
+	// Parse banner ID
+	bannerID, err := c.ParamsInt("id")
+	if err != nil {
+		return Error(c, "Invalid banner ID", err.Error())
+	}
 
+	// Parse request body
+	req := new(dto.CreateBannerRequest)
+	if err := c.BodyParser(req); err != nil {
+		return Error(c, "Invalid request body", err.Error())
+	}
+
+	// Debug log the request
+	fmt.Printf("Updating banner with ID: %d\nRequest: %+v\n", bannerID, req)
+
+	// Update banner
+	banner, err := h.bannerService.UpdateBanner(c.Context(), int64(bannerID), req)
+	if err != nil {
+		return Error(c, "Failed to update banner", err.Error())
+	}
+
+	return Success(c, banner)
+}
 func (h *BannerHandler) GetBanner(c *fiber.Ctx) error {
 	// Parse banner ID
 	bannerID, err := c.ParamsInt("id")

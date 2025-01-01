@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8010:8010"  # Maps port 8080 on the host to port 8080 in the container
+    environment:
+      - ENV=production  # Set environment variables as needed
+      - APP_NAME="PMC JOB"
+      - APP_PORT=800
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=root
+      - DB_HOST=103.217.111.54
+      - DB_PORT=5432
+      - DB_DATABASE=pmc_job
+      - BROKER_CONNECTION_STRING=amqp://admin:PackMyCode@103.217.111.54:5672/
+    restart: always  # Ensures the app restarts if it crashes
+    volumes:
+      - .:/app  # Mounts the current directory to /app in the container
