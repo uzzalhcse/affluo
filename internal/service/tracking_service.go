@@ -2,17 +2,22 @@
 package service
 
 import (
+	"affluo/constant"
 	"affluo/ent"
 	"affluo/ent/banner"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
+	"affluo/ent/user"
 	"affluo/internal/dto"
 	"context"
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"math"
 	"math/rand"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -33,7 +38,7 @@ func NewTrackingService(client *ent.Client) *TrackingService {
 }
 
 // RecordImpression records a banner impression
-func (s *TrackingService) RecordImpression(ctx context.Context, bannerID int64, req *dto.ImpressionRequest) error {
+func (s *TrackingService) RecordImpression(ctx context.Context, bannerID, publisherId int64, req *dto.ImpressionRequest) error {
 	date := time.Now().UTC().Truncate(24 * time.Hour)
 
 	// Use transaction to ensure atomic updates
@@ -47,6 +52,7 @@ func (s *TrackingService) RecordImpression(ctx context.Context, bannerID int64, 
 	stats, err := tx.BannerStats.Query().
 		Where(
 			bannerstats.HasBannerWith(banner.IDEQ(bannerID)),
+			bannerstats.HasPublisherWith(user.IDEQ(publisherId)),
 			bannerstats.DateEQ(date),
 		).
 		First(ctx)
@@ -54,6 +60,7 @@ func (s *TrackingService) RecordImpression(ctx context.Context, bannerID int64, 
 	if ent.IsNotFound(err) {
 		stats, err = tx.BannerStats.Create().
 			SetBannerID(bannerID).
+			SetPublisherID(publisherId).
 			SetDate(date).
 			Save(ctx)
 	}
@@ -83,7 +90,7 @@ func (s *TrackingService) RecordImpression(ctx context.Context, bannerID int64, 
 }
 
 // RecordClick records a banner click
-func (s *TrackingService) RecordClick(ctx context.Context, bannerID int64, req *dto.ClickRequest) error {
+func (s *TrackingService) RecordClick(ctx context.Context, bannerID, publisherID int64, req *dto.ClickRequest) error {
 	date := time.Now().UTC().Truncate(24 * time.Hour)
 
 	tx, err := s.client.Tx(ctx)
@@ -96,12 +103,14 @@ func (s *TrackingService) RecordClick(ctx context.Context, bannerID int64, req *
 		Where(
 			bannerstats.HasBannerWith(banner.IDEQ(bannerID)),
 			bannerstats.DateEQ(date),
+			bannerstats.HasPublisherWith(user.IDEQ(publisherID)),
 		).
 		First(ctx)
 
 	if ent.IsNotFound(err) {
 		stats, err = tx.BannerStats.Create().
 			SetBannerID(bannerID).
+			SetPublisherID(publisherID).
 			SetDate(date).
 			Save(ctx)
 	}
@@ -110,13 +119,21 @@ func (s *TrackingService) RecordClick(ctx context.Context, bannerID int64, req *
 	}
 
 	// Update click count and CTR
-	impressions := stats.Impressions
 	newClicks := stats.Clicks + 1
-	newCTR := float64(newClicks) / float64(impressions)
+	impressions := stats.Impressions
+	newCTR := float64(0)
+	if impressions > 0 {
+		newCTR = float64(newClicks) / float64(impressions)
+	}
+	// Calculate new earnings
+	clickEarnings := float64(newClicks) * constant.BannerCPC
+	impressionEarnings := float64(impressions) * constant.BannerImpressions
+	totalEarnings := clickEarnings + impressionEarnings
 
 	_, err = tx.BannerStats.UpdateOne(stats).
 		SetClicks(newClicks).
 		SetCtr(newCTR).
+		SetEarnings(totalEarnings).
 		Save(ctx)
 	if err != nil {
 		return err
@@ -129,6 +146,109 @@ func (s *TrackingService) RecordClick(ctx context.Context, bannerID int64, req *
 	}
 
 	return tx.Commit()
+}
+
+func (s *TrackingService) SyncVisit(ctx context.Context, pubId, landingPage, term, utm_query, currentIP string) (string, error) {
+	date := time.Now().UTC().Truncate(24 * time.Hour)
+
+	trackingID := fmt.Sprintf("%s_%s_%s_%s_%s", pubId, landingPage, term, currentIP, date.Format("2006-01-02"))
+	trackingHash := fmt.Sprintf("%x", md5.Sum([]byte(trackingID)))
+	// Parse publisher ID
+	publisherId, err := strconv.ParseInt(pubId, 10, 64)
+	if err != nil {
+		return trackingHash, fmt.Errorf("invalid publisher id: %w", err)
+	}
+
+	// Check if publisher exists
+	publisher, err := s.client.User.Get(ctx, publisherId)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return trackingHash, fmt.Errorf("publisher not found: %d", publisherId)
+		}
+		return trackingHash, fmt.Errorf("error fetching publisher: %w", err)
+	}
+
+	// Try to find existing tracking for the date
+	tracking, err := s.client.GigTracking.Query().
+		Where(
+			gigtracking.HasPublisherWith(user.ID(publisherId)),
+			gigtracking.Type(term),
+			gigtracking.Lp(landingPage),
+			gigtracking.DateEQ(date),
+		).
+		Only(ctx)
+
+	if err != nil {
+		if !ent.IsNotFound(err) {
+			return trackingHash, fmt.Errorf("error querying tracking: %w", err)
+		}
+
+		// Create new tracking if not found
+		tracking, err = s.client.GigTracking.Create().
+			SetPublisher(publisher).
+			SetDate(date).
+			SetLp(landingPage).
+			SetType(term).
+			SetUtmQuery(utm_query).
+			SetTrackID(trackingHash).
+			Save(ctx)
+
+		if err != nil {
+			return trackingHash, fmt.Errorf("error creating tracking: %w", err)
+		}
+	} else {
+		fmt.Printf("Found existing tracking: %+v\n", tracking)
+		// Update existing tracking
+		tracking, err = tracking.Update().
+			SetLp(landingPage).
+			SetUtmQuery(utm_query).
+			Save(ctx)
+
+		fmt.Printf("after update: %+v\n", tracking)
+		if err != nil {
+			return trackingHash, fmt.Errorf("error updating tracking: %w", err)
+		}
+	}
+
+	return trackingHash, nil
+}
+func (s *TrackingService) GigLead(ctx context.Context, track_id string) error {
+	if track_id == "" {
+		return fmt.Errorf("invalid track ID")
+	}
+
+	// Query existing tracking record
+	tracking, err := s.client.GigTracking.
+		Query().
+		Where(
+			gigtracking.TrackID(track_id),
+		).
+		First(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("tracking record not found for ID: %s", track_id)
+		}
+		return fmt.Errorf("error querying tracking record: %w", err)
+	}
+
+	// Check if lead is expired (more than 2 days old)
+	if time.Since(tracking.Date) > 48*time.Hour {
+		return fmt.Errorf("lead expired: more than 2 days old")
+	}
+
+	// Update the tracking record to mark it as a valid lead
+	_, err = tracking.
+		Update().
+		SetRevenue(constant.GigCPL).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+
+	if err != nil {
+		return fmt.Errorf("error updating tracking record: %w", err)
+	}
+
+	return nil
 }
 
 // RecordLead records a conversion/lead
@@ -343,6 +463,7 @@ func (s *TrackingService) GetStats(ctx context.Context, bannerID int64, startDat
 		response.TotalImpressions += stat.Impressions
 		response.TotalClicks += stat.Clicks
 		response.TotalLeads += stat.Leads
+		response.TotalEarning += stat.Earnings
 
 		// Convert to response format
 		response.Items[i] = dto.StatsResponse{
@@ -352,6 +473,7 @@ func (s *TrackingService) GetStats(ctx context.Context, bannerID int64, startDat
 			Clicks:         stat.Clicks,
 			Leads:          stat.Leads,
 			CTR:            stat.Ctr,
+			Earning:        stat.Earnings,
 			ConversionRate: stat.ConversionRate,
 		}
 	}
@@ -365,4 +487,82 @@ func (s *TrackingService) GetStats(ctx context.Context, bannerID int64, startDat
 	}
 
 	return response, nil
+}
+
+func (s *TrackingService) GigReports(ctx context.Context, publisherId int64, startDateStr, endDateStr string) (*dto.GigStats, error) {
+	startDate, endDate, err := parseDateRange(startDateStr, endDateStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Query stats for the date range
+	items, err := s.client.GigTracking.Query().
+		Where(
+			gigtracking.DateGTE(startDate),
+			gigtracking.DateLTE(endDate),
+			gigtracking.HasPublisherWith(user.ID(publisherId)),
+		).
+		Order(ent.Asc(gigtracking.FieldDate)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch stats: %w", err)
+	}
+
+	// Calculate summary metrics
+	stats := calculateSummaryMetrics(items)
+	stats.Items = items
+
+	return stats, nil
+}
+
+func parseDateRange(startDateStr, endDateStr string) (time.Time, time.Time, error) {
+	var startDate, endDate time.Time
+	var err error
+
+	if startDateStr != "" {
+		startDate, err = time.Parse("2006-01-02", startDateStr)
+		if err != nil {
+			return startDate, endDate, fmt.Errorf("invalid start date format: %w", err)
+		}
+	} else {
+		startDate = time.Now().AddDate(0, 0, -30)
+	}
+
+	if endDateStr != "" {
+		endDate, err = time.Parse("2006-01-02", endDateStr)
+		if err != nil {
+			return startDate, endDate, fmt.Errorf("invalid end date format: %w", err)
+		}
+	} else {
+		endDate = time.Now()
+	}
+
+	return startDate, endDate, nil
+}
+
+func calculateSummaryMetrics(items []*ent.GigTracking) *dto.GigStats {
+	stats := &dto.GigStats{}
+	totalClicks := 0
+
+	for _, item := range items {
+		stats.TotalRevenue += item.Revenue
+		totalClicks++
+
+		// Track leads (assuming revenue > 0 indicates a conversion)
+		if item.Revenue > 0 {
+			stats.TotalLeads++
+		}
+	}
+
+	// Calculate averages and rates
+	if len(items) > 0 {
+		stats.AverageRevenue = stats.TotalRevenue / float64(len(items))
+	}
+	if totalClicks > 0 {
+		stats.ConversionRate = float64(stats.TotalLeads) / float64(totalClicks)
+	}
+
+	stats.TotalClicks = totalClicks
+
+	return stats
 }

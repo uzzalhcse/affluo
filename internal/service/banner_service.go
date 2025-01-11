@@ -7,8 +7,10 @@ import (
 	"affluo/ent/bannercreative"
 	"affluo/ent/creative"
 	"affluo/internal/dto"
+	"affluo/internal/helper"
 	"context"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"strings"
 	"time"
 )
@@ -21,20 +23,24 @@ func NewBannerService(client *ent.Client) *BannerService {
 	return &BannerService{client: client}
 }
 
-func (s *BannerService) GetAllPublisherBanners(ctx context.Context) ([]*dto.BannerResponse, error) {
+func (s *BannerService) GetAllPublisherBanners(c *fiber.Ctx) ([]*dto.BannerResponse, error) {
 	banners, err := s.client.Banner.Query().
 		Where(
 			banner.StatusEQ(banner.StatusActive),
 		).
 		Order(ent.Asc(banner.FieldCreatedAt)).
-		All(ctx)
+		All(c.Context())
 	if err != nil {
 		return nil, err
 	}
 
+	userID, err := helper.GetUserIDFromContext(c)
+	if err != nil {
+		return nil, err
+	}
 	var responses []*dto.BannerResponse
 	for _, b := range banners {
-		response, err := s.enrichBannerResponse(ctx, b)
+		response, err := s.enrichBannerResponse(c.Context(), b, userID)
 		if err != nil {
 			return nil, err
 		}
@@ -138,8 +144,7 @@ func (s *BannerService) SetPrimaryCreative(ctx context.Context, bannerID, creati
 	return tx.Commit()
 }
 
-// CreateBanner creates a banner with associated creatives
-func (s *BannerService) CreateBanner(ctx context.Context, req *dto.CreateBannerRequest) (*dto.BannerResponse, error) {
+func (s *BannerService) CreateBanner(ctx context.Context, req *dto.CreateBannerRequest) (*ent.Banner, error) {
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
 		return nil, err
@@ -185,11 +190,10 @@ func (s *BannerService) CreateBanner(ctx context.Context, req *dto.CreateBannerR
 		return nil, err
 	}
 
-	return s.GetBannerByID(ctx, b.ID)
+	return b, nil
 }
 
-// GetBannerByID retrieves a banner with all its details
-func (s *BannerService) GetBannerByID(ctx context.Context, id int64) (*dto.BannerResponse, error) {
+func (s *BannerService) GetBannerByID(ctx context.Context, id, userIDValue int64) (*dto.BannerResponse, error) {
 	b, err := s.client.Banner.Query().
 		Where(banner.IDEQ(id)).
 		WithCreatives().
@@ -197,8 +201,7 @@ func (s *BannerService) GetBannerByID(ctx context.Context, id int64) (*dto.Banne
 	if err != nil {
 		return nil, err
 	}
-
-	return s.enrichBannerResponse(ctx, b)
+	return s.enrichBannerResponse(ctx, b, userIDValue)
 }
 
 // GetAllBanners retrieves all banners with their creatives
@@ -238,7 +241,7 @@ func (s *BannerService) GetActiveBanners(ctx context.Context) ([]*dto.BannerResp
 
 	var response []*dto.BannerResponse
 	for _, b := range banners {
-		enriched, err := s.enrichBannerResponse(ctx, b)
+		enriched, err := s.enrichBannerResponse(ctx, b, 0)
 		if err != nil {
 			return nil, err
 		}
@@ -249,7 +252,7 @@ func (s *BannerService) GetActiveBanners(ctx context.Context) ([]*dto.BannerResp
 }
 
 // UpdateBanner updates a banner's details
-func (s *BannerService) UpdateBanner(ctx context.Context, id int64, req *dto.CreateBannerRequest) (*dto.BannerResponse, error) {
+func (s *BannerService) UpdateBanner(ctx context.Context, id int64, req *dto.CreateBannerRequest) (*ent.Banner, error) {
 	// Start a transaction
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
@@ -319,7 +322,7 @@ func (s *BannerService) UpdateBanner(ctx context.Context, id int64, req *dto.Cre
 	}
 
 	// Return updated banner
-	return s.GetBannerByID(ctx, b.ID)
+	return b, nil
 }
 
 // CreateCreative creates a new creative
@@ -405,7 +408,7 @@ func (s *BannerService) GetBannerCreatives(ctx context.Context, bannerID int64) 
 }
 
 // Helper functions for generating tracking related content
-func (s *BannerService) enrichBannerResponse(ctx context.Context, banner *ent.Banner) (*dto.BannerResponse, error) {
+func (s *BannerService) enrichBannerResponse(ctx context.Context, banner *ent.Banner, publisherId int64) (*dto.BannerResponse, error) {
 	creative, err := s.client.Creative.Query().
 		Where(
 			creative.HasBannerCreativesWith(
@@ -431,7 +434,7 @@ func (s *BannerService) enrichBannerResponse(ctx context.Context, banner *ent.Ba
 	}
 
 	if creative != nil {
-		response.HTMLCode = s.generateHTMLCode(banner, creative)
+		response.HTMLCode = s.generateHTMLCode(banner, creative, publisherId)
 	}
 
 	return response, nil
@@ -440,7 +443,7 @@ func (s *BannerService) generateTrackingURL(banner *ent.Banner) string {
 	return fmt.Sprintf("%s/click/%d", constant.TrackingDomain, banner.ID)
 }
 
-func (s *BannerService) generateHTMLCode(banner *ent.Banner, creative *ent.Creative) string {
+func (s *BannerService) generateHTMLCode(banner *ent.Banner, creative *ent.Creative, publisherId int64) string {
 	dimensions := strings.Split(banner.Size, "x")
 	width, height := dimensions[0], dimensions[1]
 
@@ -460,10 +463,10 @@ func (s *BannerService) generateHTMLCode(banner *ent.Banner, creative *ent.Creat
 		width,
 		height,
 		banner.Name,
-		s.generateTrackingScript(banner),
+		s.generateTrackingScript(banner, publisherId),
 	)
 }
-func (s *BannerService) generateTrackingScript(banner *ent.Banner) string {
+func (s *BannerService) generateTrackingScript(banner *ent.Banner, publisherId int64) string {
 	return fmt.Sprintf(`
     (function() {
         // Configuration
@@ -471,6 +474,7 @@ func (s *BannerService) generateTrackingScript(banner *ent.Banner) string {
             trackingDomain: '%s',
             bannerID: %d,
             clickURL: '%s',
+			publisherId: %d,
             debug: false
         };
 
@@ -496,13 +500,14 @@ func (s *BannerService) generateTrackingScript(banner *ent.Banner) string {
                     timestamp: new Date().toISOString(),
                     eventID: generateUID(),
                     bannerID: config.bannerID,
+					publisherId: config.publisherId,
                     url: window.location.href,
                     referer: document.referrer,
                     ...getDeviceInfo(),
                     ...extraData
                 };
 
-                const response = await fetch(config.trackingDomain + '/api/tracking/' + eventType + '/' + config.bannerID, {
+                const response = await fetch(config.trackingDomain + '/api/tracking/' + eventType + '/' + config.bannerID+'?pub='+config.publisherId, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -521,7 +526,7 @@ func (s *BannerService) generateTrackingScript(banner *ent.Banner) string {
                 
                 // Fallback to image pixel for impression tracking
                 if (eventType === 'impression') {
-                    new Image().src = config.trackingDomain + '/api/tracking/pixel/' + config.bannerID + '?t=' + Date.now();
+                    new Image().src = config.trackingDomain + '/api/tracking/pixel/' + config.bannerID +'?pub='+config.publisherId;
                 }
             }
         }
@@ -538,7 +543,7 @@ func (s *BannerService) generateTrackingScript(banner *ent.Banner) string {
                         }
                     });
                 }, {
-                    threshold: 0.5 // 50% visibility required
+                    threshold: 0.5 
                 });
                 
 				const container = document.currentScript?.parentElement || document.querySelector('.aff-banner');
@@ -582,5 +587,5 @@ func (s *BannerService) generateTrackingScript(banner *ent.Banner) string {
             // Track impression
             trackImpression();
         });
-    })();`, constant.TrackingDomain, banner.ID, banner.ClickURL)
+    })();`, constant.TrackingDomain, banner.ID, banner.ClickURL, publisherId)
 }

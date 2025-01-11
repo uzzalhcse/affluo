@@ -9,6 +9,7 @@ import (
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/creative"
+	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
 	"affluo/ent/payout"
 	"affluo/ent/post"
@@ -42,6 +43,7 @@ const (
 	TypeCampaign       = "Campaign"
 	TypeCampaignLink   = "CampaignLink"
 	TypeCreative       = "Creative"
+	TypeGigTracking    = "GigTracking"
 	TypeLead           = "Lead"
 	TypePayout         = "Payout"
 	TypePost           = "Post"
@@ -7656,6 +7658,879 @@ func (m *CreativeMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Creative edge %s", name)
 }
 
+// GigTrackingMutation represents an operation that mutates the GigTracking nodes in the graph.
+type GigTrackingMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *int64
+	date             *time.Time
+	_type            *string
+	utm_query        *string
+	lp               *string
+	track_id         *string
+	revenue          *float64
+	addrevenue       *float64
+	created_at       *time.Time
+	updated_at       *time.Time
+	clearedFields    map[string]struct{}
+	publisher        *int64
+	clearedpublisher bool
+	done             bool
+	oldValue         func(context.Context) (*GigTracking, error)
+	predicates       []predicate.GigTracking
+}
+
+var _ ent.Mutation = (*GigTrackingMutation)(nil)
+
+// gigtrackingOption allows management of the mutation configuration using functional options.
+type gigtrackingOption func(*GigTrackingMutation)
+
+// newGigTrackingMutation creates new mutation for the GigTracking entity.
+func newGigTrackingMutation(c config, op Op, opts ...gigtrackingOption) *GigTrackingMutation {
+	m := &GigTrackingMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGigTracking,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGigTrackingID sets the ID field of the mutation.
+func withGigTrackingID(id int64) gigtrackingOption {
+	return func(m *GigTrackingMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GigTracking
+		)
+		m.oldValue = func(ctx context.Context) (*GigTracking, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GigTracking.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGigTracking sets the old GigTracking of the mutation.
+func withGigTracking(node *GigTracking) gigtrackingOption {
+	return func(m *GigTrackingMutation) {
+		m.oldValue = func(context.Context) (*GigTracking, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GigTrackingMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GigTrackingMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of GigTracking entities.
+func (m *GigTrackingMutation) SetID(id int64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GigTrackingMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GigTrackingMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GigTracking.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDate sets the "date" field.
+func (m *GigTrackingMutation) SetDate(t time.Time) {
+	m.date = &t
+}
+
+// Date returns the value of the "date" field in the mutation.
+func (m *GigTrackingMutation) Date() (r time.Time, exists bool) {
+	v := m.date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDate returns the old "date" field's value of the GigTracking entity.
+// If the GigTracking object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GigTrackingMutation) OldDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDate: %w", err)
+	}
+	return oldValue.Date, nil
+}
+
+// ResetDate resets all changes to the "date" field.
+func (m *GigTrackingMutation) ResetDate() {
+	m.date = nil
+}
+
+// SetType sets the "type" field.
+func (m *GigTrackingMutation) SetType(s string) {
+	m._type = &s
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *GigTrackingMutation) GetType() (r string, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the GigTracking entity.
+// If the GigTracking object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GigTrackingMutation) OldType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *GigTrackingMutation) ResetType() {
+	m._type = nil
+}
+
+// SetUtmQuery sets the "utm_query" field.
+func (m *GigTrackingMutation) SetUtmQuery(s string) {
+	m.utm_query = &s
+}
+
+// UtmQuery returns the value of the "utm_query" field in the mutation.
+func (m *GigTrackingMutation) UtmQuery() (r string, exists bool) {
+	v := m.utm_query
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUtmQuery returns the old "utm_query" field's value of the GigTracking entity.
+// If the GigTracking object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GigTrackingMutation) OldUtmQuery(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUtmQuery is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUtmQuery requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUtmQuery: %w", err)
+	}
+	return oldValue.UtmQuery, nil
+}
+
+// ClearUtmQuery clears the value of the "utm_query" field.
+func (m *GigTrackingMutation) ClearUtmQuery() {
+	m.utm_query = nil
+	m.clearedFields[gigtracking.FieldUtmQuery] = struct{}{}
+}
+
+// UtmQueryCleared returns if the "utm_query" field was cleared in this mutation.
+func (m *GigTrackingMutation) UtmQueryCleared() bool {
+	_, ok := m.clearedFields[gigtracking.FieldUtmQuery]
+	return ok
+}
+
+// ResetUtmQuery resets all changes to the "utm_query" field.
+func (m *GigTrackingMutation) ResetUtmQuery() {
+	m.utm_query = nil
+	delete(m.clearedFields, gigtracking.FieldUtmQuery)
+}
+
+// SetLp sets the "lp" field.
+func (m *GigTrackingMutation) SetLp(s string) {
+	m.lp = &s
+}
+
+// Lp returns the value of the "lp" field in the mutation.
+func (m *GigTrackingMutation) Lp() (r string, exists bool) {
+	v := m.lp
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLp returns the old "lp" field's value of the GigTracking entity.
+// If the GigTracking object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GigTrackingMutation) OldLp(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLp is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLp requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLp: %w", err)
+	}
+	return oldValue.Lp, nil
+}
+
+// ClearLp clears the value of the "lp" field.
+func (m *GigTrackingMutation) ClearLp() {
+	m.lp = nil
+	m.clearedFields[gigtracking.FieldLp] = struct{}{}
+}
+
+// LpCleared returns if the "lp" field was cleared in this mutation.
+func (m *GigTrackingMutation) LpCleared() bool {
+	_, ok := m.clearedFields[gigtracking.FieldLp]
+	return ok
+}
+
+// ResetLp resets all changes to the "lp" field.
+func (m *GigTrackingMutation) ResetLp() {
+	m.lp = nil
+	delete(m.clearedFields, gigtracking.FieldLp)
+}
+
+// SetTrackID sets the "track_id" field.
+func (m *GigTrackingMutation) SetTrackID(s string) {
+	m.track_id = &s
+}
+
+// TrackID returns the value of the "track_id" field in the mutation.
+func (m *GigTrackingMutation) TrackID() (r string, exists bool) {
+	v := m.track_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTrackID returns the old "track_id" field's value of the GigTracking entity.
+// If the GigTracking object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GigTrackingMutation) OldTrackID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTrackID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTrackID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTrackID: %w", err)
+	}
+	return oldValue.TrackID, nil
+}
+
+// ClearTrackID clears the value of the "track_id" field.
+func (m *GigTrackingMutation) ClearTrackID() {
+	m.track_id = nil
+	m.clearedFields[gigtracking.FieldTrackID] = struct{}{}
+}
+
+// TrackIDCleared returns if the "track_id" field was cleared in this mutation.
+func (m *GigTrackingMutation) TrackIDCleared() bool {
+	_, ok := m.clearedFields[gigtracking.FieldTrackID]
+	return ok
+}
+
+// ResetTrackID resets all changes to the "track_id" field.
+func (m *GigTrackingMutation) ResetTrackID() {
+	m.track_id = nil
+	delete(m.clearedFields, gigtracking.FieldTrackID)
+}
+
+// SetRevenue sets the "revenue" field.
+func (m *GigTrackingMutation) SetRevenue(f float64) {
+	m.revenue = &f
+	m.addrevenue = nil
+}
+
+// Revenue returns the value of the "revenue" field in the mutation.
+func (m *GigTrackingMutation) Revenue() (r float64, exists bool) {
+	v := m.revenue
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRevenue returns the old "revenue" field's value of the GigTracking entity.
+// If the GigTracking object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GigTrackingMutation) OldRevenue(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRevenue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRevenue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRevenue: %w", err)
+	}
+	return oldValue.Revenue, nil
+}
+
+// AddRevenue adds f to the "revenue" field.
+func (m *GigTrackingMutation) AddRevenue(f float64) {
+	if m.addrevenue != nil {
+		*m.addrevenue += f
+	} else {
+		m.addrevenue = &f
+	}
+}
+
+// AddedRevenue returns the value that was added to the "revenue" field in this mutation.
+func (m *GigTrackingMutation) AddedRevenue() (r float64, exists bool) {
+	v := m.addrevenue
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRevenue resets all changes to the "revenue" field.
+func (m *GigTrackingMutation) ResetRevenue() {
+	m.revenue = nil
+	m.addrevenue = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *GigTrackingMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *GigTrackingMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the GigTracking entity.
+// If the GigTracking object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GigTrackingMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *GigTrackingMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *GigTrackingMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *GigTrackingMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the GigTracking entity.
+// If the GigTracking object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GigTrackingMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *GigTrackingMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetPublisherID sets the "publisher" edge to the User entity by id.
+func (m *GigTrackingMutation) SetPublisherID(id int64) {
+	m.publisher = &id
+}
+
+// ClearPublisher clears the "publisher" edge to the User entity.
+func (m *GigTrackingMutation) ClearPublisher() {
+	m.clearedpublisher = true
+}
+
+// PublisherCleared reports if the "publisher" edge to the User entity was cleared.
+func (m *GigTrackingMutation) PublisherCleared() bool {
+	return m.clearedpublisher
+}
+
+// PublisherID returns the "publisher" edge ID in the mutation.
+func (m *GigTrackingMutation) PublisherID() (id int64, exists bool) {
+	if m.publisher != nil {
+		return *m.publisher, true
+	}
+	return
+}
+
+// PublisherIDs returns the "publisher" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PublisherID instead. It exists only for internal usage by the builders.
+func (m *GigTrackingMutation) PublisherIDs() (ids []int64) {
+	if id := m.publisher; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPublisher resets all changes to the "publisher" edge.
+func (m *GigTrackingMutation) ResetPublisher() {
+	m.publisher = nil
+	m.clearedpublisher = false
+}
+
+// Where appends a list predicates to the GigTrackingMutation builder.
+func (m *GigTrackingMutation) Where(ps ...predicate.GigTracking) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GigTrackingMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GigTrackingMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GigTracking, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GigTrackingMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GigTrackingMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GigTracking).
+func (m *GigTrackingMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GigTrackingMutation) Fields() []string {
+	fields := make([]string, 0, 8)
+	if m.date != nil {
+		fields = append(fields, gigtracking.FieldDate)
+	}
+	if m._type != nil {
+		fields = append(fields, gigtracking.FieldType)
+	}
+	if m.utm_query != nil {
+		fields = append(fields, gigtracking.FieldUtmQuery)
+	}
+	if m.lp != nil {
+		fields = append(fields, gigtracking.FieldLp)
+	}
+	if m.track_id != nil {
+		fields = append(fields, gigtracking.FieldTrackID)
+	}
+	if m.revenue != nil {
+		fields = append(fields, gigtracking.FieldRevenue)
+	}
+	if m.created_at != nil {
+		fields = append(fields, gigtracking.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, gigtracking.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GigTrackingMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case gigtracking.FieldDate:
+		return m.Date()
+	case gigtracking.FieldType:
+		return m.GetType()
+	case gigtracking.FieldUtmQuery:
+		return m.UtmQuery()
+	case gigtracking.FieldLp:
+		return m.Lp()
+	case gigtracking.FieldTrackID:
+		return m.TrackID()
+	case gigtracking.FieldRevenue:
+		return m.Revenue()
+	case gigtracking.FieldCreatedAt:
+		return m.CreatedAt()
+	case gigtracking.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GigTrackingMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case gigtracking.FieldDate:
+		return m.OldDate(ctx)
+	case gigtracking.FieldType:
+		return m.OldType(ctx)
+	case gigtracking.FieldUtmQuery:
+		return m.OldUtmQuery(ctx)
+	case gigtracking.FieldLp:
+		return m.OldLp(ctx)
+	case gigtracking.FieldTrackID:
+		return m.OldTrackID(ctx)
+	case gigtracking.FieldRevenue:
+		return m.OldRevenue(ctx)
+	case gigtracking.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case gigtracking.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown GigTracking field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GigTrackingMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case gigtracking.FieldDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDate(v)
+		return nil
+	case gigtracking.FieldType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
+	case gigtracking.FieldUtmQuery:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUtmQuery(v)
+		return nil
+	case gigtracking.FieldLp:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLp(v)
+		return nil
+	case gigtracking.FieldTrackID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTrackID(v)
+		return nil
+	case gigtracking.FieldRevenue:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRevenue(v)
+		return nil
+	case gigtracking.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case gigtracking.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GigTracking field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GigTrackingMutation) AddedFields() []string {
+	var fields []string
+	if m.addrevenue != nil {
+		fields = append(fields, gigtracking.FieldRevenue)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GigTrackingMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case gigtracking.FieldRevenue:
+		return m.AddedRevenue()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GigTrackingMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case gigtracking.FieldRevenue:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRevenue(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GigTracking numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GigTrackingMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(gigtracking.FieldUtmQuery) {
+		fields = append(fields, gigtracking.FieldUtmQuery)
+	}
+	if m.FieldCleared(gigtracking.FieldLp) {
+		fields = append(fields, gigtracking.FieldLp)
+	}
+	if m.FieldCleared(gigtracking.FieldTrackID) {
+		fields = append(fields, gigtracking.FieldTrackID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GigTrackingMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GigTrackingMutation) ClearField(name string) error {
+	switch name {
+	case gigtracking.FieldUtmQuery:
+		m.ClearUtmQuery()
+		return nil
+	case gigtracking.FieldLp:
+		m.ClearLp()
+		return nil
+	case gigtracking.FieldTrackID:
+		m.ClearTrackID()
+		return nil
+	}
+	return fmt.Errorf("unknown GigTracking nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GigTrackingMutation) ResetField(name string) error {
+	switch name {
+	case gigtracking.FieldDate:
+		m.ResetDate()
+		return nil
+	case gigtracking.FieldType:
+		m.ResetType()
+		return nil
+	case gigtracking.FieldUtmQuery:
+		m.ResetUtmQuery()
+		return nil
+	case gigtracking.FieldLp:
+		m.ResetLp()
+		return nil
+	case gigtracking.FieldTrackID:
+		m.ResetTrackID()
+		return nil
+	case gigtracking.FieldRevenue:
+		m.ResetRevenue()
+		return nil
+	case gigtracking.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case gigtracking.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown GigTracking field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GigTrackingMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.publisher != nil {
+		edges = append(edges, gigtracking.EdgePublisher)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GigTrackingMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case gigtracking.EdgePublisher:
+		if id := m.publisher; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GigTrackingMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GigTrackingMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GigTrackingMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedpublisher {
+		edges = append(edges, gigtracking.EdgePublisher)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GigTrackingMutation) EdgeCleared(name string) bool {
+	switch name {
+	case gigtracking.EdgePublisher:
+		return m.clearedpublisher
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GigTrackingMutation) ClearEdge(name string) error {
+	switch name {
+	case gigtracking.EdgePublisher:
+		m.ClearPublisher()
+		return nil
+	}
+	return fmt.Errorf("unknown GigTracking unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GigTrackingMutation) ResetEdge(name string) error {
+	switch name {
+	case gigtracking.EdgePublisher:
+		m.ResetPublisher()
+		return nil
+	}
+	return fmt.Errorf("unknown GigTracking edge %s", name)
+}
+
 // LeadMutation represents an operation that mutates the Lead nodes in the graph.
 type LeadMutation struct {
 	config
@@ -11663,6 +12538,9 @@ type UserMutation struct {
 	stats                  map[int64]struct{}
 	removedstats           map[int64]struct{}
 	clearedstats           bool
+	gig_trackings          map[int64]struct{}
+	removedgig_trackings   map[int64]struct{}
+	clearedgig_trackings   bool
 	done                   bool
 	oldValue               func(context.Context) (*User, error)
 	predicates             []predicate.User
@@ -12593,6 +13471,60 @@ func (m *UserMutation) ResetStats() {
 	m.removedstats = nil
 }
 
+// AddGigTrackingIDs adds the "gig_trackings" edge to the GigTracking entity by ids.
+func (m *UserMutation) AddGigTrackingIDs(ids ...int64) {
+	if m.gig_trackings == nil {
+		m.gig_trackings = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.gig_trackings[ids[i]] = struct{}{}
+	}
+}
+
+// ClearGigTrackings clears the "gig_trackings" edge to the GigTracking entity.
+func (m *UserMutation) ClearGigTrackings() {
+	m.clearedgig_trackings = true
+}
+
+// GigTrackingsCleared reports if the "gig_trackings" edge to the GigTracking entity was cleared.
+func (m *UserMutation) GigTrackingsCleared() bool {
+	return m.clearedgig_trackings
+}
+
+// RemoveGigTrackingIDs removes the "gig_trackings" edge to the GigTracking entity by IDs.
+func (m *UserMutation) RemoveGigTrackingIDs(ids ...int64) {
+	if m.removedgig_trackings == nil {
+		m.removedgig_trackings = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.gig_trackings, ids[i])
+		m.removedgig_trackings[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedGigTrackings returns the removed IDs of the "gig_trackings" edge to the GigTracking entity.
+func (m *UserMutation) RemovedGigTrackingsIDs() (ids []int64) {
+	for id := range m.removedgig_trackings {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// GigTrackingsIDs returns the "gig_trackings" edge IDs in the mutation.
+func (m *UserMutation) GigTrackingsIDs() (ids []int64) {
+	for id := range m.gig_trackings {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetGigTrackings resets all changes to the "gig_trackings" edge.
+func (m *UserMutation) ResetGigTrackings() {
+	m.gig_trackings = nil
+	m.clearedgig_trackings = false
+	m.removedgig_trackings = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -12946,7 +13878,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.campaigns != nil {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -12964,6 +13896,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.stats != nil {
 		edges = append(edges, user.EdgeStats)
+	}
+	if m.gig_trackings != nil {
+		edges = append(edges, user.EdgeGigTrackings)
 	}
 	return edges
 }
@@ -13008,13 +13943,19 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeGigTrackings:
+		ids := make([]ent.Value, 0, len(m.gig_trackings))
+		for id := range m.gig_trackings {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.removedcampaigns != nil {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -13032,6 +13973,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedstats != nil {
 		edges = append(edges, user.EdgeStats)
+	}
+	if m.removedgig_trackings != nil {
+		edges = append(edges, user.EdgeGigTrackings)
 	}
 	return edges
 }
@@ -13076,13 +14020,19 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeGigTrackings:
+		ids := make([]ent.Value, 0, len(m.removedgig_trackings))
+		for id := range m.removedgig_trackings {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.clearedcampaigns {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -13100,6 +14050,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedstats {
 		edges = append(edges, user.EdgeStats)
+	}
+	if m.clearedgig_trackings {
+		edges = append(edges, user.EdgeGigTrackings)
 	}
 	return edges
 }
@@ -13120,6 +14073,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedposts
 	case user.EdgeStats:
 		return m.clearedstats
+	case user.EdgeGigTrackings:
+		return m.clearedgig_trackings
 	}
 	return false
 }
@@ -13153,6 +14108,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeStats:
 		m.ResetStats()
+		return nil
+	case user.EdgeGigTrackings:
+		m.ResetGigTrackings()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

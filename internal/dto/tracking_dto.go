@@ -1,7 +1,10 @@
 // internal/dto/tracking.go
 package dto
 
-import "time"
+import (
+	"affluo/ent"
+	"time"
+)
 
 type ImpressionRequest struct {
 	IPAddress  string            `json:"ip_address"`
@@ -40,6 +43,7 @@ type StatsResponse struct {
 	Clicks         int64     `json:"clicks"`
 	Leads          int64     `json:"leads"`
 	CTR            float64   `json:"ctr"`
+	Earning        float64   `json:"earning"`
 	ConversionRate float64   `json:"conversion_rate"`
 }
 
@@ -49,5 +53,15 @@ type StatsAggregateResponse struct {
 	TotalLeads       int64           `json:"total_leads"`
 	AverageCTR       float64         `json:"average_ctr"`
 	AverageConvRate  float64         `json:"average_conv_rate"`
+	TotalEarning     float64         `json:"total_earning"`
 	Items            []StatsResponse `json:"items"`
+}
+type GigStats struct {
+	Items           []*ent.GigTracking `json:"items"`
+	TotalRevenue    float64            `json:"total_revenue"`
+	TotalClicks     int                `json:"total_clicks"`
+	TotalLeads      int                `json:"total_leads"`
+	AverageRevenue  float64            `json:"average_revenue"`
+	ConversionRate  float64            `json:"conversion_rate"`
+	TopPerformingLP string             `json:"top_performing_lp"`
 }

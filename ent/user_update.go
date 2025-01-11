@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
 	"affluo/ent/post"
 	"affluo/ent/predicate"
@@ -314,6 +315,21 @@ func (uu *UserUpdate) AddStats(b ...*BannerStats) *UserUpdate {
 	return uu.AddStatIDs(ids...)
 }
 
+// AddGigTrackingIDs adds the "gig_trackings" edge to the GigTracking entity by IDs.
+func (uu *UserUpdate) AddGigTrackingIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddGigTrackingIDs(ids...)
+	return uu
+}
+
+// AddGigTrackings adds the "gig_trackings" edges to the GigTracking entity.
+func (uu *UserUpdate) AddGigTrackings(g ...*GigTracking) *UserUpdate {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uu.AddGigTrackingIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -443,6 +459,27 @@ func (uu *UserUpdate) RemoveStats(b ...*BannerStats) *UserUpdate {
 		ids[i] = b[i].ID
 	}
 	return uu.RemoveStatIDs(ids...)
+}
+
+// ClearGigTrackings clears all "gig_trackings" edges to the GigTracking entity.
+func (uu *UserUpdate) ClearGigTrackings() *UserUpdate {
+	uu.mutation.ClearGigTrackings()
+	return uu
+}
+
+// RemoveGigTrackingIDs removes the "gig_trackings" edge to GigTracking entities by IDs.
+func (uu *UserUpdate) RemoveGigTrackingIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveGigTrackingIDs(ids...)
+	return uu
+}
+
+// RemoveGigTrackings removes "gig_trackings" edges to GigTracking entities.
+func (uu *UserUpdate) RemoveGigTrackings(g ...*GigTracking) *UserUpdate {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uu.RemoveGigTrackingIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -829,6 +866,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.GigTrackingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.GigTrackingsTable,
+			Columns: []string{user.GigTrackingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gigtracking.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedGigTrackingsIDs(); len(nodes) > 0 && !uu.mutation.GigTrackingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.GigTrackingsTable,
+			Columns: []string{user.GigTrackingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gigtracking.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.GigTrackingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.GigTrackingsTable,
+			Columns: []string{user.GigTrackingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gigtracking.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -1129,6 +1211,21 @@ func (uuo *UserUpdateOne) AddStats(b ...*BannerStats) *UserUpdateOne {
 	return uuo.AddStatIDs(ids...)
 }
 
+// AddGigTrackingIDs adds the "gig_trackings" edge to the GigTracking entity by IDs.
+func (uuo *UserUpdateOne) AddGigTrackingIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddGigTrackingIDs(ids...)
+	return uuo
+}
+
+// AddGigTrackings adds the "gig_trackings" edges to the GigTracking entity.
+func (uuo *UserUpdateOne) AddGigTrackings(g ...*GigTracking) *UserUpdateOne {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uuo.AddGigTrackingIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -1258,6 +1355,27 @@ func (uuo *UserUpdateOne) RemoveStats(b ...*BannerStats) *UserUpdateOne {
 		ids[i] = b[i].ID
 	}
 	return uuo.RemoveStatIDs(ids...)
+}
+
+// ClearGigTrackings clears all "gig_trackings" edges to the GigTracking entity.
+func (uuo *UserUpdateOne) ClearGigTrackings() *UserUpdateOne {
+	uuo.mutation.ClearGigTrackings()
+	return uuo
+}
+
+// RemoveGigTrackingIDs removes the "gig_trackings" edge to GigTracking entities by IDs.
+func (uuo *UserUpdateOne) RemoveGigTrackingIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveGigTrackingIDs(ids...)
+	return uuo
+}
+
+// RemoveGigTrackings removes "gig_trackings" edges to GigTracking entities.
+func (uuo *UserUpdateOne) RemoveGigTrackings(g ...*GigTracking) *UserUpdateOne {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uuo.RemoveGigTrackingIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1667,6 +1785,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.GigTrackingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.GigTrackingsTable,
+			Columns: []string{user.GigTrackingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gigtracking.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedGigTrackingsIDs(); len(nodes) > 0 && !uuo.mutation.GigTrackingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.GigTrackingsTable,
+			Columns: []string{user.GigTrackingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gigtracking.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.GigTrackingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.GigTrackingsTable,
+			Columns: []string{user.GigTrackingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gigtracking.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

@@ -70,6 +70,7 @@ func (a *Application) SetupRoutes() {
 		trackingGroup.Post("/lead/:id", a.Handlers.Tracking.RecordLead)
 
 		trackingGroup.Get("/pixel/:id", a.Handlers.Tracking.PixelTracking)
+		trackingGroup.Get("/visit", a.Handlers.Tracking.VisitTracking)
 
 		// Banner selection endpoint
 		trackingGroup.Get("/select/:campaign_id", a.Handlers.Tracking.SelectBanner)
@@ -79,6 +80,11 @@ func (a *Application) SetupRoutes() {
 	statsGroup := a.App.Group("/api/stats")
 	{
 		statsGroup.Get("/banner", a.Middleware.Auth.Authenticate(), a.Handlers.Tracking.GetStats)
+		statsGroup.Get("/gigs", a.Middleware.Auth.Authenticate(), a.Handlers.Tracking.GetGigReports)
+	}
+	webhookGroup := a.App.Group("/api/callback")
+	{
+		webhookGroup.Get("/gigs", a.Middleware.Auth.Authenticate(), a.Handlers.Tracking.GigLeadCallBack)
 	}
 
 }

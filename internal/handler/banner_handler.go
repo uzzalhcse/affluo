@@ -2,6 +2,7 @@ package handler
 
 import (
 	"affluo/internal/dto"
+	"affluo/internal/helper"
 	"affluo/internal/service"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
@@ -23,7 +24,7 @@ func (h *BannerHandler) GetAllBanners(c *fiber.Ctx) error {
 	return Success(c, banners)
 }
 func (h *BannerHandler) GetPublisherBanners(c *fiber.Ctx) error {
-	banners, err := h.bannerService.GetAllPublisherBanners(c.Context())
+	banners, err := h.bannerService.GetAllPublisherBanners(c)
 	if err != nil {
 		return Error(c, "Failed to retrieve banners", err.Error())
 	}
@@ -85,8 +86,12 @@ func (h *BannerHandler) GetBanner(c *fiber.Ctx) error {
 		return Error(c, "Invalid banner ID", err.Error())
 	}
 
+	userID, err := helper.GetUserIDFromContext(c)
+	if err != nil {
+		return Error(c, "User not authenticated", err)
+	}
 	// Fetch banner
-	banner, err := h.bannerService.GetBannerByID(c.Context(), int64(bannerID))
+	banner, err := h.bannerService.GetBannerByID(c.Context(), int64(bannerID), userID)
 	if err != nil {
 		return Error(c, "Failed to retrieve banner", err.Error())
 	}

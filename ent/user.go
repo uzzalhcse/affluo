@@ -61,9 +61,11 @@ type UserEdges struct {
 	Posts []*Post `json:"posts,omitempty"`
 	// Stats holds the value of the stats edge.
 	Stats []*BannerStats `json:"stats,omitempty"`
+	// GigTrackings holds the value of the gig_trackings edge.
+	GigTrackings []*GigTracking `json:"gig_trackings,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 }
 
 // CampaignsOrErr returns the Campaigns value or an error if the edge
@@ -118,6 +120,15 @@ func (e UserEdges) StatsOrErr() ([]*BannerStats, error) {
 		return e.Stats, nil
 	}
 	return nil, &NotLoadedError{edge: "stats"}
+}
+
+// GigTrackingsOrErr returns the GigTrackings value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) GigTrackingsOrErr() ([]*GigTracking, error) {
+	if e.loadedTypes[6] {
+		return e.GigTrackings, nil
+	}
+	return nil, &NotLoadedError{edge: "gig_trackings"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -267,6 +278,11 @@ func (u *User) QueryPosts() *PostQuery {
 // QueryStats queries the "stats" edge of the User entity.
 func (u *User) QueryStats() *BannerStatsQuery {
 	return NewUserClient(u.config).QueryStats(u)
+}
+
+// QueryGigTrackings queries the "gig_trackings" edge of the User entity.
+func (u *User) QueryGigTrackings() *GigTrackingQuery {
+	return NewUserClient(u.config).QueryGigTrackings(u)
 }
 
 // Update returns a builder for updating this User.

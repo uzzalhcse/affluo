@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
 	"affluo/ent/post"
 	"affluo/ent/referral"
@@ -264,6 +265,21 @@ func (uc *UserCreate) AddStats(b ...*BannerStats) *UserCreate {
 		ids[i] = b[i].ID
 	}
 	return uc.AddStatIDs(ids...)
+}
+
+// AddGigTrackingIDs adds the "gig_trackings" edge to the GigTracking entity by IDs.
+func (uc *UserCreate) AddGigTrackingIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddGigTrackingIDs(ids...)
+	return uc
+}
+
+// AddGigTrackings adds the "gig_trackings" edges to the GigTracking entity.
+func (uc *UserCreate) AddGigTrackings(g ...*GigTracking) *UserCreate {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uc.AddGigTrackingIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -526,6 +542,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bannerstats.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.GigTrackingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.GigTrackingsTable,
+			Columns: []string{user.GigTrackingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gigtracking.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

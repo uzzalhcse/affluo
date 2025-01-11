@@ -3,8 +3,8 @@ package handler
 
 import (
 	"affluo/internal/dto"
+	"affluo/internal/helper"
 	"affluo/internal/service"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -49,16 +49,9 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 
 func (h *AuthHandler) Profile(c *fiber.Ctx) error {
 	// Convert user_id to int64
-	userIDValue := c.Locals("user_id")
-	var userID int64
-
-	switch v := userIDValue.(type) {
-	case float64:
-		userID = int64(v)
-	case int64:
-		userID = v
-	default:
-		return Unauthorized(c, "Invalid user ID type", fmt.Errorf("unexpected user ID type: %T", userIDValue))
+	userID, err := helper.GetUserIDFromContext(c)
+	if err != nil {
+		return Unauthorized(c, "User not authenticated", err)
 	}
 
 	user, err := h.authService.GetUserFromContext(c.Context(), userID)

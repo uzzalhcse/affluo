@@ -3,7 +3,9 @@ package handler
 
 import (
 	"affluo/internal/dto"
+	"affluo/internal/helper"
 	"affluo/internal/service"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"log"
 )
@@ -22,12 +24,13 @@ func (h *TrackingHandler) RecordImpression(c *fiber.Ctx) error {
 		return Error(c, "Invalid banner ID", err.Error())
 	}
 
+	publisherId := c.QueryInt("pub")
 	req := new(dto.ImpressionRequest)
 	if err := c.BodyParser(req); err != nil {
 		return Error(c, "Invalid request body", err.Error())
 	}
 
-	err = h.trackingService.RecordImpression(c.Context(), int64(bannerID), req)
+	err = h.trackingService.RecordImpression(c.Context(), int64(bannerID), int64(publisherId), req)
 	if err != nil {
 		return Error(c, "Failed to record impression", err.Error())
 	}
@@ -37,6 +40,7 @@ func (h *TrackingHandler) RecordImpression(c *fiber.Ctx) error {
 
 func (h *TrackingHandler) RecordClick(c *fiber.Ctx) error {
 	bannerID, err := c.ParamsInt("id")
+	publisherId := c.QueryInt("pub")
 	if err != nil {
 		return Error(c, "Invalid banner ID", err.Error())
 	}
@@ -46,7 +50,7 @@ func (h *TrackingHandler) RecordClick(c *fiber.Ctx) error {
 		return Error(c, "Invalid request body", err.Error())
 	}
 
-	err = h.trackingService.RecordClick(c.Context(), int64(bannerID), req)
+	err = h.trackingService.RecordClick(c.Context(), int64(bannerID), int64(publisherId), req)
 	if err != nil {
 		return Error(c, "Failed to record click", err.Error())
 	}
@@ -102,6 +106,48 @@ func (h *TrackingHandler) GetStats(c *fiber.Ctx) error {
 
 	return Success(c, fiber.Map{"stats": stats})
 }
+func (h *TrackingHandler) GetGigReports(c *fiber.Ctx) error {
+	// Parse date range from query parameters
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+
+	publisherId, err := helper.GetUserIDFromContext(c)
+	if err != nil {
+		return Error(c, "Failed to get reports", err.Error())
+	}
+
+	stats, err := h.trackingService.GigReports(c.Context(), publisherId, startDate, endDate)
+	if err != nil {
+		return Error(c, "Failed to get stats", err.Error())
+	}
+
+	return Success(c, fiber.Map{"stats": stats})
+}
+
+func (h *TrackingHandler) VisitTracking(c *fiber.Ctx) error {
+	pubId := c.Query("pub")
+	landingPage := c.Query("lp")
+	term := c.Query("type")
+	utm_query := c.Query("utm_query")
+	currentIP := c.IP()
+	trackingHash, err := h.trackingService.SyncVisit(c.Context(), pubId, landingPage, term, utm_query, currentIP)
+	if err != nil {
+		return Error(c, "Something went wrong", err.Error())
+	}
+
+	redirectUrl := fmt.Sprintf("%s?track_id=%s", landingPage, trackingHash)
+
+	return c.Redirect(redirectUrl, 301)
+}
+func (h *TrackingHandler) GigLeadCallBack(c *fiber.Ctx) error {
+	track_id := c.Query("track_id")
+	// todo check if item_id is valid
+	err := h.trackingService.GigLead(c.Context(), track_id)
+	if err != nil {
+		return Error(c, "Something went wrong", err.Error())
+	}
+	return Success(c, fiber.Map{"status": "recorded"})
+}
 
 // handler/tracking_handler.go
 
@@ -111,8 +157,9 @@ func (h *TrackingHandler) PixelTracking(c *fiber.Ctx) error {
 		return Error(c, "Invalid banner ID", err.Error())
 	}
 
+	publisherId := c.QueryInt("pub")
 	// Record impression
-	err = h.trackingService.RecordImpression(c.Context(), int64(bannerID), &dto.ImpressionRequest{
+	err = h.trackingService.RecordImpression(c.Context(), int64(bannerID), int64(publisherId), &dto.ImpressionRequest{
 		IPAddress: c.IP(),
 		UserAgent: c.Get("User-Agent"),
 		Referer:   c.Get("Referer"),

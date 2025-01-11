@@ -9,6 +9,7 @@ import (
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/creative"
+	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
 	"affluo/ent/referral"
 	"affluo/ent/schema"
@@ -167,6 +168,30 @@ func init() {
 	creativeDescID := creativeFields[0].Descriptor()
 	// creative.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	creative.IDValidator = creativeDescID.Validators[0].(func(int64) error)
+	gigtrackingFields := schema.GigTracking{}.Fields()
+	_ = gigtrackingFields
+	// gigtrackingDescDate is the schema descriptor for date field.
+	gigtrackingDescDate := gigtrackingFields[1].Descriptor()
+	// gigtracking.DefaultDate holds the default value on creation for the date field.
+	gigtracking.DefaultDate = gigtrackingDescDate.Default.(func() time.Time)
+	// gigtrackingDescType is the schema descriptor for type field.
+	gigtrackingDescType := gigtrackingFields[2].Descriptor()
+	// gigtracking.DefaultType holds the default value on creation for the type field.
+	gigtracking.DefaultType = gigtrackingDescType.Default.(string)
+	// gigtrackingDescRevenue is the schema descriptor for revenue field.
+	gigtrackingDescRevenue := gigtrackingFields[6].Descriptor()
+	// gigtracking.DefaultRevenue holds the default value on creation for the revenue field.
+	gigtracking.DefaultRevenue = gigtrackingDescRevenue.Default.(float64)
+	// gigtrackingDescCreatedAt is the schema descriptor for created_at field.
+	gigtrackingDescCreatedAt := gigtrackingFields[7].Descriptor()
+	// gigtracking.DefaultCreatedAt holds the default value on creation for the created_at field.
+	gigtracking.DefaultCreatedAt = gigtrackingDescCreatedAt.Default.(func() time.Time)
+	// gigtrackingDescUpdatedAt is the schema descriptor for updated_at field.
+	gigtrackingDescUpdatedAt := gigtrackingFields[8].Descriptor()
+	// gigtracking.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	gigtracking.DefaultUpdatedAt = gigtrackingDescUpdatedAt.Default.(func() time.Time)
+	// gigtracking.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	gigtracking.UpdateDefaultUpdatedAt = gigtrackingDescUpdatedAt.UpdateDefault.(func() time.Time)
 	leadFields := schema.Lead{}.Fields()
 	_ = leadFields
 	// leadDescCurrency is the schema descriptor for currency field.

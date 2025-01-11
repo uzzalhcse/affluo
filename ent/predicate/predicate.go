@@ -24,6 +24,9 @@ type CampaignLink func(*sql.Selector)
 // Creative is the predicate function for creative builders.
 type Creative func(*sql.Selector)
 
+// GigTracking is the predicate function for gigtracking builders.
+type GigTracking func(*sql.Selector)
+
 // Lead is the predicate function for lead builders.
 type Lead func(*sql.Selector)
 

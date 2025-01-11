@@ -17,6 +17,7 @@ import (
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/creative"
+	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
 	"affluo/ent/payout"
 	"affluo/ent/post"
@@ -48,6 +49,8 @@ type Client struct {
 	CampaignLink *CampaignLinkClient
 	// Creative is the client for interacting with the Creative builders.
 	Creative *CreativeClient
+	// GigTracking is the client for interacting with the GigTracking builders.
+	GigTracking *GigTrackingClient
 	// Lead is the client for interacting with the Lead builders.
 	Lead *LeadClient
 	// Payout is the client for interacting with the Payout builders.
@@ -79,6 +82,7 @@ func (c *Client) init() {
 	c.Campaign = NewCampaignClient(c.config)
 	c.CampaignLink = NewCampaignLinkClient(c.config)
 	c.Creative = NewCreativeClient(c.config)
+	c.GigTracking = NewGigTrackingClient(c.config)
 	c.Lead = NewLeadClient(c.config)
 	c.Payout = NewPayoutClient(c.config)
 	c.Post = NewPostClient(c.config)
@@ -184,6 +188,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Campaign:       NewCampaignClient(cfg),
 		CampaignLink:   NewCampaignLinkClient(cfg),
 		Creative:       NewCreativeClient(cfg),
+		GigTracking:    NewGigTrackingClient(cfg),
 		Lead:           NewLeadClient(cfg),
 		Payout:         NewPayoutClient(cfg),
 		Post:           NewPostClient(cfg),
@@ -216,6 +221,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Campaign:       NewCampaignClient(cfg),
 		CampaignLink:   NewCampaignLinkClient(cfg),
 		Creative:       NewCreativeClient(cfg),
+		GigTracking:    NewGigTrackingClient(cfg),
 		Lead:           NewLeadClient(cfg),
 		Payout:         NewPayoutClient(cfg),
 		Post:           NewPostClient(cfg),
@@ -253,7 +259,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink,
-		c.Creative, c.Lead, c.Payout, c.Post, c.Referral, c.Test, c.Track, c.User,
+		c.Creative, c.GigTracking, c.Lead, c.Payout, c.Post, c.Referral, c.Test,
+		c.Track, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -264,7 +271,8 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink,
-		c.Creative, c.Lead, c.Payout, c.Post, c.Referral, c.Test, c.Track, c.User,
+		c.Creative, c.GigTracking, c.Lead, c.Payout, c.Post, c.Referral, c.Test,
+		c.Track, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -285,6 +293,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CampaignLink.mutate(ctx, m)
 	case *CreativeMutation:
 		return c.Creative.mutate(ctx, m)
+	case *GigTrackingMutation:
+		return c.GigTracking.mutate(ctx, m)
 	case *LeadMutation:
 		return c.Lead.mutate(ctx, m)
 	case *PayoutMutation:
@@ -1387,6 +1397,155 @@ func (c *CreativeClient) mutate(ctx context.Context, m *CreativeMutation) (Value
 		return (&CreativeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Creative mutation op: %q", m.Op())
+	}
+}
+
+// GigTrackingClient is a client for the GigTracking schema.
+type GigTrackingClient struct {
+	config
+}
+
+// NewGigTrackingClient returns a client for the GigTracking from the given config.
+func NewGigTrackingClient(c config) *GigTrackingClient {
+	return &GigTrackingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `gigtracking.Hooks(f(g(h())))`.
+func (c *GigTrackingClient) Use(hooks ...Hook) {
+	c.hooks.GigTracking = append(c.hooks.GigTracking, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `gigtracking.Intercept(f(g(h())))`.
+func (c *GigTrackingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GigTracking = append(c.inters.GigTracking, interceptors...)
+}
+
+// Create returns a builder for creating a GigTracking entity.
+func (c *GigTrackingClient) Create() *GigTrackingCreate {
+	mutation := newGigTrackingMutation(c.config, OpCreate)
+	return &GigTrackingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GigTracking entities.
+func (c *GigTrackingClient) CreateBulk(builders ...*GigTrackingCreate) *GigTrackingCreateBulk {
+	return &GigTrackingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GigTrackingClient) MapCreateBulk(slice any, setFunc func(*GigTrackingCreate, int)) *GigTrackingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GigTrackingCreateBulk{err: fmt.Errorf("calling to GigTrackingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GigTrackingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GigTrackingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GigTracking.
+func (c *GigTrackingClient) Update() *GigTrackingUpdate {
+	mutation := newGigTrackingMutation(c.config, OpUpdate)
+	return &GigTrackingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GigTrackingClient) UpdateOne(gt *GigTracking) *GigTrackingUpdateOne {
+	mutation := newGigTrackingMutation(c.config, OpUpdateOne, withGigTracking(gt))
+	return &GigTrackingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GigTrackingClient) UpdateOneID(id int64) *GigTrackingUpdateOne {
+	mutation := newGigTrackingMutation(c.config, OpUpdateOne, withGigTrackingID(id))
+	return &GigTrackingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GigTracking.
+func (c *GigTrackingClient) Delete() *GigTrackingDelete {
+	mutation := newGigTrackingMutation(c.config, OpDelete)
+	return &GigTrackingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GigTrackingClient) DeleteOne(gt *GigTracking) *GigTrackingDeleteOne {
+	return c.DeleteOneID(gt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GigTrackingClient) DeleteOneID(id int64) *GigTrackingDeleteOne {
+	builder := c.Delete().Where(gigtracking.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GigTrackingDeleteOne{builder}
+}
+
+// Query returns a query builder for GigTracking.
+func (c *GigTrackingClient) Query() *GigTrackingQuery {
+	return &GigTrackingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGigTracking},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GigTracking entity by its id.
+func (c *GigTrackingClient) Get(ctx context.Context, id int64) (*GigTracking, error) {
+	return c.Query().Where(gigtracking.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GigTrackingClient) GetX(ctx context.Context, id int64) *GigTracking {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryPublisher queries the publisher edge of a GigTracking.
+func (c *GigTrackingClient) QueryPublisher(gt *GigTracking) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gt.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(gigtracking.Table, gigtracking.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, gigtracking.PublisherTable, gigtracking.PublisherColumn),
+		)
+		fromV = sqlgraph.Neighbors(gt.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *GigTrackingClient) Hooks() []Hook {
+	return c.hooks.GigTracking
+}
+
+// Interceptors returns the client interceptors.
+func (c *GigTrackingClient) Interceptors() []Interceptor {
+	return c.inters.GigTracking
+}
+
+func (c *GigTrackingClient) mutate(ctx context.Context, m *GigTrackingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GigTrackingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GigTrackingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GigTrackingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GigTrackingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GigTracking mutation op: %q", m.Op())
 	}
 }
 
@@ -2520,6 +2679,22 @@ func (c *UserClient) QueryStats(u *User) *BannerStatsQuery {
 	return query
 }
 
+// QueryGigTrackings queries the gig_trackings edge of a User.
+func (c *UserClient) QueryGigTrackings(u *User) *GigTrackingQuery {
+	query := (&GigTrackingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(gigtracking.Table, gigtracking.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.GigTrackingsTable, user.GigTrackingsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -2548,11 +2723,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Creative, Lead,
-		Payout, Post, Referral, Test, Track, User []ent.Hook
+		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Creative,
+		GigTracking, Lead, Payout, Post, Referral, Test, Track, User []ent.Hook
 	}
 	inters struct {
-		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Creative, Lead,
-		Payout, Post, Referral, Test, Track, User []ent.Interceptor
+		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Creative,
+		GigTracking, Lead, Payout, Post, Referral, Test, Track, User []ent.Interceptor
 	}
 )

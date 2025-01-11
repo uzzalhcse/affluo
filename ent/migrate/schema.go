@@ -227,6 +227,45 @@ var (
 		Columns:    CreativesColumns,
 		PrimaryKey: []*schema.Column{CreativesColumns[0]},
 	}
+	// GigTrackingsColumns holds the columns for the "gig_trackings" table.
+	GigTrackingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "date", Type: field.TypeTime},
+		{Name: "type", Type: field.TypeString, Default: "services"},
+		{Name: "utm_query", Type: field.TypeString, Nullable: true},
+		{Name: "lp", Type: field.TypeString, Nullable: true},
+		{Name: "track_id", Type: field.TypeString, Nullable: true},
+		{Name: "revenue", Type: field.TypeFloat64, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "gig_tracking_publisher", Type: field.TypeInt64},
+	}
+	// GigTrackingsTable holds the schema information for the "gig_trackings" table.
+	GigTrackingsTable = &schema.Table{
+		Name:       "gig_trackings",
+		Columns:    GigTrackingsColumns,
+		PrimaryKey: []*schema.Column{GigTrackingsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "gig_trackings_users_publisher",
+				Columns:    []*schema.Column{GigTrackingsColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "gigtracking_date_lp_type_track_id_gig_tracking_publisher",
+				Unique:  true,
+				Columns: []*schema.Column{GigTrackingsColumns[1], GigTrackingsColumns[4], GigTrackingsColumns[2], GigTrackingsColumns[5], GigTrackingsColumns[9]},
+			},
+			{
+				Name:    "gigtracking_gig_tracking_publisher",
+				Unique:  false,
+				Columns: []*schema.Column{GigTrackingsColumns[9]},
+			},
+		},
+	}
 	// LeadsColumns holds the columns for the "leads" table.
 	LeadsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -443,6 +482,7 @@ var (
 		CampaignsTable,
 		CampaignLinksTable,
 		CreativesTable,
+		GigTrackingsTable,
 		LeadsTable,
 		PayoutsTable,
 		PostsTable,
@@ -461,6 +501,7 @@ func init() {
 	BannerStatsTable.ForeignKeys[1].RefTable = UsersTable
 	CampaignsTable.ForeignKeys[0].RefTable = UsersTable
 	CampaignLinksTable.ForeignKeys[0].RefTable = CampaignsTable
+	GigTrackingsTable.ForeignKeys[0].RefTable = UsersTable
 	LeadsTable.ForeignKeys[0].RefTable = BannersTable
 	PayoutsTable.ForeignKeys[0].RefTable = UsersTable
 	PostsTable.ForeignKeys[0].RefTable = UsersTable

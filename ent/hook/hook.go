@@ -80,6 +80,18 @@ func (f CreativeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CreativeMutation", m)
 }
 
+// The GigTrackingFunc type is an adapter to allow the use of ordinary
+// function as GigTracking mutator.
+type GigTrackingFunc func(context.Context, *ent.GigTrackingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GigTrackingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GigTrackingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GigTrackingMutation", m)
+}
+
 // The LeadFunc type is an adapter to allow the use of ordinary
 // function as Lead mutator.
 type LeadFunc func(context.Context, *ent.LeadMutation) (ent.Value, error)

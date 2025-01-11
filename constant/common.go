@@ -15,3 +15,8 @@ const (
 	StatusRefunded  = "refunded"
 	StatusPaid      = "paid"
 )
+const (
+	GigCPL            = 0.3
+	BannerCPC         = 0.05
+	BannerImpressions = 0.001
+)

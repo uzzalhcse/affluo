@@ -51,6 +51,8 @@ const (
 	EdgePosts = "posts"
 	// EdgeStats holds the string denoting the stats edge name in mutations.
 	EdgeStats = "stats"
+	// EdgeGigTrackings holds the string denoting the gig_trackings edge name in mutations.
+	EdgeGigTrackings = "gig_trackings"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// CampaignsTable is the table that holds the campaigns relation/edge.
@@ -95,6 +97,13 @@ const (
 	StatsInverseTable = "banner_stats"
 	// StatsColumn is the table column denoting the stats relation/edge.
 	StatsColumn = "user_stats"
+	// GigTrackingsTable is the table that holds the gig_trackings relation/edge.
+	GigTrackingsTable = "gig_trackings"
+	// GigTrackingsInverseTable is the table name for the GigTracking entity.
+	// It exists in this package in order to avoid circular dependency with the "gigtracking" package.
+	GigTrackingsInverseTable = "gig_trackings"
+	// GigTrackingsColumn is the table column denoting the gig_trackings relation/edge.
+	GigTrackingsColumn = "gig_tracking_publisher"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -317,6 +326,20 @@ func ByStats(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newStatsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByGigTrackingsCount orders the results by gig_trackings count.
+func ByGigTrackingsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newGigTrackingsStep(), opts...)
+	}
+}
+
+// ByGigTrackings orders the results by gig_trackings terms.
+func ByGigTrackings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newGigTrackingsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newCampaignsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -357,5 +380,12 @@ func newStatsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(StatsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, StatsTable, StatsColumn),
+	)
+}
+func newGigTrackingsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(GigTrackingsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, GigTrackingsTable, GigTrackingsColumn),
 	)
 }
