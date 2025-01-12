@@ -116,7 +116,7 @@ func (s *TrackingService) RecordClick(ctx context.Context, bannerID, publisherID
 	stats, err := tx.BannerStats.Query().
 		Where(
 			bannerstats.HasBannerWith(banner.IDEQ(bannerID)),
-			bannerstats.DateEQ(date),
+			//bannerstats.DateEQ(date),
 			bannerstats.HasPublisherWith(user.IDEQ(publisherID)),
 		).
 		WithBanner().
@@ -309,18 +309,22 @@ func validateInput(trackID, affiliateUserID string) error {
 
 func (s *TrackingService) processGigLead(ctx context.Context, tx *ent.Tx, publisherID int64, trackID, targetType, affiliateUserID string) error {
 	// Query existing tracking record
-	tracking, err := tx.GigTracking.Query().
-		Where(gigtracking.TrackID(trackID)).
+	affiliate, err := tx.Affiliate.Query().
+		Where(
+			affiliate.TrackingCode(trackID),
+			affiliate.AffiliateUserID(affiliateUserID),
+			affiliate.HasUserWith(user.IDEQ(publisherID)),
+		).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("tracking record not found for ID: %s", trackID)
+			return fmt.Errorf("affiliate not found: %s", trackID)
 		}
-		return fmt.Errorf("failed to query tracking record: %w", err)
+		return fmt.Errorf("failed to query affiliate record: %w", err)
 	}
 
 	// Validate lead expiration
-	if time.Since(tracking.Date) > 48*time.Hour {
+	if time.Since(affiliate.RegistrationDate) > 72*time.Hour {
 		return fmt.Errorf("lead expired: tracking record is more than 48 hours old")
 	}
 
@@ -331,23 +335,14 @@ func (s *TrackingService) processGigLead(ctx context.Context, tx *ent.Tx, publis
 	}
 
 	// Update tracking record and affiliate commission atomically
-	if err := s.updateTrackingAndCommission(ctx, tx, tracking, commission, targetType, affiliateUserID, trackID); err != nil {
+	if err := s.updateTrackingAndCommission(ctx, tx, commission, targetType, affiliateUserID, trackID); err != nil {
 		return fmt.Errorf("failed to update tracking and commission: %w", err)
 	}
 
 	return nil
 }
 
-func (s *TrackingService) updateTrackingAndCommission(ctx context.Context, tx *ent.Tx, tracking *ent.GigTracking, commission *ent.CommissionPlan, targetType, affiliateUserID, trackingCode string) error {
-	// Update tracking record
-	if err := tracking.Update().
-		SetRevenue(commission.LeadCommission).
-		SetUpdatedAt(time.Now()).
-		SetType(targetType).
-		SetAffiliateUserID(affiliateUserID).
-		Exec(ctx); err != nil {
-		return fmt.Errorf("failed to update tracking record: %w", err)
-	}
+func (s *TrackingService) updateTrackingAndCommission(ctx context.Context, tx *ent.Tx, commission *ent.CommissionPlan, targetType, affiliateUserID, trackingCode string) error {
 
 	// Update affiliate commission
 	if err := tx.Affiliate.Update().
