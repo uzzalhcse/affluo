@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"affluo/ent/affiliate"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/commissionplan"
@@ -302,6 +303,21 @@ func (uu *UserUpdate) SetCommissionPlan(c *CommissionPlan) *UserUpdate {
 	return uu.SetCommissionPlanID(c.ID)
 }
 
+// AddAffiliateIDs adds the "affiliates" edge to the Affiliate entity by IDs.
+func (uu *UserUpdate) AddAffiliateIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddAffiliateIDs(ids...)
+	return uu
+}
+
+// AddAffiliates adds the "affiliates" edges to the Affiliate entity.
+func (uu *UserUpdate) AddAffiliates(a ...*Affiliate) *UserUpdate {
+	ids := make([]int64, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uu.AddAffiliateIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -395,6 +411,27 @@ func (uu *UserUpdate) RemoveGigTrackings(g ...*GigTracking) *UserUpdate {
 func (uu *UserUpdate) ClearCommissionPlan() *UserUpdate {
 	uu.mutation.ClearCommissionPlan()
 	return uu
+}
+
+// ClearAffiliates clears all "affiliates" edges to the Affiliate entity.
+func (uu *UserUpdate) ClearAffiliates() *UserUpdate {
+	uu.mutation.ClearAffiliates()
+	return uu
+}
+
+// RemoveAffiliateIDs removes the "affiliates" edge to Affiliate entities by IDs.
+func (uu *UserUpdate) RemoveAffiliateIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveAffiliateIDs(ids...)
+	return uu
+}
+
+// RemoveAffiliates removes "affiliates" edges to Affiliate entities.
+func (uu *UserUpdate) RemoveAffiliates(a ...*Affiliate) *UserUpdate {
+	ids := make([]int64, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uu.RemoveAffiliateIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -720,6 +757,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.AffiliatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliatesTable,
+			Columns: []string{user.AffiliatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliate.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedAffiliatesIDs(); len(nodes) > 0 && !uu.mutation.AffiliatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliatesTable,
+			Columns: []string{user.AffiliatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliate.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.AffiliatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliatesTable,
+			Columns: []string{user.AffiliatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliate.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -1009,6 +1091,21 @@ func (uuo *UserUpdateOne) SetCommissionPlan(c *CommissionPlan) *UserUpdateOne {
 	return uuo.SetCommissionPlanID(c.ID)
 }
 
+// AddAffiliateIDs adds the "affiliates" edge to the Affiliate entity by IDs.
+func (uuo *UserUpdateOne) AddAffiliateIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddAffiliateIDs(ids...)
+	return uuo
+}
+
+// AddAffiliates adds the "affiliates" edges to the Affiliate entity.
+func (uuo *UserUpdateOne) AddAffiliates(a ...*Affiliate) *UserUpdateOne {
+	ids := make([]int64, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uuo.AddAffiliateIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -1102,6 +1199,27 @@ func (uuo *UserUpdateOne) RemoveGigTrackings(g ...*GigTracking) *UserUpdateOne {
 func (uuo *UserUpdateOne) ClearCommissionPlan() *UserUpdateOne {
 	uuo.mutation.ClearCommissionPlan()
 	return uuo
+}
+
+// ClearAffiliates clears all "affiliates" edges to the Affiliate entity.
+func (uuo *UserUpdateOne) ClearAffiliates() *UserUpdateOne {
+	uuo.mutation.ClearAffiliates()
+	return uuo
+}
+
+// RemoveAffiliateIDs removes the "affiliates" edge to Affiliate entities by IDs.
+func (uuo *UserUpdateOne) RemoveAffiliateIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveAffiliateIDs(ids...)
+	return uuo
+}
+
+// RemoveAffiliates removes "affiliates" edges to Affiliate entities.
+func (uuo *UserUpdateOne) RemoveAffiliates(a ...*Affiliate) *UserUpdateOne {
+	ids := make([]int64, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uuo.RemoveAffiliateIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1450,6 +1568,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(commissionplan.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.AffiliatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliatesTable,
+			Columns: []string{user.AffiliatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliate.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedAffiliatesIDs(); len(nodes) > 0 && !uuo.mutation.AffiliatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliatesTable,
+			Columns: []string{user.AffiliatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliate.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.AffiliatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliatesTable,
+			Columns: []string{user.AffiliatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliate.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

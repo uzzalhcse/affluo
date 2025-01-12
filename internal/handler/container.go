@@ -12,6 +12,7 @@ type Container struct {
 	Auth       *AuthHandler // Add Auth Handler
 	Banner     *BannerHandler
 	Commission *CommissionHandler
+	Affiliate  *AffiliateHandler
 }
 
 func NewContainer(services *service.Container) *Container {
@@ -22,5 +23,6 @@ func NewContainer(services *service.Container) *Container {
 		Auth:       NewAuthHandler(services.Auth), // Initialize Auth Handler
 		Banner:     NewBannerHandler(services.Banner),
 		Commission: NewCommissionHandler(services.Commission),
+		Affiliate:  NewAffiliateHandler(services.Affiliate),
 	}
 }

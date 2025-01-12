@@ -15,6 +15,7 @@ type Container struct {
 	Banner     *BannerService
 	AntiFraud  *AntiFraudService
 	Commission *CommissionService
+	Affiliate  *AffiliateService
 }
 
 func NewContainer(client *ent.Client, redisClient *redis.Client) *Container {
@@ -29,5 +30,6 @@ func NewContainer(client *ent.Client, redisClient *redis.Client) *Container {
 		Banner:     NewBannerService(client),
 		AntiFraud:  NewAntiFraudService(client, redisClient),
 		Commission: NewCommissionService(client),
+		Affiliate:  NewAffiliateService(client),
 	}
 }

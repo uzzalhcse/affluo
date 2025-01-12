@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"affluo/ent/affiliate"
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
 	"affluo/ent/bannerstats"
@@ -35,6 +36,7 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
+	TypeAffiliate      = "Affiliate"
 	TypeBanner         = "Banner"
 	TypeBannerCreative = "BannerCreative"
 	TypeBannerStats    = "BannerStats"
@@ -48,6 +50,806 @@ const (
 	TypeTest           = "Test"
 	TypeUser           = "User"
 )
+
+// AffiliateMutation represents an operation that mutates the Affiliate nodes in the graph.
+type AffiliateMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *int64
+	tracking_code          *string
+	affiliate_user_id      *string
+	source                 *affiliate.Source
+	registration_date      *time.Time
+	first_transaction_date *time.Time
+	commission             *float64
+	addcommission          *float64
+	date                   *time.Time
+	clearedFields          map[string]struct{}
+	user                   *int64
+	cleareduser            bool
+	done                   bool
+	oldValue               func(context.Context) (*Affiliate, error)
+	predicates             []predicate.Affiliate
+}
+
+var _ ent.Mutation = (*AffiliateMutation)(nil)
+
+// affiliateOption allows management of the mutation configuration using functional options.
+type affiliateOption func(*AffiliateMutation)
+
+// newAffiliateMutation creates new mutation for the Affiliate entity.
+func newAffiliateMutation(c config, op Op, opts ...affiliateOption) *AffiliateMutation {
+	m := &AffiliateMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeAffiliate,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withAffiliateID sets the ID field of the mutation.
+func withAffiliateID(id int64) affiliateOption {
+	return func(m *AffiliateMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Affiliate
+		)
+		m.oldValue = func(ctx context.Context) (*Affiliate, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Affiliate.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withAffiliate sets the old Affiliate of the mutation.
+func withAffiliate(node *Affiliate) affiliateOption {
+	return func(m *AffiliateMutation) {
+		m.oldValue = func(context.Context) (*Affiliate, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m AffiliateMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m AffiliateMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Affiliate entities.
+func (m *AffiliateMutation) SetID(id int64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *AffiliateMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *AffiliateMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Affiliate.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTrackingCode sets the "tracking_code" field.
+func (m *AffiliateMutation) SetTrackingCode(s string) {
+	m.tracking_code = &s
+}
+
+// TrackingCode returns the value of the "tracking_code" field in the mutation.
+func (m *AffiliateMutation) TrackingCode() (r string, exists bool) {
+	v := m.tracking_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTrackingCode returns the old "tracking_code" field's value of the Affiliate entity.
+// If the Affiliate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AffiliateMutation) OldTrackingCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTrackingCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTrackingCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTrackingCode: %w", err)
+	}
+	return oldValue.TrackingCode, nil
+}
+
+// ClearTrackingCode clears the value of the "tracking_code" field.
+func (m *AffiliateMutation) ClearTrackingCode() {
+	m.tracking_code = nil
+	m.clearedFields[affiliate.FieldTrackingCode] = struct{}{}
+}
+
+// TrackingCodeCleared returns if the "tracking_code" field was cleared in this mutation.
+func (m *AffiliateMutation) TrackingCodeCleared() bool {
+	_, ok := m.clearedFields[affiliate.FieldTrackingCode]
+	return ok
+}
+
+// ResetTrackingCode resets all changes to the "tracking_code" field.
+func (m *AffiliateMutation) ResetTrackingCode() {
+	m.tracking_code = nil
+	delete(m.clearedFields, affiliate.FieldTrackingCode)
+}
+
+// SetAffiliateUserID sets the "affiliate_user_id" field.
+func (m *AffiliateMutation) SetAffiliateUserID(s string) {
+	m.affiliate_user_id = &s
+}
+
+// AffiliateUserID returns the value of the "affiliate_user_id" field in the mutation.
+func (m *AffiliateMutation) AffiliateUserID() (r string, exists bool) {
+	v := m.affiliate_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAffiliateUserID returns the old "affiliate_user_id" field's value of the Affiliate entity.
+// If the Affiliate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AffiliateMutation) OldAffiliateUserID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAffiliateUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAffiliateUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAffiliateUserID: %w", err)
+	}
+	return oldValue.AffiliateUserID, nil
+}
+
+// ResetAffiliateUserID resets all changes to the "affiliate_user_id" field.
+func (m *AffiliateMutation) ResetAffiliateUserID() {
+	m.affiliate_user_id = nil
+}
+
+// SetSource sets the "source" field.
+func (m *AffiliateMutation) SetSource(a affiliate.Source) {
+	m.source = &a
+}
+
+// Source returns the value of the "source" field in the mutation.
+func (m *AffiliateMutation) Source() (r affiliate.Source, exists bool) {
+	v := m.source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSource returns the old "source" field's value of the Affiliate entity.
+// If the Affiliate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AffiliateMutation) OldSource(ctx context.Context) (v affiliate.Source, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSource: %w", err)
+	}
+	return oldValue.Source, nil
+}
+
+// ResetSource resets all changes to the "source" field.
+func (m *AffiliateMutation) ResetSource() {
+	m.source = nil
+}
+
+// SetRegistrationDate sets the "registration_date" field.
+func (m *AffiliateMutation) SetRegistrationDate(t time.Time) {
+	m.registration_date = &t
+}
+
+// RegistrationDate returns the value of the "registration_date" field in the mutation.
+func (m *AffiliateMutation) RegistrationDate() (r time.Time, exists bool) {
+	v := m.registration_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRegistrationDate returns the old "registration_date" field's value of the Affiliate entity.
+// If the Affiliate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AffiliateMutation) OldRegistrationDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRegistrationDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRegistrationDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRegistrationDate: %w", err)
+	}
+	return oldValue.RegistrationDate, nil
+}
+
+// ResetRegistrationDate resets all changes to the "registration_date" field.
+func (m *AffiliateMutation) ResetRegistrationDate() {
+	m.registration_date = nil
+}
+
+// SetFirstTransactionDate sets the "first_transaction_date" field.
+func (m *AffiliateMutation) SetFirstTransactionDate(t time.Time) {
+	m.first_transaction_date = &t
+}
+
+// FirstTransactionDate returns the value of the "first_transaction_date" field in the mutation.
+func (m *AffiliateMutation) FirstTransactionDate() (r time.Time, exists bool) {
+	v := m.first_transaction_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFirstTransactionDate returns the old "first_transaction_date" field's value of the Affiliate entity.
+// If the Affiliate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AffiliateMutation) OldFirstTransactionDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFirstTransactionDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFirstTransactionDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFirstTransactionDate: %w", err)
+	}
+	return oldValue.FirstTransactionDate, nil
+}
+
+// ClearFirstTransactionDate clears the value of the "first_transaction_date" field.
+func (m *AffiliateMutation) ClearFirstTransactionDate() {
+	m.first_transaction_date = nil
+	m.clearedFields[affiliate.FieldFirstTransactionDate] = struct{}{}
+}
+
+// FirstTransactionDateCleared returns if the "first_transaction_date" field was cleared in this mutation.
+func (m *AffiliateMutation) FirstTransactionDateCleared() bool {
+	_, ok := m.clearedFields[affiliate.FieldFirstTransactionDate]
+	return ok
+}
+
+// ResetFirstTransactionDate resets all changes to the "first_transaction_date" field.
+func (m *AffiliateMutation) ResetFirstTransactionDate() {
+	m.first_transaction_date = nil
+	delete(m.clearedFields, affiliate.FieldFirstTransactionDate)
+}
+
+// SetCommission sets the "commission" field.
+func (m *AffiliateMutation) SetCommission(f float64) {
+	m.commission = &f
+	m.addcommission = nil
+}
+
+// Commission returns the value of the "commission" field in the mutation.
+func (m *AffiliateMutation) Commission() (r float64, exists bool) {
+	v := m.commission
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCommission returns the old "commission" field's value of the Affiliate entity.
+// If the Affiliate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AffiliateMutation) OldCommission(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCommission is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCommission requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCommission: %w", err)
+	}
+	return oldValue.Commission, nil
+}
+
+// AddCommission adds f to the "commission" field.
+func (m *AffiliateMutation) AddCommission(f float64) {
+	if m.addcommission != nil {
+		*m.addcommission += f
+	} else {
+		m.addcommission = &f
+	}
+}
+
+// AddedCommission returns the value that was added to the "commission" field in this mutation.
+func (m *AffiliateMutation) AddedCommission() (r float64, exists bool) {
+	v := m.addcommission
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCommission resets all changes to the "commission" field.
+func (m *AffiliateMutation) ResetCommission() {
+	m.commission = nil
+	m.addcommission = nil
+}
+
+// SetDate sets the "date" field.
+func (m *AffiliateMutation) SetDate(t time.Time) {
+	m.date = &t
+}
+
+// Date returns the value of the "date" field in the mutation.
+func (m *AffiliateMutation) Date() (r time.Time, exists bool) {
+	v := m.date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDate returns the old "date" field's value of the Affiliate entity.
+// If the Affiliate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AffiliateMutation) OldDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDate: %w", err)
+	}
+	return oldValue.Date, nil
+}
+
+// ResetDate resets all changes to the "date" field.
+func (m *AffiliateMutation) ResetDate() {
+	m.date = nil
+}
+
+// SetUserID sets the "user" edge to the User entity by id.
+func (m *AffiliateMutation) SetUserID(id int64) {
+	m.user = &id
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *AffiliateMutation) ClearUser() {
+	m.cleareduser = true
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *AffiliateMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserID returns the "user" edge ID in the mutation.
+func (m *AffiliateMutation) UserID() (id int64, exists bool) {
+	if m.user != nil {
+		return *m.user, true
+	}
+	return
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *AffiliateMutation) UserIDs() (ids []int64) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *AffiliateMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// Where appends a list predicates to the AffiliateMutation builder.
+func (m *AffiliateMutation) Where(ps ...predicate.Affiliate) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the AffiliateMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *AffiliateMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Affiliate, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *AffiliateMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *AffiliateMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Affiliate).
+func (m *AffiliateMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *AffiliateMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.tracking_code != nil {
+		fields = append(fields, affiliate.FieldTrackingCode)
+	}
+	if m.affiliate_user_id != nil {
+		fields = append(fields, affiliate.FieldAffiliateUserID)
+	}
+	if m.source != nil {
+		fields = append(fields, affiliate.FieldSource)
+	}
+	if m.registration_date != nil {
+		fields = append(fields, affiliate.FieldRegistrationDate)
+	}
+	if m.first_transaction_date != nil {
+		fields = append(fields, affiliate.FieldFirstTransactionDate)
+	}
+	if m.commission != nil {
+		fields = append(fields, affiliate.FieldCommission)
+	}
+	if m.date != nil {
+		fields = append(fields, affiliate.FieldDate)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *AffiliateMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case affiliate.FieldTrackingCode:
+		return m.TrackingCode()
+	case affiliate.FieldAffiliateUserID:
+		return m.AffiliateUserID()
+	case affiliate.FieldSource:
+		return m.Source()
+	case affiliate.FieldRegistrationDate:
+		return m.RegistrationDate()
+	case affiliate.FieldFirstTransactionDate:
+		return m.FirstTransactionDate()
+	case affiliate.FieldCommission:
+		return m.Commission()
+	case affiliate.FieldDate:
+		return m.Date()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *AffiliateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case affiliate.FieldTrackingCode:
+		return m.OldTrackingCode(ctx)
+	case affiliate.FieldAffiliateUserID:
+		return m.OldAffiliateUserID(ctx)
+	case affiliate.FieldSource:
+		return m.OldSource(ctx)
+	case affiliate.FieldRegistrationDate:
+		return m.OldRegistrationDate(ctx)
+	case affiliate.FieldFirstTransactionDate:
+		return m.OldFirstTransactionDate(ctx)
+	case affiliate.FieldCommission:
+		return m.OldCommission(ctx)
+	case affiliate.FieldDate:
+		return m.OldDate(ctx)
+	}
+	return nil, fmt.Errorf("unknown Affiliate field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AffiliateMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case affiliate.FieldTrackingCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTrackingCode(v)
+		return nil
+	case affiliate.FieldAffiliateUserID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAffiliateUserID(v)
+		return nil
+	case affiliate.FieldSource:
+		v, ok := value.(affiliate.Source)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSource(v)
+		return nil
+	case affiliate.FieldRegistrationDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRegistrationDate(v)
+		return nil
+	case affiliate.FieldFirstTransactionDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFirstTransactionDate(v)
+		return nil
+	case affiliate.FieldCommission:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCommission(v)
+		return nil
+	case affiliate.FieldDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDate(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Affiliate field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *AffiliateMutation) AddedFields() []string {
+	var fields []string
+	if m.addcommission != nil {
+		fields = append(fields, affiliate.FieldCommission)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *AffiliateMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case affiliate.FieldCommission:
+		return m.AddedCommission()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AffiliateMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case affiliate.FieldCommission:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCommission(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Affiliate numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *AffiliateMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(affiliate.FieldTrackingCode) {
+		fields = append(fields, affiliate.FieldTrackingCode)
+	}
+	if m.FieldCleared(affiliate.FieldFirstTransactionDate) {
+		fields = append(fields, affiliate.FieldFirstTransactionDate)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *AffiliateMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *AffiliateMutation) ClearField(name string) error {
+	switch name {
+	case affiliate.FieldTrackingCode:
+		m.ClearTrackingCode()
+		return nil
+	case affiliate.FieldFirstTransactionDate:
+		m.ClearFirstTransactionDate()
+		return nil
+	}
+	return fmt.Errorf("unknown Affiliate nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *AffiliateMutation) ResetField(name string) error {
+	switch name {
+	case affiliate.FieldTrackingCode:
+		m.ResetTrackingCode()
+		return nil
+	case affiliate.FieldAffiliateUserID:
+		m.ResetAffiliateUserID()
+		return nil
+	case affiliate.FieldSource:
+		m.ResetSource()
+		return nil
+	case affiliate.FieldRegistrationDate:
+		m.ResetRegistrationDate()
+		return nil
+	case affiliate.FieldFirstTransactionDate:
+		m.ResetFirstTransactionDate()
+		return nil
+	case affiliate.FieldCommission:
+		m.ResetCommission()
+		return nil
+	case affiliate.FieldDate:
+		m.ResetDate()
+		return nil
+	}
+	return fmt.Errorf("unknown Affiliate field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *AffiliateMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.user != nil {
+		edges = append(edges, affiliate.EdgeUser)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *AffiliateMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case affiliate.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *AffiliateMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *AffiliateMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *AffiliateMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.cleareduser {
+		edges = append(edges, affiliate.EdgeUser)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *AffiliateMutation) EdgeCleared(name string) bool {
+	switch name {
+	case affiliate.EdgeUser:
+		return m.cleareduser
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *AffiliateMutation) ClearEdge(name string) error {
+	switch name {
+	case affiliate.EdgeUser:
+		m.ClearUser()
+		return nil
+	}
+	return fmt.Errorf("unknown Affiliate unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *AffiliateMutation) ResetEdge(name string) error {
+	switch name {
+	case affiliate.EdgeUser:
+		m.ResetUser()
+		return nil
+	}
+	return fmt.Errorf("unknown Affiliate edge %s", name)
+}
 
 // BannerMutation represents an operation that mutates the Banner nodes in the graph.
 type BannerMutation struct {
@@ -11258,6 +12060,9 @@ type UserMutation struct {
 	clearedgig_trackings   bool
 	commission_plan        *int
 	clearedcommission_plan bool
+	affiliates             map[int64]struct{}
+	removedaffiliates      map[int64]struct{}
+	clearedaffiliates      bool
 	done                   bool
 	oldValue               func(context.Context) (*User, error)
 	predicates             []predicate.User
@@ -12119,6 +12924,60 @@ func (m *UserMutation) ResetCommissionPlan() {
 	m.clearedcommission_plan = false
 }
 
+// AddAffiliateIDs adds the "affiliates" edge to the Affiliate entity by ids.
+func (m *UserMutation) AddAffiliateIDs(ids ...int64) {
+	if m.affiliates == nil {
+		m.affiliates = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.affiliates[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAffiliates clears the "affiliates" edge to the Affiliate entity.
+func (m *UserMutation) ClearAffiliates() {
+	m.clearedaffiliates = true
+}
+
+// AffiliatesCleared reports if the "affiliates" edge to the Affiliate entity was cleared.
+func (m *UserMutation) AffiliatesCleared() bool {
+	return m.clearedaffiliates
+}
+
+// RemoveAffiliateIDs removes the "affiliates" edge to the Affiliate entity by IDs.
+func (m *UserMutation) RemoveAffiliateIDs(ids ...int64) {
+	if m.removedaffiliates == nil {
+		m.removedaffiliates = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.affiliates, ids[i])
+		m.removedaffiliates[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAffiliates returns the removed IDs of the "affiliates" edge to the Affiliate entity.
+func (m *UserMutation) RemovedAffiliatesIDs() (ids []int64) {
+	for id := range m.removedaffiliates {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AffiliatesIDs returns the "affiliates" edge IDs in the mutation.
+func (m *UserMutation) AffiliatesIDs() (ids []int64) {
+	for id := range m.affiliates {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAffiliates resets all changes to the "affiliates" edge.
+func (m *UserMutation) ResetAffiliates() {
+	m.affiliates = nil
+	m.clearedaffiliates = false
+	m.removedaffiliates = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -12472,7 +13331,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.campaigns != nil {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -12487,6 +13346,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.commission_plan != nil {
 		edges = append(edges, user.EdgeCommissionPlan)
+	}
+	if m.affiliates != nil {
+		edges = append(edges, user.EdgeAffiliates)
 	}
 	return edges
 }
@@ -12523,13 +13385,19 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 		if id := m.commission_plan; id != nil {
 			return []ent.Value{*id}
 		}
+	case user.EdgeAffiliates:
+		ids := make([]ent.Value, 0, len(m.affiliates))
+		for id := range m.affiliates {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.removedcampaigns != nil {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -12541,6 +13409,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedgig_trackings != nil {
 		edges = append(edges, user.EdgeGigTrackings)
+	}
+	if m.removedaffiliates != nil {
+		edges = append(edges, user.EdgeAffiliates)
 	}
 	return edges
 }
@@ -12573,13 +13444,19 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeAffiliates:
+		ids := make([]ent.Value, 0, len(m.removedaffiliates))
+		for id := range m.removedaffiliates {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.clearedcampaigns {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -12594,6 +13471,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedcommission_plan {
 		edges = append(edges, user.EdgeCommissionPlan)
+	}
+	if m.clearedaffiliates {
+		edges = append(edges, user.EdgeAffiliates)
 	}
 	return edges
 }
@@ -12612,6 +13492,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedgig_trackings
 	case user.EdgeCommissionPlan:
 		return m.clearedcommission_plan
+	case user.EdgeAffiliates:
+		return m.clearedaffiliates
 	}
 	return false
 }
@@ -12645,6 +13527,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeCommissionPlan:
 		m.ResetCommissionPlan()
+		return nil
+	case user.EdgeAffiliates:
+		m.ResetAffiliates()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

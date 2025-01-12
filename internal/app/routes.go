@@ -70,6 +70,8 @@ func (a *Application) SetupRoutes() {
 	publisherGroup := a.App.Group("/api/publisher")
 	{
 		publisherGroup.Get("/banners", a.Middleware.Auth.Authenticate(), a.Handlers.Banner.GetPublisherBanners)
+		publisherGroup.Post("/affiliates", a.Middleware.Auth.Authenticate(), a.Handlers.Affiliate.CreateAffiliate)
+		publisherGroup.Get("/affiliates", a.Middleware.Auth.Authenticate(), a.Handlers.Affiliate.GetAffiliate)
 	}
 	trackingGroup := a.App.Group("/api/tracking")
 	{

@@ -8,6 +8,18 @@ import (
 	"fmt"
 )
 
+// The AffiliateFunc type is an adapter to allow the use of ordinary
+// function as Affiliate mutator.
+type AffiliateFunc func(context.Context, *ent.AffiliateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AffiliateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AffiliateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AffiliateMutation", m)
+}
+
 // The BannerFunc type is an adapter to allow the use of ordinary
 // function as Banner mutator.
 type BannerFunc func(context.Context, *ent.BannerMutation) (ent.Value, error)

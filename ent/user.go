@@ -61,9 +61,11 @@ type UserEdges struct {
 	GigTrackings []*GigTracking `json:"gig_trackings,omitempty"`
 	// CommissionPlan holds the value of the commission_plan edge.
 	CommissionPlan *CommissionPlan `json:"commission_plan,omitempty"`
+	// Affiliates holds the value of the affiliates edge.
+	Affiliates []*Affiliate `json:"affiliates,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // CampaignsOrErr returns the Campaigns value or an error if the edge
@@ -111,6 +113,15 @@ func (e UserEdges) CommissionPlanOrErr() (*CommissionPlan, error) {
 		return nil, &NotFoundError{label: commissionplan.Label}
 	}
 	return nil, &NotLoadedError{edge: "commission_plan"}
+}
+
+// AffiliatesOrErr returns the Affiliates value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AffiliatesOrErr() ([]*Affiliate, error) {
+	if e.loadedTypes[5] {
+		return e.Affiliates, nil
+	}
+	return nil, &NotLoadedError{edge: "affiliates"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -264,6 +275,11 @@ func (u *User) QueryGigTrackings() *GigTrackingQuery {
 // QueryCommissionPlan queries the "commission_plan" edge of the User entity.
 func (u *User) QueryCommissionPlan() *CommissionPlanQuery {
 	return NewUserClient(u.config).QueryCommissionPlan(u)
+}
+
+// QueryAffiliates queries the "affiliates" edge of the User entity.
+func (u *User) QueryAffiliates() *AffiliateQuery {
+	return NewUserClient(u.config).QueryAffiliates(u)
 }
 
 // Update returns a builder for updating this User.

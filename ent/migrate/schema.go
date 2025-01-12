@@ -8,6 +8,32 @@ import (
 )
 
 var (
+	// AffiliatesColumns holds the columns for the "affiliates" table.
+	AffiliatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "tracking_code", Type: field.TypeString, Nullable: true},
+		{Name: "affiliate_user_id", Type: field.TypeString},
+		{Name: "source", Type: field.TypeEnum, Enums: []string{"banner", "services", "products"}, Default: "banner"},
+		{Name: "registration_date", Type: field.TypeTime},
+		{Name: "first_transaction_date", Type: field.TypeTime, Nullable: true},
+		{Name: "commission", Type: field.TypeFloat64},
+		{Name: "date", Type: field.TypeTime},
+		{Name: "user_affiliates", Type: field.TypeInt64},
+	}
+	// AffiliatesTable holds the schema information for the "affiliates" table.
+	AffiliatesTable = &schema.Table{
+		Name:       "affiliates",
+		Columns:    AffiliatesColumns,
+		PrimaryKey: []*schema.Column{AffiliatesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "affiliates_users_affiliates",
+				Columns:    []*schema.Column{AffiliatesColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// BannersColumns holds the columns for the "banners" table.
 	BannersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -412,6 +438,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AffiliatesTable,
 		BannersTable,
 		BannerCreativesTable,
 		BannerStatsTable,
@@ -429,6 +456,7 @@ var (
 )
 
 func init() {
+	AffiliatesTable.ForeignKeys[0].RefTable = UsersTable
 	BannerCreativesTable.ForeignKeys[0].RefTable = BannersTable
 	BannerCreativesTable.ForeignKeys[1].RefTable = CreativesTable
 	BannerStatsTable.ForeignKeys[0].RefTable = BannersTable

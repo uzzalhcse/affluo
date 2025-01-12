@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Affiliate is the predicate function for affiliate builders.
+type Affiliate func(*sql.Selector)
+
 // Banner is the predicate function for banner builders.
 type Banner func(*sql.Selector)
 

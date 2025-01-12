@@ -11,6 +11,7 @@ import (
 
 	"affluo/ent/migrate"
 
+	"affluo/ent/affiliate"
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
 	"affluo/ent/bannerstats"
@@ -35,6 +36,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Affiliate is the client for interacting with the Affiliate builders.
+	Affiliate *AffiliateClient
 	// Banner is the client for interacting with the Banner builders.
 	Banner *BannerClient
 	// BannerCreative is the client for interacting with the BannerCreative builders.
@@ -70,6 +73,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Affiliate = NewAffiliateClient(c.config)
 	c.Banner = NewBannerClient(c.config)
 	c.BannerCreative = NewBannerCreativeClient(c.config)
 	c.BannerStats = NewBannerStatsClient(c.config)
@@ -174,6 +178,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:            ctx,
 		config:         cfg,
+		Affiliate:      NewAffiliateClient(cfg),
 		Banner:         NewBannerClient(cfg),
 		BannerCreative: NewBannerCreativeClient(cfg),
 		BannerStats:    NewBannerStatsClient(cfg),
@@ -205,6 +210,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:            ctx,
 		config:         cfg,
+		Affiliate:      NewAffiliateClient(cfg),
 		Banner:         NewBannerClient(cfg),
 		BannerCreative: NewBannerCreativeClient(cfg),
 		BannerStats:    NewBannerStatsClient(cfg),
@@ -223,7 +229,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Banner.
+//		Affiliate.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -246,8 +252,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink,
-		c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout, c.Test, c.User,
+		c.Affiliate, c.Banner, c.BannerCreative, c.BannerStats, c.Campaign,
+		c.CampaignLink, c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout,
+		c.Test, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -257,8 +264,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink,
-		c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout, c.Test, c.User,
+		c.Affiliate, c.Banner, c.BannerCreative, c.BannerStats, c.Campaign,
+		c.CampaignLink, c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout,
+		c.Test, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -267,6 +275,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *AffiliateMutation:
+		return c.Affiliate.mutate(ctx, m)
 	case *BannerMutation:
 		return c.Banner.mutate(ctx, m)
 	case *BannerCreativeMutation:
@@ -293,6 +303,155 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// AffiliateClient is a client for the Affiliate schema.
+type AffiliateClient struct {
+	config
+}
+
+// NewAffiliateClient returns a client for the Affiliate from the given config.
+func NewAffiliateClient(c config) *AffiliateClient {
+	return &AffiliateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `affiliate.Hooks(f(g(h())))`.
+func (c *AffiliateClient) Use(hooks ...Hook) {
+	c.hooks.Affiliate = append(c.hooks.Affiliate, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `affiliate.Intercept(f(g(h())))`.
+func (c *AffiliateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Affiliate = append(c.inters.Affiliate, interceptors...)
+}
+
+// Create returns a builder for creating a Affiliate entity.
+func (c *AffiliateClient) Create() *AffiliateCreate {
+	mutation := newAffiliateMutation(c.config, OpCreate)
+	return &AffiliateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Affiliate entities.
+func (c *AffiliateClient) CreateBulk(builders ...*AffiliateCreate) *AffiliateCreateBulk {
+	return &AffiliateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AffiliateClient) MapCreateBulk(slice any, setFunc func(*AffiliateCreate, int)) *AffiliateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AffiliateCreateBulk{err: fmt.Errorf("calling to AffiliateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AffiliateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AffiliateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Affiliate.
+func (c *AffiliateClient) Update() *AffiliateUpdate {
+	mutation := newAffiliateMutation(c.config, OpUpdate)
+	return &AffiliateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AffiliateClient) UpdateOne(a *Affiliate) *AffiliateUpdateOne {
+	mutation := newAffiliateMutation(c.config, OpUpdateOne, withAffiliate(a))
+	return &AffiliateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AffiliateClient) UpdateOneID(id int64) *AffiliateUpdateOne {
+	mutation := newAffiliateMutation(c.config, OpUpdateOne, withAffiliateID(id))
+	return &AffiliateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Affiliate.
+func (c *AffiliateClient) Delete() *AffiliateDelete {
+	mutation := newAffiliateMutation(c.config, OpDelete)
+	return &AffiliateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AffiliateClient) DeleteOne(a *Affiliate) *AffiliateDeleteOne {
+	return c.DeleteOneID(a.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AffiliateClient) DeleteOneID(id int64) *AffiliateDeleteOne {
+	builder := c.Delete().Where(affiliate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AffiliateDeleteOne{builder}
+}
+
+// Query returns a query builder for Affiliate.
+func (c *AffiliateClient) Query() *AffiliateQuery {
+	return &AffiliateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAffiliate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Affiliate entity by its id.
+func (c *AffiliateClient) Get(ctx context.Context, id int64) (*Affiliate, error) {
+	return c.Query().Where(affiliate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AffiliateClient) GetX(ctx context.Context, id int64) *Affiliate {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a Affiliate.
+func (c *AffiliateClient) QueryUser(a *Affiliate) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliate.Table, affiliate.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, affiliate.UserTable, affiliate.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AffiliateClient) Hooks() []Hook {
+	return c.hooks.Affiliate
+}
+
+// Interceptors returns the client interceptors.
+func (c *AffiliateClient) Interceptors() []Interceptor {
+	return c.inters.Affiliate
+}
+
+func (c *AffiliateClient) mutate(ctx context.Context, m *AffiliateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AffiliateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AffiliateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AffiliateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AffiliateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Affiliate mutation op: %q", m.Op())
 	}
 }
 
@@ -2251,6 +2410,22 @@ func (c *UserClient) QueryCommissionPlan(u *User) *CommissionPlanQuery {
 	return query
 }
 
+// QueryAffiliates queries the affiliates edge of a User.
+func (c *UserClient) QueryAffiliates(u *User) *AffiliateQuery {
+	query := (&AffiliateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(affiliate.Table, affiliate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliatesTable, user.AffiliatesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -2279,11 +2454,12 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, CommissionPlan,
-		Creative, GigTracking, Lead, Payout, Test, User []ent.Hook
+		Affiliate, Banner, BannerCreative, BannerStats, Campaign, CampaignLink,
+		CommissionPlan, Creative, GigTracking, Lead, Payout, Test, User []ent.Hook
 	}
 	inters struct {
-		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, CommissionPlan,
-		Creative, GigTracking, Lead, Payout, Test, User []ent.Interceptor
+		Affiliate, Banner, BannerCreative, BannerStats, Campaign, CampaignLink,
+		CommissionPlan, Creative, GigTracking, Lead, Payout, Test,
+		User []ent.Interceptor
 	}
 )

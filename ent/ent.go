@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"affluo/ent/affiliate"
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
 	"affluo/ent/bannerstats"
@@ -84,6 +85,7 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			affiliate.Table:      affiliate.ValidColumn,
 			banner.Table:         banner.ValidColumn,
 			bannercreative.Table: bannercreative.ValidColumn,
 			bannerstats.Table:    bannerstats.ValidColumn,

@@ -44,13 +44,14 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("campaigns", Campaign.Type),
-		edge.To("payouts", Payout.Type), // Add this line
+		edge.To("payouts", Payout.Type),
 		edge.To("stats", BannerStats.Type),
 		edge.From("gig_trackings", GigTracking.Type).
 			Ref("publisher"),
 		edge.From("commission_plan", CommissionPlan.Type).
 			Ref("publishers").
 			Unique(),
+		edge.To("affiliates", Affiliate.Type),
 	}
 }
 func (User) Indexes() []ent.Index {

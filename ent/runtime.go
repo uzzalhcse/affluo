@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"affluo/ent/affiliate"
 	"affluo/ent/banner"
 	"affluo/ent/bannercreative"
 	"affluo/ent/bannerstats"
@@ -21,6 +22,20 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	affiliateFields := schema.Affiliate{}.Fields()
+	_ = affiliateFields
+	// affiliateDescRegistrationDate is the schema descriptor for registration_date field.
+	affiliateDescRegistrationDate := affiliateFields[4].Descriptor()
+	// affiliate.DefaultRegistrationDate holds the default value on creation for the registration_date field.
+	affiliate.DefaultRegistrationDate = affiliateDescRegistrationDate.Default.(time.Time)
+	// affiliateDescDate is the schema descriptor for date field.
+	affiliateDescDate := affiliateFields[7].Descriptor()
+	// affiliate.DefaultDate holds the default value on creation for the date field.
+	affiliate.DefaultDate = affiliateDescDate.Default.(func() time.Time)
+	// affiliateDescID is the schema descriptor for id field.
+	affiliateDescID := affiliateFields[0].Descriptor()
+	// affiliate.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	affiliate.IDValidator = affiliateDescID.Validators[0].(func(int64) error)
 	bannerFields := schema.Banner{}.Fields()
 	_ = bannerFields
 	// bannerDescName is the schema descriptor for name field.

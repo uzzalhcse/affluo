@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"affluo/ent/affiliate"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/commissionplan"
@@ -33,6 +34,7 @@ type UserQuery struct {
 	withStats          *BannerStatsQuery
 	withGigTrackings   *GigTrackingQuery
 	withCommissionPlan *CommissionPlanQuery
+	withAffiliates     *AffiliateQuery
 	withFKs            bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -173,6 +175,28 @@ func (uq *UserQuery) QueryCommissionPlan() *CommissionPlanQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(commissionplan.Table, commissionplan.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, user.CommissionPlanTable, user.CommissionPlanColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAffiliates chains the current query on the "affiliates" edge.
+func (uq *UserQuery) QueryAffiliates() *AffiliateQuery {
+	query := (&AffiliateClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(affiliate.Table, affiliate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliatesTable, user.AffiliatesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -377,6 +401,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		withStats:          uq.withStats.Clone(),
 		withGigTrackings:   uq.withGigTrackings.Clone(),
 		withCommissionPlan: uq.withCommissionPlan.Clone(),
+		withAffiliates:     uq.withAffiliates.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -435,6 +460,17 @@ func (uq *UserQuery) WithCommissionPlan(opts ...func(*CommissionPlanQuery)) *Use
 		opt(query)
 	}
 	uq.withCommissionPlan = query
+	return uq
+}
+
+// WithAffiliates tells the query-builder to eager-load the nodes that are connected to
+// the "affiliates" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithAffiliates(opts ...func(*AffiliateQuery)) *UserQuery {
+	query := (&AffiliateClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withAffiliates = query
 	return uq
 }
 
@@ -517,12 +553,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			uq.withCampaigns != nil,
 			uq.withPayouts != nil,
 			uq.withStats != nil,
 			uq.withGigTrackings != nil,
 			uq.withCommissionPlan != nil,
+			uq.withAffiliates != nil,
 		}
 	)
 	if uq.withCommissionPlan != nil {
@@ -580,6 +617,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if query := uq.withCommissionPlan; query != nil {
 		if err := uq.loadCommissionPlan(ctx, query, nodes, nil,
 			func(n *User, e *CommissionPlan) { n.Edges.CommissionPlan = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withAffiliates; query != nil {
+		if err := uq.loadAffiliates(ctx, query, nodes,
+			func(n *User) { n.Edges.Affiliates = []*Affiliate{} },
+			func(n *User, e *Affiliate) { n.Edges.Affiliates = append(n.Edges.Affiliates, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -739,6 +783,37 @@ func (uq *UserQuery) loadCommissionPlan(ctx context.Context, query *CommissionPl
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (uq *UserQuery) loadAffiliates(ctx context.Context, query *AffiliateQuery, nodes []*User, init func(*User), assign func(*User, *Affiliate)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Affiliate(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.AffiliatesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_affiliates
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_affiliates" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_affiliates" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

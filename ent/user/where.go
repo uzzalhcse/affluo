@@ -855,6 +855,29 @@ func HasCommissionPlanWith(preds ...predicate.CommissionPlan) predicate.User {
 	})
 }
 
+// HasAffiliates applies the HasEdge predicate on the "affiliates" edge.
+func HasAffiliates() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AffiliatesTable, AffiliatesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAffiliatesWith applies the HasEdge predicate on the "affiliates" edge with a given conditions (other predicates).
+func HasAffiliatesWith(preds ...predicate.Affiliate) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAffiliatesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

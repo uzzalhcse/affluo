@@ -49,6 +49,8 @@ const (
 	EdgeGigTrackings = "gig_trackings"
 	// EdgeCommissionPlan holds the string denoting the commission_plan edge name in mutations.
 	EdgeCommissionPlan = "commission_plan"
+	// EdgeAffiliates holds the string denoting the affiliates edge name in mutations.
+	EdgeAffiliates = "affiliates"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// CampaignsTable is the table that holds the campaigns relation/edge.
@@ -86,6 +88,13 @@ const (
 	CommissionPlanInverseTable = "commission_plans"
 	// CommissionPlanColumn is the table column denoting the commission_plan relation/edge.
 	CommissionPlanColumn = "commission_plan_publishers"
+	// AffiliatesTable is the table that holds the affiliates relation/edge.
+	AffiliatesTable = "affiliates"
+	// AffiliatesInverseTable is the table name for the Affiliate entity.
+	// It exists in this package in order to avoid circular dependency with the "affiliate" package.
+	AffiliatesInverseTable = "affiliates"
+	// AffiliatesColumn is the table column denoting the affiliates relation/edge.
+	AffiliatesColumn = "user_affiliates"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -298,6 +307,20 @@ func ByCommissionPlanField(field string, opts ...sql.OrderTermOption) OrderOptio
 		sqlgraph.OrderByNeighborTerms(s, newCommissionPlanStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByAffiliatesCount orders the results by affiliates count.
+func ByAffiliatesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAffiliatesStep(), opts...)
+	}
+}
+
+// ByAffiliates orders the results by affiliates terms.
+func ByAffiliates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAffiliatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newCampaignsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -331,5 +354,12 @@ func newCommissionPlanStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CommissionPlanInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, CommissionPlanTable, CommissionPlanColumn),
+	)
+}
+func newAffiliatesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AffiliatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AffiliatesTable, AffiliatesColumn),
 	)
 }

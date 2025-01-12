@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"affluo/ent/affiliate"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/commissionplan"
@@ -252,6 +253,21 @@ func (uc *UserCreate) SetNillableCommissionPlanID(id *int) *UserCreate {
 // SetCommissionPlan sets the "commission_plan" edge to the CommissionPlan entity.
 func (uc *UserCreate) SetCommissionPlan(c *CommissionPlan) *UserCreate {
 	return uc.SetCommissionPlanID(c.ID)
+}
+
+// AddAffiliateIDs adds the "affiliates" edge to the Affiliate entity by IDs.
+func (uc *UserCreate) AddAffiliateIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddAffiliateIDs(ids...)
+	return uc
+}
+
+// AddAffiliates adds the "affiliates" edges to the Affiliate entity.
+func (uc *UserCreate) AddAffiliates(a ...*Affiliate) *UserCreate {
+	ids := make([]int64, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uc.AddAffiliateIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -504,6 +520,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.commission_plan_publishers = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.AffiliatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliatesTable,
+			Columns: []string{user.AffiliatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliate.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
