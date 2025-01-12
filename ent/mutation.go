@@ -8,6 +8,7 @@ import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/commissionplan"
 	"affluo/ent/creative"
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
@@ -42,6 +43,7 @@ const (
 	TypeBannerStats    = "BannerStats"
 	TypeCampaign       = "Campaign"
 	TypeCampaignLink   = "CampaignLink"
+	TypeCommissionPlan = "CommissionPlan"
 	TypeCreative       = "Creative"
 	TypeGigTracking    = "GigTracking"
 	TypeLead           = "Lead"
@@ -6820,6 +6822,1160 @@ func (m *CampaignLinkMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown CampaignLink edge %s", name)
 }
 
+// CommissionPlanMutation represents an operation that mutates the CommissionPlan nodes in the graph.
+type CommissionPlanMutation struct {
+	config
+	op                       Op
+	typ                      string
+	id                       *int
+	name                     *string
+	description              *string
+	_type                    *commissionplan.Type
+	click_commission         *float64
+	addclick_commission      *float64
+	impression_commission    *float64
+	addimpression_commission *float64
+	lead_commission          *float64
+	addlead_commission       *float64
+	minimum_payout           *float64
+	addminimum_payout        *float64
+	valid_from               *time.Time
+	valid_until              *time.Time
+	is_active                *bool
+	is_default               *bool
+	clearedFields            map[string]struct{}
+	publishers               map[int64]struct{}
+	removedpublishers        map[int64]struct{}
+	clearedpublishers        bool
+	done                     bool
+	oldValue                 func(context.Context) (*CommissionPlan, error)
+	predicates               []predicate.CommissionPlan
+}
+
+var _ ent.Mutation = (*CommissionPlanMutation)(nil)
+
+// commissionplanOption allows management of the mutation configuration using functional options.
+type commissionplanOption func(*CommissionPlanMutation)
+
+// newCommissionPlanMutation creates new mutation for the CommissionPlan entity.
+func newCommissionPlanMutation(c config, op Op, opts ...commissionplanOption) *CommissionPlanMutation {
+	m := &CommissionPlanMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCommissionPlan,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCommissionPlanID sets the ID field of the mutation.
+func withCommissionPlanID(id int) commissionplanOption {
+	return func(m *CommissionPlanMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *CommissionPlan
+		)
+		m.oldValue = func(ctx context.Context) (*CommissionPlan, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().CommissionPlan.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCommissionPlan sets the old CommissionPlan of the mutation.
+func withCommissionPlan(node *CommissionPlan) commissionplanOption {
+	return func(m *CommissionPlanMutation) {
+		m.oldValue = func(context.Context) (*CommissionPlan, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CommissionPlanMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CommissionPlanMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CommissionPlanMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CommissionPlanMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().CommissionPlan.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *CommissionPlanMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *CommissionPlanMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *CommissionPlanMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *CommissionPlanMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *CommissionPlanMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *CommissionPlanMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[commissionplan.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *CommissionPlanMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[commissionplan.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *CommissionPlanMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, commissionplan.FieldDescription)
+}
+
+// SetType sets the "type" field.
+func (m *CommissionPlanMutation) SetType(c commissionplan.Type) {
+	m._type = &c
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *CommissionPlanMutation) GetType() (r commissionplan.Type, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldType(ctx context.Context) (v commissionplan.Type, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *CommissionPlanMutation) ResetType() {
+	m._type = nil
+}
+
+// SetClickCommission sets the "click_commission" field.
+func (m *CommissionPlanMutation) SetClickCommission(f float64) {
+	m.click_commission = &f
+	m.addclick_commission = nil
+}
+
+// ClickCommission returns the value of the "click_commission" field in the mutation.
+func (m *CommissionPlanMutation) ClickCommission() (r float64, exists bool) {
+	v := m.click_commission
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClickCommission returns the old "click_commission" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldClickCommission(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClickCommission is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClickCommission requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClickCommission: %w", err)
+	}
+	return oldValue.ClickCommission, nil
+}
+
+// AddClickCommission adds f to the "click_commission" field.
+func (m *CommissionPlanMutation) AddClickCommission(f float64) {
+	if m.addclick_commission != nil {
+		*m.addclick_commission += f
+	} else {
+		m.addclick_commission = &f
+	}
+}
+
+// AddedClickCommission returns the value that was added to the "click_commission" field in this mutation.
+func (m *CommissionPlanMutation) AddedClickCommission() (r float64, exists bool) {
+	v := m.addclick_commission
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetClickCommission resets all changes to the "click_commission" field.
+func (m *CommissionPlanMutation) ResetClickCommission() {
+	m.click_commission = nil
+	m.addclick_commission = nil
+}
+
+// SetImpressionCommission sets the "impression_commission" field.
+func (m *CommissionPlanMutation) SetImpressionCommission(f float64) {
+	m.impression_commission = &f
+	m.addimpression_commission = nil
+}
+
+// ImpressionCommission returns the value of the "impression_commission" field in the mutation.
+func (m *CommissionPlanMutation) ImpressionCommission() (r float64, exists bool) {
+	v := m.impression_commission
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImpressionCommission returns the old "impression_commission" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldImpressionCommission(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImpressionCommission is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImpressionCommission requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImpressionCommission: %w", err)
+	}
+	return oldValue.ImpressionCommission, nil
+}
+
+// AddImpressionCommission adds f to the "impression_commission" field.
+func (m *CommissionPlanMutation) AddImpressionCommission(f float64) {
+	if m.addimpression_commission != nil {
+		*m.addimpression_commission += f
+	} else {
+		m.addimpression_commission = &f
+	}
+}
+
+// AddedImpressionCommission returns the value that was added to the "impression_commission" field in this mutation.
+func (m *CommissionPlanMutation) AddedImpressionCommission() (r float64, exists bool) {
+	v := m.addimpression_commission
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetImpressionCommission resets all changes to the "impression_commission" field.
+func (m *CommissionPlanMutation) ResetImpressionCommission() {
+	m.impression_commission = nil
+	m.addimpression_commission = nil
+}
+
+// SetLeadCommission sets the "lead_commission" field.
+func (m *CommissionPlanMutation) SetLeadCommission(f float64) {
+	m.lead_commission = &f
+	m.addlead_commission = nil
+}
+
+// LeadCommission returns the value of the "lead_commission" field in the mutation.
+func (m *CommissionPlanMutation) LeadCommission() (r float64, exists bool) {
+	v := m.lead_commission
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeadCommission returns the old "lead_commission" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldLeadCommission(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeadCommission is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeadCommission requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeadCommission: %w", err)
+	}
+	return oldValue.LeadCommission, nil
+}
+
+// AddLeadCommission adds f to the "lead_commission" field.
+func (m *CommissionPlanMutation) AddLeadCommission(f float64) {
+	if m.addlead_commission != nil {
+		*m.addlead_commission += f
+	} else {
+		m.addlead_commission = &f
+	}
+}
+
+// AddedLeadCommission returns the value that was added to the "lead_commission" field in this mutation.
+func (m *CommissionPlanMutation) AddedLeadCommission() (r float64, exists bool) {
+	v := m.addlead_commission
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLeadCommission resets all changes to the "lead_commission" field.
+func (m *CommissionPlanMutation) ResetLeadCommission() {
+	m.lead_commission = nil
+	m.addlead_commission = nil
+}
+
+// SetMinimumPayout sets the "minimum_payout" field.
+func (m *CommissionPlanMutation) SetMinimumPayout(f float64) {
+	m.minimum_payout = &f
+	m.addminimum_payout = nil
+}
+
+// MinimumPayout returns the value of the "minimum_payout" field in the mutation.
+func (m *CommissionPlanMutation) MinimumPayout() (r float64, exists bool) {
+	v := m.minimum_payout
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinimumPayout returns the old "minimum_payout" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldMinimumPayout(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinimumPayout is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinimumPayout requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinimumPayout: %w", err)
+	}
+	return oldValue.MinimumPayout, nil
+}
+
+// AddMinimumPayout adds f to the "minimum_payout" field.
+func (m *CommissionPlanMutation) AddMinimumPayout(f float64) {
+	if m.addminimum_payout != nil {
+		*m.addminimum_payout += f
+	} else {
+		m.addminimum_payout = &f
+	}
+}
+
+// AddedMinimumPayout returns the value that was added to the "minimum_payout" field in this mutation.
+func (m *CommissionPlanMutation) AddedMinimumPayout() (r float64, exists bool) {
+	v := m.addminimum_payout
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMinimumPayout resets all changes to the "minimum_payout" field.
+func (m *CommissionPlanMutation) ResetMinimumPayout() {
+	m.minimum_payout = nil
+	m.addminimum_payout = nil
+}
+
+// SetValidFrom sets the "valid_from" field.
+func (m *CommissionPlanMutation) SetValidFrom(t time.Time) {
+	m.valid_from = &t
+}
+
+// ValidFrom returns the value of the "valid_from" field in the mutation.
+func (m *CommissionPlanMutation) ValidFrom() (r time.Time, exists bool) {
+	v := m.valid_from
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValidFrom returns the old "valid_from" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldValidFrom(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValidFrom is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValidFrom requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValidFrom: %w", err)
+	}
+	return oldValue.ValidFrom, nil
+}
+
+// ClearValidFrom clears the value of the "valid_from" field.
+func (m *CommissionPlanMutation) ClearValidFrom() {
+	m.valid_from = nil
+	m.clearedFields[commissionplan.FieldValidFrom] = struct{}{}
+}
+
+// ValidFromCleared returns if the "valid_from" field was cleared in this mutation.
+func (m *CommissionPlanMutation) ValidFromCleared() bool {
+	_, ok := m.clearedFields[commissionplan.FieldValidFrom]
+	return ok
+}
+
+// ResetValidFrom resets all changes to the "valid_from" field.
+func (m *CommissionPlanMutation) ResetValidFrom() {
+	m.valid_from = nil
+	delete(m.clearedFields, commissionplan.FieldValidFrom)
+}
+
+// SetValidUntil sets the "valid_until" field.
+func (m *CommissionPlanMutation) SetValidUntil(t time.Time) {
+	m.valid_until = &t
+}
+
+// ValidUntil returns the value of the "valid_until" field in the mutation.
+func (m *CommissionPlanMutation) ValidUntil() (r time.Time, exists bool) {
+	v := m.valid_until
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValidUntil returns the old "valid_until" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldValidUntil(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValidUntil is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValidUntil requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValidUntil: %w", err)
+	}
+	return oldValue.ValidUntil, nil
+}
+
+// ClearValidUntil clears the value of the "valid_until" field.
+func (m *CommissionPlanMutation) ClearValidUntil() {
+	m.valid_until = nil
+	m.clearedFields[commissionplan.FieldValidUntil] = struct{}{}
+}
+
+// ValidUntilCleared returns if the "valid_until" field was cleared in this mutation.
+func (m *CommissionPlanMutation) ValidUntilCleared() bool {
+	_, ok := m.clearedFields[commissionplan.FieldValidUntil]
+	return ok
+}
+
+// ResetValidUntil resets all changes to the "valid_until" field.
+func (m *CommissionPlanMutation) ResetValidUntil() {
+	m.valid_until = nil
+	delete(m.clearedFields, commissionplan.FieldValidUntil)
+}
+
+// SetIsActive sets the "is_active" field.
+func (m *CommissionPlanMutation) SetIsActive(b bool) {
+	m.is_active = &b
+}
+
+// IsActive returns the value of the "is_active" field in the mutation.
+func (m *CommissionPlanMutation) IsActive() (r bool, exists bool) {
+	v := m.is_active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsActive returns the old "is_active" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldIsActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsActive: %w", err)
+	}
+	return oldValue.IsActive, nil
+}
+
+// ResetIsActive resets all changes to the "is_active" field.
+func (m *CommissionPlanMutation) ResetIsActive() {
+	m.is_active = nil
+}
+
+// SetIsDefault sets the "is_default" field.
+func (m *CommissionPlanMutation) SetIsDefault(b bool) {
+	m.is_default = &b
+}
+
+// IsDefault returns the value of the "is_default" field in the mutation.
+func (m *CommissionPlanMutation) IsDefault() (r bool, exists bool) {
+	v := m.is_default
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsDefault returns the old "is_default" field's value of the CommissionPlan entity.
+// If the CommissionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommissionPlanMutation) OldIsDefault(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsDefault is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsDefault requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsDefault: %w", err)
+	}
+	return oldValue.IsDefault, nil
+}
+
+// ResetIsDefault resets all changes to the "is_default" field.
+func (m *CommissionPlanMutation) ResetIsDefault() {
+	m.is_default = nil
+}
+
+// AddPublisherIDs adds the "publishers" edge to the User entity by ids.
+func (m *CommissionPlanMutation) AddPublisherIDs(ids ...int64) {
+	if m.publishers == nil {
+		m.publishers = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.publishers[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPublishers clears the "publishers" edge to the User entity.
+func (m *CommissionPlanMutation) ClearPublishers() {
+	m.clearedpublishers = true
+}
+
+// PublishersCleared reports if the "publishers" edge to the User entity was cleared.
+func (m *CommissionPlanMutation) PublishersCleared() bool {
+	return m.clearedpublishers
+}
+
+// RemovePublisherIDs removes the "publishers" edge to the User entity by IDs.
+func (m *CommissionPlanMutation) RemovePublisherIDs(ids ...int64) {
+	if m.removedpublishers == nil {
+		m.removedpublishers = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.publishers, ids[i])
+		m.removedpublishers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPublishers returns the removed IDs of the "publishers" edge to the User entity.
+func (m *CommissionPlanMutation) RemovedPublishersIDs() (ids []int64) {
+	for id := range m.removedpublishers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PublishersIDs returns the "publishers" edge IDs in the mutation.
+func (m *CommissionPlanMutation) PublishersIDs() (ids []int64) {
+	for id := range m.publishers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPublishers resets all changes to the "publishers" edge.
+func (m *CommissionPlanMutation) ResetPublishers() {
+	m.publishers = nil
+	m.clearedpublishers = false
+	m.removedpublishers = nil
+}
+
+// Where appends a list predicates to the CommissionPlanMutation builder.
+func (m *CommissionPlanMutation) Where(ps ...predicate.CommissionPlan) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CommissionPlanMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CommissionPlanMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.CommissionPlan, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CommissionPlanMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CommissionPlanMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (CommissionPlan).
+func (m *CommissionPlanMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CommissionPlanMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.name != nil {
+		fields = append(fields, commissionplan.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, commissionplan.FieldDescription)
+	}
+	if m._type != nil {
+		fields = append(fields, commissionplan.FieldType)
+	}
+	if m.click_commission != nil {
+		fields = append(fields, commissionplan.FieldClickCommission)
+	}
+	if m.impression_commission != nil {
+		fields = append(fields, commissionplan.FieldImpressionCommission)
+	}
+	if m.lead_commission != nil {
+		fields = append(fields, commissionplan.FieldLeadCommission)
+	}
+	if m.minimum_payout != nil {
+		fields = append(fields, commissionplan.FieldMinimumPayout)
+	}
+	if m.valid_from != nil {
+		fields = append(fields, commissionplan.FieldValidFrom)
+	}
+	if m.valid_until != nil {
+		fields = append(fields, commissionplan.FieldValidUntil)
+	}
+	if m.is_active != nil {
+		fields = append(fields, commissionplan.FieldIsActive)
+	}
+	if m.is_default != nil {
+		fields = append(fields, commissionplan.FieldIsDefault)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CommissionPlanMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case commissionplan.FieldName:
+		return m.Name()
+	case commissionplan.FieldDescription:
+		return m.Description()
+	case commissionplan.FieldType:
+		return m.GetType()
+	case commissionplan.FieldClickCommission:
+		return m.ClickCommission()
+	case commissionplan.FieldImpressionCommission:
+		return m.ImpressionCommission()
+	case commissionplan.FieldLeadCommission:
+		return m.LeadCommission()
+	case commissionplan.FieldMinimumPayout:
+		return m.MinimumPayout()
+	case commissionplan.FieldValidFrom:
+		return m.ValidFrom()
+	case commissionplan.FieldValidUntil:
+		return m.ValidUntil()
+	case commissionplan.FieldIsActive:
+		return m.IsActive()
+	case commissionplan.FieldIsDefault:
+		return m.IsDefault()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CommissionPlanMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case commissionplan.FieldName:
+		return m.OldName(ctx)
+	case commissionplan.FieldDescription:
+		return m.OldDescription(ctx)
+	case commissionplan.FieldType:
+		return m.OldType(ctx)
+	case commissionplan.FieldClickCommission:
+		return m.OldClickCommission(ctx)
+	case commissionplan.FieldImpressionCommission:
+		return m.OldImpressionCommission(ctx)
+	case commissionplan.FieldLeadCommission:
+		return m.OldLeadCommission(ctx)
+	case commissionplan.FieldMinimumPayout:
+		return m.OldMinimumPayout(ctx)
+	case commissionplan.FieldValidFrom:
+		return m.OldValidFrom(ctx)
+	case commissionplan.FieldValidUntil:
+		return m.OldValidUntil(ctx)
+	case commissionplan.FieldIsActive:
+		return m.OldIsActive(ctx)
+	case commissionplan.FieldIsDefault:
+		return m.OldIsDefault(ctx)
+	}
+	return nil, fmt.Errorf("unknown CommissionPlan field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CommissionPlanMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case commissionplan.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case commissionplan.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case commissionplan.FieldType:
+		v, ok := value.(commissionplan.Type)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
+	case commissionplan.FieldClickCommission:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClickCommission(v)
+		return nil
+	case commissionplan.FieldImpressionCommission:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImpressionCommission(v)
+		return nil
+	case commissionplan.FieldLeadCommission:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeadCommission(v)
+		return nil
+	case commissionplan.FieldMinimumPayout:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinimumPayout(v)
+		return nil
+	case commissionplan.FieldValidFrom:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValidFrom(v)
+		return nil
+	case commissionplan.FieldValidUntil:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValidUntil(v)
+		return nil
+	case commissionplan.FieldIsActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsActive(v)
+		return nil
+	case commissionplan.FieldIsDefault:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsDefault(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CommissionPlan field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CommissionPlanMutation) AddedFields() []string {
+	var fields []string
+	if m.addclick_commission != nil {
+		fields = append(fields, commissionplan.FieldClickCommission)
+	}
+	if m.addimpression_commission != nil {
+		fields = append(fields, commissionplan.FieldImpressionCommission)
+	}
+	if m.addlead_commission != nil {
+		fields = append(fields, commissionplan.FieldLeadCommission)
+	}
+	if m.addminimum_payout != nil {
+		fields = append(fields, commissionplan.FieldMinimumPayout)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CommissionPlanMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case commissionplan.FieldClickCommission:
+		return m.AddedClickCommission()
+	case commissionplan.FieldImpressionCommission:
+		return m.AddedImpressionCommission()
+	case commissionplan.FieldLeadCommission:
+		return m.AddedLeadCommission()
+	case commissionplan.FieldMinimumPayout:
+		return m.AddedMinimumPayout()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CommissionPlanMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case commissionplan.FieldClickCommission:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClickCommission(v)
+		return nil
+	case commissionplan.FieldImpressionCommission:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddImpressionCommission(v)
+		return nil
+	case commissionplan.FieldLeadCommission:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLeadCommission(v)
+		return nil
+	case commissionplan.FieldMinimumPayout:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMinimumPayout(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CommissionPlan numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CommissionPlanMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(commissionplan.FieldDescription) {
+		fields = append(fields, commissionplan.FieldDescription)
+	}
+	if m.FieldCleared(commissionplan.FieldValidFrom) {
+		fields = append(fields, commissionplan.FieldValidFrom)
+	}
+	if m.FieldCleared(commissionplan.FieldValidUntil) {
+		fields = append(fields, commissionplan.FieldValidUntil)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CommissionPlanMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CommissionPlanMutation) ClearField(name string) error {
+	switch name {
+	case commissionplan.FieldDescription:
+		m.ClearDescription()
+		return nil
+	case commissionplan.FieldValidFrom:
+		m.ClearValidFrom()
+		return nil
+	case commissionplan.FieldValidUntil:
+		m.ClearValidUntil()
+		return nil
+	}
+	return fmt.Errorf("unknown CommissionPlan nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CommissionPlanMutation) ResetField(name string) error {
+	switch name {
+	case commissionplan.FieldName:
+		m.ResetName()
+		return nil
+	case commissionplan.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case commissionplan.FieldType:
+		m.ResetType()
+		return nil
+	case commissionplan.FieldClickCommission:
+		m.ResetClickCommission()
+		return nil
+	case commissionplan.FieldImpressionCommission:
+		m.ResetImpressionCommission()
+		return nil
+	case commissionplan.FieldLeadCommission:
+		m.ResetLeadCommission()
+		return nil
+	case commissionplan.FieldMinimumPayout:
+		m.ResetMinimumPayout()
+		return nil
+	case commissionplan.FieldValidFrom:
+		m.ResetValidFrom()
+		return nil
+	case commissionplan.FieldValidUntil:
+		m.ResetValidUntil()
+		return nil
+	case commissionplan.FieldIsActive:
+		m.ResetIsActive()
+		return nil
+	case commissionplan.FieldIsDefault:
+		m.ResetIsDefault()
+		return nil
+	}
+	return fmt.Errorf("unknown CommissionPlan field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CommissionPlanMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.publishers != nil {
+		edges = append(edges, commissionplan.EdgePublishers)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CommissionPlanMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case commissionplan.EdgePublishers:
+		ids := make([]ent.Value, 0, len(m.publishers))
+		for id := range m.publishers {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CommissionPlanMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedpublishers != nil {
+		edges = append(edges, commissionplan.EdgePublishers)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CommissionPlanMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case commissionplan.EdgePublishers:
+		ids := make([]ent.Value, 0, len(m.removedpublishers))
+		for id := range m.removedpublishers {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CommissionPlanMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedpublishers {
+		edges = append(edges, commissionplan.EdgePublishers)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CommissionPlanMutation) EdgeCleared(name string) bool {
+	switch name {
+	case commissionplan.EdgePublishers:
+		return m.clearedpublishers
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CommissionPlanMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown CommissionPlan unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CommissionPlanMutation) ResetEdge(name string) error {
+	switch name {
+	case commissionplan.EdgePublishers:
+		m.ResetPublishers()
+		return nil
+	}
+	return fmt.Errorf("unknown CommissionPlan edge %s", name)
+}
+
 // CreativeMutation represents an operation that mutates the Creative nodes in the graph.
 type CreativeMutation struct {
 	config
@@ -12541,6 +13697,8 @@ type UserMutation struct {
 	gig_trackings          map[int64]struct{}
 	removedgig_trackings   map[int64]struct{}
 	clearedgig_trackings   bool
+	commission_plan        *int
+	clearedcommission_plan bool
 	done                   bool
 	oldValue               func(context.Context) (*User, error)
 	predicates             []predicate.User
@@ -13525,6 +14683,45 @@ func (m *UserMutation) ResetGigTrackings() {
 	m.removedgig_trackings = nil
 }
 
+// SetCommissionPlanID sets the "commission_plan" edge to the CommissionPlan entity by id.
+func (m *UserMutation) SetCommissionPlanID(id int) {
+	m.commission_plan = &id
+}
+
+// ClearCommissionPlan clears the "commission_plan" edge to the CommissionPlan entity.
+func (m *UserMutation) ClearCommissionPlan() {
+	m.clearedcommission_plan = true
+}
+
+// CommissionPlanCleared reports if the "commission_plan" edge to the CommissionPlan entity was cleared.
+func (m *UserMutation) CommissionPlanCleared() bool {
+	return m.clearedcommission_plan
+}
+
+// CommissionPlanID returns the "commission_plan" edge ID in the mutation.
+func (m *UserMutation) CommissionPlanID() (id int, exists bool) {
+	if m.commission_plan != nil {
+		return *m.commission_plan, true
+	}
+	return
+}
+
+// CommissionPlanIDs returns the "commission_plan" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CommissionPlanID instead. It exists only for internal usage by the builders.
+func (m *UserMutation) CommissionPlanIDs() (ids []int) {
+	if id := m.commission_plan; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCommissionPlan resets all changes to the "commission_plan" edge.
+func (m *UserMutation) ResetCommissionPlan() {
+	m.commission_plan = nil
+	m.clearedcommission_plan = false
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -13878,7 +15075,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.campaigns != nil {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -13899,6 +15096,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.gig_trackings != nil {
 		edges = append(edges, user.EdgeGigTrackings)
+	}
+	if m.commission_plan != nil {
+		edges = append(edges, user.EdgeCommissionPlan)
 	}
 	return edges
 }
@@ -13949,13 +15149,17 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeCommissionPlan:
+		if id := m.commission_plan; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.removedcampaigns != nil {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -14032,7 +15236,7 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.clearedcampaigns {
 		edges = append(edges, user.EdgeCampaigns)
 	}
@@ -14053,6 +15257,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedgig_trackings {
 		edges = append(edges, user.EdgeGigTrackings)
+	}
+	if m.clearedcommission_plan {
+		edges = append(edges, user.EdgeCommissionPlan)
 	}
 	return edges
 }
@@ -14075,6 +15282,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedstats
 	case user.EdgeGigTrackings:
 		return m.clearedgig_trackings
+	case user.EdgeCommissionPlan:
+		return m.clearedcommission_plan
 	}
 	return false
 }
@@ -14083,6 +15292,9 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *UserMutation) ClearEdge(name string) error {
 	switch name {
+	case user.EdgeCommissionPlan:
+		m.ClearCommissionPlan()
+		return nil
 	}
 	return fmt.Errorf("unknown User unique edge %s", name)
 }
@@ -14111,6 +15323,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeGigTrackings:
 		m.ResetGigTrackings()
+		return nil
+	case user.EdgeCommissionPlan:
+		m.ResetCommissionPlan()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

@@ -34,21 +34,28 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate request
 	if err := req.Validate(); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
-	// Optional email validation
 	if err := h.validateEmail(req.Email); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid email format",
 		})
 	}
 
-	user, err := h.userService.CreateUser(c.Context(), req.Username, req.Email, req.Password, req.Role, req.FirstName, req.LastName)
+	user, err := h.userService.CreateUser(
+		c.Context(),
+		req.Username,
+		req.Email,
+		req.Password,
+		req.Role,
+		req.FirstName,
+		req.LastName,
+		req.CommissionPlanID,
+	)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create user: " + err.Error(),
@@ -84,13 +91,30 @@ func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
 
 	users, err := h.userService.ListUsers(c.Context(), queryOpts...)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to retrieve users: " + err.Error(),
-		})
+		return Error(c, "Failed to retrieve users", err.Error())
 	}
 
 	// Convert users to response DTOs
-	return c.JSON(dto.NewUsersResponse(users))
+	return Success(c, fiber.Map{
+		"items": dto.NewUsersResponse(users),
+	})
+}
+func (h *UserHandler) ToggleActive(c *fiber.Ctx) error {
+	id := c.Params("id")
+	idInt, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID",
+		})
+	}
+
+	err = h.userService.ToggleActive(c.Context(), idInt)
+	if err != nil {
+		return Error(c, "Failed to Toggle user status", err.Error())
+	}
+
+	// Convert users to response DTOs
+	return Success(c, nil)
 }
 func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	id := c.Params("id")
@@ -163,6 +187,9 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	if req.IsActive != nil {
 		updates["is_active"] = *req.IsActive
 	}
+	if req.CommissionPlanID != nil {
+		updates["commission_plan_id"] = *req.CommissionPlanID
+	}
 
 	// Perform update if there are changes
 	if len(updates) == 0 {
@@ -171,14 +198,14 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	user, err := h.userService.UpdateUser(c.Context(), idInt, updates)
+	err = h.userService.UpdateUser(c.Context(), idInt, updates)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to update user: " + err.Error(),
 		})
 	}
 
-	return c.JSON(dto.NewUserResponse(user))
+	return Success(c, nil)
 }
 
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {

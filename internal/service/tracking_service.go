@@ -7,6 +7,7 @@ import (
 	"affluo/ent/banner"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/commissionplan"
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
 	"affluo/ent/user"
@@ -47,6 +48,23 @@ func (s *TrackingService) RecordImpression(ctx context.Context, bannerID, publis
 		return err
 	}
 	defer tx.Rollback()
+	// Get publisher's commission plan
+	commission, err := tx.CommissionPlan.Query().
+		Where(
+			commissionplan.HasPublishersWith(user.IDEQ(publisherId)),
+			commissionplan.IsActive(true),
+		).
+		First(ctx)
+
+	if err != nil && !ent.IsNotFound(err) {
+		return err
+	}
+
+	impressionRate := constant.BannerImpressions // Default rate
+	earning := 0.0
+	if commission != nil {
+		impressionRate = commission.ImpressionCommission
+	}
 
 	// Get or create stats for today
 	stats, err := tx.BannerStats.Query().
@@ -68,9 +86,11 @@ func (s *TrackingService) RecordImpression(ctx context.Context, bannerID, publis
 		return err
 	}
 
+	earning = float64(stats.Impressions+1)*impressionRate + float64(stats.Clicks)*commission.ClickCommission
 	// Update impression count
 	_, err = tx.BannerStats.UpdateOne(stats).
 		AddImpressions(1).
+		SetEarnings(earning).
 		Save(ctx)
 	if err != nil {
 		return err
@@ -117,6 +137,22 @@ func (s *TrackingService) RecordClick(ctx context.Context, bannerID, publisherID
 	if err != nil {
 		return err
 	}
+	// Get publisher's commission plan
+	commission, err := tx.CommissionPlan.Query().
+		Where(
+			commissionplan.HasPublishersWith(user.IDEQ(publisherID)),
+			commissionplan.IsActive(true),
+		).
+		First(ctx)
+
+	if err != nil && !ent.IsNotFound(err) {
+		return err
+	}
+
+	clickRate := constant.BannerCPC // Default rate
+	if commission != nil {
+		clickRate = commission.ClickCommission
+	}
 
 	// Update click count and CTR
 	newClicks := stats.Clicks + 1
@@ -126,8 +162,8 @@ func (s *TrackingService) RecordClick(ctx context.Context, bannerID, publisherID
 		newCTR = float64(newClicks) / float64(impressions)
 	}
 	// Calculate new earnings
-	clickEarnings := float64(newClicks) * constant.BannerCPC
-	impressionEarnings := float64(impressions) * constant.BannerImpressions
+	clickEarnings := float64(newClicks) * clickRate
+	impressionEarnings := float64(impressions) * commission.ImpressionCommission
 	totalEarnings := clickEarnings + impressionEarnings
 
 	_, err = tx.BannerStats.UpdateOne(stats).
@@ -501,6 +537,7 @@ func (s *TrackingService) GigReports(ctx context.Context, publisherId int64, sta
 			gigtracking.DateGTE(startDate),
 			gigtracking.DateLTE(endDate),
 			gigtracking.HasPublisherWith(user.ID(publisherId)),
+			gigtracking.RevenueGT(0),
 		).
 		Order(ent.Asc(gigtracking.FieldDate)).
 		All(ctx)

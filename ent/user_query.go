@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/commissionplan"
 	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
 	"affluo/ent/post"
@@ -26,17 +27,19 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx              *QueryContext
-	order            []user.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.User
-	withCampaigns    *CampaignQuery
-	withReferrals    *ReferralQuery
-	withTracks       *TrackQuery
-	withPayouts      *PayoutQuery
-	withPosts        *PostQuery
-	withStats        *BannerStatsQuery
-	withGigTrackings *GigTrackingQuery
+	ctx                *QueryContext
+	order              []user.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.User
+	withCampaigns      *CampaignQuery
+	withReferrals      *ReferralQuery
+	withTracks         *TrackQuery
+	withPayouts        *PayoutQuery
+	withPosts          *PostQuery
+	withStats          *BannerStatsQuery
+	withGigTrackings   *GigTrackingQuery
+	withCommissionPlan *CommissionPlanQuery
+	withFKs            bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -220,6 +223,28 @@ func (uq *UserQuery) QueryGigTrackings() *GigTrackingQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(gigtracking.Table, gigtracking.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, user.GigTrackingsTable, user.GigTrackingsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCommissionPlan chains the current query on the "commission_plan" edge.
+func (uq *UserQuery) QueryCommissionPlan() *CommissionPlanQuery {
+	query := (&CommissionPlanClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(commissionplan.Table, commissionplan.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, user.CommissionPlanTable, user.CommissionPlanColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -414,18 +439,19 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:           uq.config,
-		ctx:              uq.ctx.Clone(),
-		order:            append([]user.OrderOption{}, uq.order...),
-		inters:           append([]Interceptor{}, uq.inters...),
-		predicates:       append([]predicate.User{}, uq.predicates...),
-		withCampaigns:    uq.withCampaigns.Clone(),
-		withReferrals:    uq.withReferrals.Clone(),
-		withTracks:       uq.withTracks.Clone(),
-		withPayouts:      uq.withPayouts.Clone(),
-		withPosts:        uq.withPosts.Clone(),
-		withStats:        uq.withStats.Clone(),
-		withGigTrackings: uq.withGigTrackings.Clone(),
+		config:             uq.config,
+		ctx:                uq.ctx.Clone(),
+		order:              append([]user.OrderOption{}, uq.order...),
+		inters:             append([]Interceptor{}, uq.inters...),
+		predicates:         append([]predicate.User{}, uq.predicates...),
+		withCampaigns:      uq.withCampaigns.Clone(),
+		withReferrals:      uq.withReferrals.Clone(),
+		withTracks:         uq.withTracks.Clone(),
+		withPayouts:        uq.withPayouts.Clone(),
+		withPosts:          uq.withPosts.Clone(),
+		withStats:          uq.withStats.Clone(),
+		withGigTrackings:   uq.withGigTrackings.Clone(),
+		withCommissionPlan: uq.withCommissionPlan.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -509,6 +535,17 @@ func (uq *UserQuery) WithGigTrackings(opts ...func(*GigTrackingQuery)) *UserQuer
 	return uq
 }
 
+// WithCommissionPlan tells the query-builder to eager-load the nodes that are connected to
+// the "commission_plan" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithCommissionPlan(opts ...func(*CommissionPlanQuery)) *UserQuery {
+	query := (&CommissionPlanClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withCommissionPlan = query
+	return uq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -586,8 +623,9 @@ func (uq *UserQuery) prepareQuery(ctx context.Context) error {
 func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, error) {
 	var (
 		nodes       = []*User{}
+		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [8]bool{
 			uq.withCampaigns != nil,
 			uq.withReferrals != nil,
 			uq.withTracks != nil,
@@ -595,8 +633,15 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			uq.withPosts != nil,
 			uq.withStats != nil,
 			uq.withGigTrackings != nil,
+			uq.withCommissionPlan != nil,
 		}
 	)
+	if uq.withCommissionPlan != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, user.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*User).scanValues(nil, columns)
 	}
@@ -661,6 +706,12 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadGigTrackings(ctx, query, nodes,
 			func(n *User) { n.Edges.GigTrackings = []*GigTracking{} },
 			func(n *User, e *GigTracking) { n.Edges.GigTrackings = append(n.Edges.GigTrackings, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withCommissionPlan; query != nil {
+		if err := uq.loadCommissionPlan(ctx, query, nodes, nil,
+			func(n *User, e *CommissionPlan) { n.Edges.CommissionPlan = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -881,6 +932,38 @@ func (uq *UserQuery) loadGigTrackings(ctx context.Context, query *GigTrackingQue
 			return fmt.Errorf(`unexpected referenced foreign-key "gig_tracking_publisher" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadCommissionPlan(ctx context.Context, query *CommissionPlanQuery, nodes []*User, init func(*User), assign func(*User, *CommissionPlan)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*User)
+	for i := range nodes {
+		if nodes[i].commission_plan_publishers == nil {
+			continue
+		}
+		fk := *nodes[i].commission_plan_publishers
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(commissionplan.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "commission_plan_publishers" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }

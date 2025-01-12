@@ -8,6 +8,7 @@ import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/commissionplan"
 	"affluo/ent/creative"
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
@@ -91,6 +92,7 @@ func checkColumn(table, column string) error {
 			bannerstats.Table:    bannerstats.ValidColumn,
 			campaign.Table:       campaign.ValidColumn,
 			campaignlink.Table:   campaignlink.ValidColumn,
+			commissionplan.Table: commissionplan.ValidColumn,
 			creative.Table:       creative.ValidColumn,
 			gigtracking.Table:    gigtracking.ValidColumn,
 			lead.Table:           lead.ValidColumn,

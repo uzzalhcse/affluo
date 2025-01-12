@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"affluo/ent/commissionplan"
 	"affluo/ent/user"
 	"fmt"
 	"strings"
@@ -43,8 +44,9 @@ type User struct {
 	ResetTokenExpiresAt time.Time `json:"reset_token_expires_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges        UserEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                      UserEdges `json:"edges"`
+	commission_plan_publishers *int
+	selectValues               sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
@@ -63,9 +65,11 @@ type UserEdges struct {
 	Stats []*BannerStats `json:"stats,omitempty"`
 	// GigTrackings holds the value of the gig_trackings edge.
 	GigTrackings []*GigTracking `json:"gig_trackings,omitempty"`
+	// CommissionPlan holds the value of the commission_plan edge.
+	CommissionPlan *CommissionPlan `json:"commission_plan,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 }
 
 // CampaignsOrErr returns the Campaigns value or an error if the edge
@@ -131,6 +135,17 @@ func (e UserEdges) GigTrackingsOrErr() ([]*GigTracking, error) {
 	return nil, &NotLoadedError{edge: "gig_trackings"}
 }
 
+// CommissionPlanOrErr returns the CommissionPlan value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) CommissionPlanOrErr() (*CommissionPlan, error) {
+	if e.CommissionPlan != nil {
+		return e.CommissionPlan, nil
+	} else if e.loadedTypes[7] {
+		return nil, &NotFoundError{label: commissionplan.Label}
+	}
+	return nil, &NotLoadedError{edge: "commission_plan"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -144,6 +159,8 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldLastLogin, user.FieldResetTokenExpiresAt:
 			values[i] = new(sql.NullTime)
+		case user.ForeignKeys[0]: // commission_plan_publishers
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -237,6 +254,13 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.ResetTokenExpiresAt = value.Time
 			}
+		case user.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field commission_plan_publishers", value)
+			} else if value.Valid {
+				u.commission_plan_publishers = new(int)
+				*u.commission_plan_publishers = int(value.Int64)
+			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
 		}
@@ -283,6 +307,11 @@ func (u *User) QueryStats() *BannerStatsQuery {
 // QueryGigTrackings queries the "gig_trackings" edge of the User entity.
 func (u *User) QueryGigTrackings() *GigTrackingQuery {
 	return NewUserClient(u.config).QueryGigTrackings(u)
+}
+
+// QueryCommissionPlan queries the "commission_plan" edge of the User entity.
+func (u *User) QueryCommissionPlan() *CommissionPlanQuery {
+	return NewUserClient(u.config).QueryCommissionPlan(u)
 }
 
 // Update returns a builder for updating this User.

@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/commissionplan"
 	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
 	"affluo/ent/post"
@@ -280,6 +281,25 @@ func (uc *UserCreate) AddGigTrackings(g ...*GigTracking) *UserCreate {
 		ids[i] = g[i].ID
 	}
 	return uc.AddGigTrackingIDs(ids...)
+}
+
+// SetCommissionPlanID sets the "commission_plan" edge to the CommissionPlan entity by ID.
+func (uc *UserCreate) SetCommissionPlanID(id int) *UserCreate {
+	uc.mutation.SetCommissionPlanID(id)
+	return uc
+}
+
+// SetNillableCommissionPlanID sets the "commission_plan" edge to the CommissionPlan entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableCommissionPlanID(id *int) *UserCreate {
+	if id != nil {
+		uc = uc.SetCommissionPlanID(*id)
+	}
+	return uc
+}
+
+// SetCommissionPlan sets the "commission_plan" edge to the CommissionPlan entity.
+func (uc *UserCreate) SetCommissionPlan(c *CommissionPlan) *UserCreate {
+	return uc.SetCommissionPlanID(c.ID)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -563,6 +583,23 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.CommissionPlanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CommissionPlanTable,
+			Columns: []string{user.CommissionPlanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionplan.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.commission_plan_publishers = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

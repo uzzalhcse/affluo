@@ -51,6 +51,9 @@ func (User) Edges() []ent.Edge {
 		edge.To("stats", BannerStats.Type),
 		edge.From("gig_trackings", GigTracking.Type).
 			Ref("publisher"),
+		edge.From("commission_plan", CommissionPlan.Type).
+			Ref("publishers").
+			Unique(),
 	}
 }
 func (User) Indexes() []ent.Index {

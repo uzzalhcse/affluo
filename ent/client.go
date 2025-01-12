@@ -16,6 +16,7 @@ import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/commissionplan"
 	"affluo/ent/creative"
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
@@ -47,6 +48,8 @@ type Client struct {
 	Campaign *CampaignClient
 	// CampaignLink is the client for interacting with the CampaignLink builders.
 	CampaignLink *CampaignLinkClient
+	// CommissionPlan is the client for interacting with the CommissionPlan builders.
+	CommissionPlan *CommissionPlanClient
 	// Creative is the client for interacting with the Creative builders.
 	Creative *CreativeClient
 	// GigTracking is the client for interacting with the GigTracking builders.
@@ -81,6 +84,7 @@ func (c *Client) init() {
 	c.BannerStats = NewBannerStatsClient(c.config)
 	c.Campaign = NewCampaignClient(c.config)
 	c.CampaignLink = NewCampaignLinkClient(c.config)
+	c.CommissionPlan = NewCommissionPlanClient(c.config)
 	c.Creative = NewCreativeClient(c.config)
 	c.GigTracking = NewGigTrackingClient(c.config)
 	c.Lead = NewLeadClient(c.config)
@@ -187,6 +191,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		BannerStats:    NewBannerStatsClient(cfg),
 		Campaign:       NewCampaignClient(cfg),
 		CampaignLink:   NewCampaignLinkClient(cfg),
+		CommissionPlan: NewCommissionPlanClient(cfg),
 		Creative:       NewCreativeClient(cfg),
 		GigTracking:    NewGigTrackingClient(cfg),
 		Lead:           NewLeadClient(cfg),
@@ -220,6 +225,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		BannerStats:    NewBannerStatsClient(cfg),
 		Campaign:       NewCampaignClient(cfg),
 		CampaignLink:   NewCampaignLinkClient(cfg),
+		CommissionPlan: NewCommissionPlanClient(cfg),
 		Creative:       NewCreativeClient(cfg),
 		GigTracking:    NewGigTrackingClient(cfg),
 		Lead:           NewLeadClient(cfg),
@@ -259,8 +265,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink,
-		c.Creative, c.GigTracking, c.Lead, c.Payout, c.Post, c.Referral, c.Test,
-		c.Track, c.User,
+		c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout, c.Post,
+		c.Referral, c.Test, c.Track, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -271,8 +277,8 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink,
-		c.Creative, c.GigTracking, c.Lead, c.Payout, c.Post, c.Referral, c.Test,
-		c.Track, c.User,
+		c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout, c.Post,
+		c.Referral, c.Test, c.Track, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -291,6 +297,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Campaign.mutate(ctx, m)
 	case *CampaignLinkMutation:
 		return c.CampaignLink.mutate(ctx, m)
+	case *CommissionPlanMutation:
+		return c.CommissionPlan.mutate(ctx, m)
 	case *CreativeMutation:
 		return c.Creative.mutate(ctx, m)
 	case *GigTrackingMutation:
@@ -1232,6 +1240,155 @@ func (c *CampaignLinkClient) mutate(ctx context.Context, m *CampaignLinkMutation
 		return (&CampaignLinkDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CampaignLink mutation op: %q", m.Op())
+	}
+}
+
+// CommissionPlanClient is a client for the CommissionPlan schema.
+type CommissionPlanClient struct {
+	config
+}
+
+// NewCommissionPlanClient returns a client for the CommissionPlan from the given config.
+func NewCommissionPlanClient(c config) *CommissionPlanClient {
+	return &CommissionPlanClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `commissionplan.Hooks(f(g(h())))`.
+func (c *CommissionPlanClient) Use(hooks ...Hook) {
+	c.hooks.CommissionPlan = append(c.hooks.CommissionPlan, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `commissionplan.Intercept(f(g(h())))`.
+func (c *CommissionPlanClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CommissionPlan = append(c.inters.CommissionPlan, interceptors...)
+}
+
+// Create returns a builder for creating a CommissionPlan entity.
+func (c *CommissionPlanClient) Create() *CommissionPlanCreate {
+	mutation := newCommissionPlanMutation(c.config, OpCreate)
+	return &CommissionPlanCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CommissionPlan entities.
+func (c *CommissionPlanClient) CreateBulk(builders ...*CommissionPlanCreate) *CommissionPlanCreateBulk {
+	return &CommissionPlanCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CommissionPlanClient) MapCreateBulk(slice any, setFunc func(*CommissionPlanCreate, int)) *CommissionPlanCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CommissionPlanCreateBulk{err: fmt.Errorf("calling to CommissionPlanClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CommissionPlanCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CommissionPlanCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CommissionPlan.
+func (c *CommissionPlanClient) Update() *CommissionPlanUpdate {
+	mutation := newCommissionPlanMutation(c.config, OpUpdate)
+	return &CommissionPlanUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CommissionPlanClient) UpdateOne(cp *CommissionPlan) *CommissionPlanUpdateOne {
+	mutation := newCommissionPlanMutation(c.config, OpUpdateOne, withCommissionPlan(cp))
+	return &CommissionPlanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CommissionPlanClient) UpdateOneID(id int) *CommissionPlanUpdateOne {
+	mutation := newCommissionPlanMutation(c.config, OpUpdateOne, withCommissionPlanID(id))
+	return &CommissionPlanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CommissionPlan.
+func (c *CommissionPlanClient) Delete() *CommissionPlanDelete {
+	mutation := newCommissionPlanMutation(c.config, OpDelete)
+	return &CommissionPlanDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CommissionPlanClient) DeleteOne(cp *CommissionPlan) *CommissionPlanDeleteOne {
+	return c.DeleteOneID(cp.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CommissionPlanClient) DeleteOneID(id int) *CommissionPlanDeleteOne {
+	builder := c.Delete().Where(commissionplan.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CommissionPlanDeleteOne{builder}
+}
+
+// Query returns a query builder for CommissionPlan.
+func (c *CommissionPlanClient) Query() *CommissionPlanQuery {
+	return &CommissionPlanQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCommissionPlan},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CommissionPlan entity by its id.
+func (c *CommissionPlanClient) Get(ctx context.Context, id int) (*CommissionPlan, error) {
+	return c.Query().Where(commissionplan.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CommissionPlanClient) GetX(ctx context.Context, id int) *CommissionPlan {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryPublishers queries the publishers edge of a CommissionPlan.
+func (c *CommissionPlanClient) QueryPublishers(cp *CommissionPlan) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := cp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(commissionplan.Table, commissionplan.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, commissionplan.PublishersTable, commissionplan.PublishersColumn),
+		)
+		fromV = sqlgraph.Neighbors(cp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CommissionPlanClient) Hooks() []Hook {
+	return c.hooks.CommissionPlan
+}
+
+// Interceptors returns the client interceptors.
+func (c *CommissionPlanClient) Interceptors() []Interceptor {
+	return c.inters.CommissionPlan
+}
+
+func (c *CommissionPlanClient) mutate(ctx context.Context, m *CommissionPlanMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CommissionPlanCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CommissionPlanUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CommissionPlanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CommissionPlanDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CommissionPlan mutation op: %q", m.Op())
 	}
 }
 
@@ -2695,6 +2852,22 @@ func (c *UserClient) QueryGigTrackings(u *User) *GigTrackingQuery {
 	return query
 }
 
+// QueryCommissionPlan queries the commission_plan edge of a User.
+func (c *UserClient) QueryCommissionPlan(u *User) *CommissionPlanQuery {
+	query := (&CommissionPlanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(commissionplan.Table, commissionplan.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, user.CommissionPlanTable, user.CommissionPlanColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -2723,11 +2896,13 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Creative,
-		GigTracking, Lead, Payout, Post, Referral, Test, Track, User []ent.Hook
+		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, CommissionPlan,
+		Creative, GigTracking, Lead, Payout, Post, Referral, Test, Track,
+		User []ent.Hook
 	}
 	inters struct {
-		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, Creative,
-		GigTracking, Lead, Payout, Post, Referral, Test, Track, User []ent.Interceptor
+		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, CommissionPlan,
+		Creative, GigTracking, Lead, Payout, Post, Referral, Test, Track,
+		User []ent.Interceptor
 	}
 )

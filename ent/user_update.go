@@ -5,6 +5,7 @@ package ent
 import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/commissionplan"
 	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
 	"affluo/ent/post"
@@ -330,6 +331,25 @@ func (uu *UserUpdate) AddGigTrackings(g ...*GigTracking) *UserUpdate {
 	return uu.AddGigTrackingIDs(ids...)
 }
 
+// SetCommissionPlanID sets the "commission_plan" edge to the CommissionPlan entity by ID.
+func (uu *UserUpdate) SetCommissionPlanID(id int) *UserUpdate {
+	uu.mutation.SetCommissionPlanID(id)
+	return uu
+}
+
+// SetNillableCommissionPlanID sets the "commission_plan" edge to the CommissionPlan entity by ID if the given value is not nil.
+func (uu *UserUpdate) SetNillableCommissionPlanID(id *int) *UserUpdate {
+	if id != nil {
+		uu = uu.SetCommissionPlanID(*id)
+	}
+	return uu
+}
+
+// SetCommissionPlan sets the "commission_plan" edge to the CommissionPlan entity.
+func (uu *UserUpdate) SetCommissionPlan(c *CommissionPlan) *UserUpdate {
+	return uu.SetCommissionPlanID(c.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -480,6 +500,12 @@ func (uu *UserUpdate) RemoveGigTrackings(g ...*GigTracking) *UserUpdate {
 		ids[i] = g[i].ID
 	}
 	return uu.RemoveGigTrackingIDs(ids...)
+}
+
+// ClearCommissionPlan clears the "commission_plan" edge to the CommissionPlan entity.
+func (uu *UserUpdate) ClearCommissionPlan() *UserUpdate {
+	uu.mutation.ClearCommissionPlan()
+	return uu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -911,6 +937,35 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.CommissionPlanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CommissionPlanTable,
+			Columns: []string{user.CommissionPlanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionplan.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.CommissionPlanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CommissionPlanTable,
+			Columns: []string{user.CommissionPlanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionplan.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -1226,6 +1281,25 @@ func (uuo *UserUpdateOne) AddGigTrackings(g ...*GigTracking) *UserUpdateOne {
 	return uuo.AddGigTrackingIDs(ids...)
 }
 
+// SetCommissionPlanID sets the "commission_plan" edge to the CommissionPlan entity by ID.
+func (uuo *UserUpdateOne) SetCommissionPlanID(id int) *UserUpdateOne {
+	uuo.mutation.SetCommissionPlanID(id)
+	return uuo
+}
+
+// SetNillableCommissionPlanID sets the "commission_plan" edge to the CommissionPlan entity by ID if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableCommissionPlanID(id *int) *UserUpdateOne {
+	if id != nil {
+		uuo = uuo.SetCommissionPlanID(*id)
+	}
+	return uuo
+}
+
+// SetCommissionPlan sets the "commission_plan" edge to the CommissionPlan entity.
+func (uuo *UserUpdateOne) SetCommissionPlan(c *CommissionPlan) *UserUpdateOne {
+	return uuo.SetCommissionPlanID(c.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -1376,6 +1450,12 @@ func (uuo *UserUpdateOne) RemoveGigTrackings(g ...*GigTracking) *UserUpdateOne {
 		ids[i] = g[i].ID
 	}
 	return uuo.RemoveGigTrackingIDs(ids...)
+}
+
+// ClearCommissionPlan clears the "commission_plan" edge to the CommissionPlan entity.
+func (uuo *UserUpdateOne) ClearCommissionPlan() *UserUpdateOne {
+	uuo.mutation.ClearCommissionPlan()
+	return uuo
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1830,6 +1910,35 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(gigtracking.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.CommissionPlanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CommissionPlanTable,
+			Columns: []string{user.CommissionPlanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionplan.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.CommissionPlanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CommissionPlanTable,
+			Columns: []string{user.CommissionPlanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionplan.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

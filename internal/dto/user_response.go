@@ -6,28 +6,30 @@ import (
 )
 
 type UserResponse struct {
-	ID        int64     `json:"id"`
-	Username  string    `json:"username"`
-	Email     string    `json:"email"`
-	FirstName string    `json:"first_name,omitempty"`
-	LastName  string    `json:"last_name,omitempty"`
-	Role      string    `json:"role"`
-	IsActive  bool      `json:"is_active"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID               int64     `json:"id"`
+	Username         string    `json:"username"`
+	Email            string    `json:"email"`
+	FirstName        string    `json:"first_name,omitempty"`
+	LastName         string    `json:"last_name,omitempty"`
+	Role             string    `json:"role"`
+	IsActive         bool      `json:"is_active"`
+	CommissionPlanID int       `json:"commission_plan_id,omitempty"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 func NewUserResponse(user *ent.User) *UserResponse {
 	return &UserResponse{
-		ID:        user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Role:      user.Role.String(),
-		IsActive:  user.IsActive,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:               user.ID,
+		Username:         user.Username,
+		Email:            user.Email,
+		FirstName:        user.FirstName,
+		LastName:         user.LastName,
+		Role:             user.Role.String(),
+		IsActive:         user.IsActive,
+		CommissionPlanID: user.Edges.CommissionPlan.ID,
+		CreatedAt:        user.CreatedAt,
+		UpdatedAt:        user.UpdatedAt,
 	}
 }
 
@@ -40,10 +42,12 @@ func NewUsersResponse(users []*ent.User) *[]UserResponse {
 			Email:     user.Email,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
-			Role:      user.Role.String(),
-			IsActive:  user.IsActive,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
+
+			Role:             user.Role.String(),
+			IsActive:         user.IsActive,
+			CommissionPlanID: user.Edges.CommissionPlan.ID,
+			CreatedAt:        user.CreatedAt,
+			UpdatedAt:        user.UpdatedAt,
 		}
 	}
 	return &usersResponse

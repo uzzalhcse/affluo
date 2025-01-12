@@ -68,6 +68,18 @@ func (f CampaignLinkFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CampaignLinkMutation", m)
 }
 
+// The CommissionPlanFunc type is an adapter to allow the use of ordinary
+// function as CommissionPlan mutator.
+type CommissionPlanFunc func(context.Context, *ent.CommissionPlanMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CommissionPlanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CommissionPlanMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommissionPlanMutation", m)
+}
+
 // The CreativeFunc type is an adapter to allow the use of ordinary
 // function as Creative mutator.
 type CreativeFunc func(context.Context, *ent.CreativeMutation) (ent.Value, error)

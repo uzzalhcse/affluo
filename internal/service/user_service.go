@@ -2,10 +2,11 @@ package service
 
 import (
 	"affluo/ent"
+	"affluo/ent/commissionplan"
 	"affluo/ent/user"
 	"context"
-	"time"
-
+	"errors"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,7 +20,7 @@ func NewUserService(client *ent.Client) *UserService {
 
 // ListUsers retrieves all users with optional filtering
 func (s *UserService) ListUsers(ctx context.Context, opts ...func(*ent.UserQuery)) ([]*ent.User, error) {
-	query := s.client.User.Query()
+	query := s.client.User.Query().WithCommissionPlan()
 	for _, opt := range opts {
 		opt(query)
 	}
@@ -27,31 +28,102 @@ func (s *UserService) ListUsers(ctx context.Context, opts ...func(*ent.UserQuery
 }
 
 // CreateUser creates a new user with hashed password
-func (s *UserService) CreateUser(ctx context.Context, username, email, password, role string, firstName, lastName *string) (*ent.User, error) {
-	// Hash password
+func (s *UserService) CreateUser(
+	ctx context.Context,
+	username string,
+	email string,
+	password string,
+	role string,
+	firstName *string,
+	lastName *string,
+	commissionPlanID *int,
+) (*ent.User, error) {
+	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Create user with optional first and last name
-	userCreate := s.client.User.Create().
+	// Start a new transaction
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("starting transaction: %w", err)
+	}
+
+	// Ensure proper rollback in case of error
+	defer func() {
+		if v := recover(); v != nil {
+			tx.Rollback()
+			panic(v)
+		}
+	}()
+
+	// Create user builder
+	userBuilder := tx.User.
+		Create().
 		SetUsername(username).
 		SetEmail(email).
 		SetPasswordHash(string(hashedPassword)).
-		SetCreatedAt(time.Now()).
-		SetRole(user.Role(role)).
-		SetIsActive(true)
+		SetRole(user.Role(role))
 
+	// Set optional fields
 	if firstName != nil {
-		userCreate.SetFirstName(*firstName)
+		userBuilder.SetFirstName(*firstName)
 	}
-
 	if lastName != nil {
-		userCreate.SetLastName(*lastName)
+		userBuilder.SetLastName(*lastName)
 	}
 
-	return userCreate.Save(ctx)
+	// Handle commission plan if provided
+	if commissionPlanID != nil {
+		// Verify commission plan exists and is active
+		plan, err := tx.CommissionPlan.
+			Query().
+			Where(
+				commissionplan.ID(*commissionPlanID),
+				commissionplan.IsActive(true),
+			).
+			Only(ctx)
+
+		if err != nil {
+			if ent.IsNotFound(err) {
+				tx.Rollback()
+				return nil, errors.New("commission plan not found or inactive")
+			}
+			tx.Rollback()
+			return nil, fmt.Errorf("querying commission plan: %w", err)
+		}
+
+		userBuilder.SetCommissionPlanID(plan.ID)
+	} else {
+		// If no commission plan provided, try to get the default one
+		defaultPlan, err := tx.CommissionPlan.
+			Query().
+			Where(
+				commissionplan.IsDefault(true),
+				commissionplan.IsActive(true),
+			).
+			Only(ctx)
+
+		if err == nil {
+			userBuilder.SetCommissionPlanID(defaultPlan.ID)
+		}
+		// If no default plan, continue without setting a commission plan
+	}
+
+	// Create the user
+	user, err := userBuilder.Save(ctx)
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("creating user: %w", err)
+	}
+
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("committing transaction: %w", err)
+	}
+
+	return user, nil
 }
 
 // GetUserByID retrieves a user by their ID
@@ -59,6 +131,11 @@ func (s *UserService) GetUserByID(ctx context.Context, id int64) (*ent.User, err
 	return s.client.User.Query().
 		Where(user.IDEQ(id)).
 		Only(ctx)
+}
+func (s *UserService) ToggleActive(ctx context.Context, id int64) error {
+	return s.client.User.UpdateOneID(id).
+		SetIsActive(!s.client.User.Query().Where(user.IDEQ(id)).OnlyX(ctx).IsActive).
+		Exec(ctx)
 }
 
 // GetUserByEmail retrieves a user by their email
@@ -69,34 +146,73 @@ func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*ent.Us
 }
 
 // UpdateUser updates user details
-func (s *UserService) UpdateUser(ctx context.Context, id int64, updates map[string]interface{}) (*ent.User, error) {
-	update := s.client.User.UpdateOneID(id)
-
-	if username, ok := updates["username"].(string); ok {
-		update.SetUsername(username)
+func (s *UserService) UpdateUser(ctx context.Context, id int64, updates map[string]interface{}) error {
+	// Start a new transaction
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("starting transaction: %w", err)
 	}
 
-	if email, ok := updates["email"].(string); ok {
-		update.SetEmail(email)
+	defer func() {
+		if v := recover(); v != nil {
+			tx.Rollback()
+			panic(v)
+		}
+	}()
+
+	// Get the update builder
+	updateBuilder := tx.User.UpdateOneID(id)
+
+	// Apply all updates
+	for field, value := range updates {
+		switch field {
+		case "username":
+			updateBuilder.SetUsername(value.(string))
+		case "email":
+			updateBuilder.SetEmail(value.(string))
+		case "first_name":
+			updateBuilder.SetFirstName(value.(string))
+		case "last_name":
+			updateBuilder.SetLastName(value.(string))
+		case "role":
+			updateBuilder.SetRole(user.Role(value.(string)))
+		case "is_active":
+			updateBuilder.SetIsActive(value.(bool))
+		case "commission_plan_id":
+			planID := value.(int)
+			// Verify commission plan exists and is active
+			plan, err := tx.CommissionPlan.
+				Query().
+				Where(
+					commissionplan.ID(planID),
+					commissionplan.IsActive(true),
+				).
+				Only(ctx)
+
+			if err != nil {
+				tx.Rollback()
+				if ent.IsNotFound(err) {
+					return errors.New("commission plan not found or inactive")
+				}
+				return fmt.Errorf("querying commission plan: %w", err)
+			}
+			updateBuilder.SetCommissionPlanID(plan.ID)
+		}
 	}
 
-	if firstName, ok := updates["first_name"].(string); ok {
-		update.SetFirstName(firstName)
+	// Perform the update
+	_, err = updateBuilder.Save(ctx)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("updating user: %w", err)
 	}
 
-	if lastName, ok := updates["last_name"].(string); ok {
-		update.SetLastName(lastName)
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("committing transaction: %w", err)
 	}
 
-	if role, ok := updates["role"].(string); ok {
-		update.SetRole(user.Role(role))
-	}
-
-	if isActive, ok := updates["is_active"].(bool); ok {
-		update.SetIsActive(isActive)
-	}
-
-	return update.Save(ctx)
+	return nil
 }
 
 // UpdateUserPassword updates a user's password

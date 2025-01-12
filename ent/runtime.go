@@ -8,6 +8,7 @@ import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/commissionplan"
 	"affluo/ent/creative"
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
@@ -148,6 +149,36 @@ func init() {
 	campaignlinkDescID := campaignlinkFields[0].Descriptor()
 	// campaignlink.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	campaignlink.IDValidator = campaignlinkDescID.Validators[0].(func(int64) error)
+	commissionplanFields := schema.CommissionPlan{}.Fields()
+	_ = commissionplanFields
+	// commissionplanDescName is the schema descriptor for name field.
+	commissionplanDescName := commissionplanFields[0].Descriptor()
+	// commissionplan.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	commissionplan.NameValidator = commissionplanDescName.Validators[0].(func(string) error)
+	// commissionplanDescClickCommission is the schema descriptor for click_commission field.
+	commissionplanDescClickCommission := commissionplanFields[3].Descriptor()
+	// commissionplan.DefaultClickCommission holds the default value on creation for the click_commission field.
+	commissionplan.DefaultClickCommission = commissionplanDescClickCommission.Default.(float64)
+	// commissionplanDescImpressionCommission is the schema descriptor for impression_commission field.
+	commissionplanDescImpressionCommission := commissionplanFields[4].Descriptor()
+	// commissionplan.DefaultImpressionCommission holds the default value on creation for the impression_commission field.
+	commissionplan.DefaultImpressionCommission = commissionplanDescImpressionCommission.Default.(float64)
+	// commissionplanDescLeadCommission is the schema descriptor for lead_commission field.
+	commissionplanDescLeadCommission := commissionplanFields[5].Descriptor()
+	// commissionplan.DefaultLeadCommission holds the default value on creation for the lead_commission field.
+	commissionplan.DefaultLeadCommission = commissionplanDescLeadCommission.Default.(float64)
+	// commissionplanDescMinimumPayout is the schema descriptor for minimum_payout field.
+	commissionplanDescMinimumPayout := commissionplanFields[6].Descriptor()
+	// commissionplan.DefaultMinimumPayout holds the default value on creation for the minimum_payout field.
+	commissionplan.DefaultMinimumPayout = commissionplanDescMinimumPayout.Default.(float64)
+	// commissionplanDescIsActive is the schema descriptor for is_active field.
+	commissionplanDescIsActive := commissionplanFields[9].Descriptor()
+	// commissionplan.DefaultIsActive holds the default value on creation for the is_active field.
+	commissionplan.DefaultIsActive = commissionplanDescIsActive.Default.(bool)
+	// commissionplanDescIsDefault is the schema descriptor for is_default field.
+	commissionplanDescIsDefault := commissionplanFields[10].Descriptor()
+	// commissionplan.DefaultIsDefault holds the default value on creation for the is_default field.
+	commissionplan.DefaultIsDefault = commissionplanDescIsDefault.Default.(bool)
 	creativeFields := schema.Creative{}.Fields()
 	_ = creativeFields
 	// creativeDescEnabled is the schema descriptor for enabled field.

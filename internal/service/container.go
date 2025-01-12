@@ -8,14 +8,15 @@ import (
 )
 
 type Container struct {
-	User      *UserService
-	Campaign  *CampaignService
-	Tracking  *TrackingService
-	Reporting *ReportingService
-	Post      *PostService
-	Auth      *AuthService // Add Auth Service
-	Banner    *BannerService
-	AntiFraud *AntiFraudService
+	User       *UserService
+	Campaign   *CampaignService
+	Tracking   *TrackingService
+	Reporting  *ReportingService
+	Post       *PostService
+	Auth       *AuthService // Add Auth Service
+	Banner     *BannerService
+	AntiFraud  *AntiFraudService
+	Commission *CommissionService
 }
 
 func NewContainer(client *ent.Client, redisClient *redis.Client) *Container {
@@ -23,13 +24,14 @@ func NewContainer(client *ent.Client, redisClient *redis.Client) *Container {
 	jwtSecretKey := "your-secret-key-here" // In real app, use a secure method to generate and store this
 
 	return &Container{
-		User:      NewUserService(client),
-		Campaign:  NewCampaignService(client),
-		Tracking:  NewTrackingService(client),
-		Reporting: NewReportingService(client),
-		Post:      NewPostService(client),
-		Auth:      NewAuthService(client, redisClient, jwtSecretKey), // Initialize Auth Service
-		Banner:    NewBannerService(client),
-		AntiFraud: NewAntiFraudService(client, redisClient),
+		User:       NewUserService(client),
+		Campaign:   NewCampaignService(client),
+		Tracking:   NewTrackingService(client),
+		Reporting:  NewReportingService(client),
+		Post:       NewPostService(client),
+		Auth:       NewAuthService(client, redisClient, jwtSecretKey), // Initialize Auth Service
+		Banner:     NewBannerService(client),
+		AntiFraud:  NewAntiFraudService(client, redisClient),
+		Commission: NewCommissionService(client),
 	}
 }

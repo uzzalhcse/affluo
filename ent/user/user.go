@@ -53,6 +53,8 @@ const (
 	EdgeStats = "stats"
 	// EdgeGigTrackings holds the string denoting the gig_trackings edge name in mutations.
 	EdgeGigTrackings = "gig_trackings"
+	// EdgeCommissionPlan holds the string denoting the commission_plan edge name in mutations.
+	EdgeCommissionPlan = "commission_plan"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// CampaignsTable is the table that holds the campaigns relation/edge.
@@ -104,6 +106,13 @@ const (
 	GigTrackingsInverseTable = "gig_trackings"
 	// GigTrackingsColumn is the table column denoting the gig_trackings relation/edge.
 	GigTrackingsColumn = "gig_tracking_publisher"
+	// CommissionPlanTable is the table that holds the commission_plan relation/edge.
+	CommissionPlanTable = "users"
+	// CommissionPlanInverseTable is the table name for the CommissionPlan entity.
+	// It exists in this package in order to avoid circular dependency with the "commissionplan" package.
+	CommissionPlanInverseTable = "commission_plans"
+	// CommissionPlanColumn is the table column denoting the commission_plan relation/edge.
+	CommissionPlanColumn = "commission_plan_publishers"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -123,10 +132,21 @@ var Columns = []string{
 	FieldResetTokenExpiresAt,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "users"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"commission_plan_publishers",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -340,6 +360,13 @@ func ByGigTrackings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newGigTrackingsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByCommissionPlanField orders the results by commission_plan field.
+func ByCommissionPlanField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCommissionPlanStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newCampaignsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -387,5 +414,12 @@ func newGigTrackingsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(GigTrackingsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, true, GigTrackingsTable, GigTrackingsColumn),
+	)
+}
+func newCommissionPlanStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CommissionPlanInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, CommissionPlanTable, CommissionPlanColumn),
 	)
 }

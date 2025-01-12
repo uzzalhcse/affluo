@@ -211,6 +211,27 @@ var (
 			},
 		},
 	}
+	// CommissionPlansColumns holds the columns for the "commission_plans" table.
+	CommissionPlansColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"fixed", "percentage"}},
+		{Name: "click_commission", Type: field.TypeFloat64, Default: 0},
+		{Name: "impression_commission", Type: field.TypeFloat64, Default: 0},
+		{Name: "lead_commission", Type: field.TypeFloat64, Default: 0},
+		{Name: "minimum_payout", Type: field.TypeFloat64, Default: 0},
+		{Name: "valid_from", Type: field.TypeTime, Nullable: true},
+		{Name: "valid_until", Type: field.TypeTime, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "is_default", Type: field.TypeBool, Default: false},
+	}
+	// CommissionPlansTable holds the schema information for the "commission_plans" table.
+	CommissionPlansTable = &schema.Table{
+		Name:       "commission_plans",
+		Columns:    CommissionPlansColumns,
+		PrimaryKey: []*schema.Column{CommissionPlansColumns[0]},
+	}
 	// CreativesColumns holds the columns for the "creatives" table.
 	CreativesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -435,12 +456,21 @@ var (
 		{Name: "last_login", Type: field.TypeTime, Nullable: true},
 		{Name: "reset_token", Type: field.TypeString, Nullable: true},
 		{Name: "reset_token_expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "commission_plan_publishers", Type: field.TypeInt, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "users_commission_plans_publishers",
+				Columns:    []*schema.Column{UsersColumns[13]},
+				RefColumns: []*schema.Column{CommissionPlansColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "user_email",
@@ -481,6 +511,7 @@ var (
 		BannerStatsTable,
 		CampaignsTable,
 		CampaignLinksTable,
+		CommissionPlansTable,
 		CreativesTable,
 		GigTrackingsTable,
 		LeadsTable,
@@ -510,6 +541,7 @@ func init() {
 	TracksTable.ForeignKeys[0].RefTable = CampaignsTable
 	TracksTable.ForeignKeys[1].RefTable = CampaignLinksTable
 	TracksTable.ForeignKeys[2].RefTable = UsersTable
+	UsersTable.ForeignKeys[0].RefTable = CommissionPlansTable
 	CampaignBannersTable.ForeignKeys[0].RefTable = CampaignsTable
 	CampaignBannersTable.ForeignKeys[1].RefTable = BannersTable
 }
