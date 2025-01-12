@@ -11,8 +11,6 @@ type Container struct {
 	User       *UserService
 	Campaign   *CampaignService
 	Tracking   *TrackingService
-	Reporting  *ReportingService
-	Post       *PostService
 	Auth       *AuthService // Add Auth Service
 	Banner     *BannerService
 	AntiFraud  *AntiFraudService
@@ -27,8 +25,6 @@ func NewContainer(client *ent.Client, redisClient *redis.Client) *Container {
 		User:       NewUserService(client),
 		Campaign:   NewCampaignService(client),
 		Tracking:   NewTrackingService(client),
-		Reporting:  NewReportingService(client),
-		Post:       NewPostService(client),
 		Auth:       NewAuthService(client, redisClient, jwtSecretKey), // Initialize Auth Service
 		Banner:     NewBannerService(client),
 		AntiFraud:  NewAntiFraudService(client, redisClient),

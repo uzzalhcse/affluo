@@ -26,6 +26,5 @@ func (CampaignLink) Fields() []ent.Field {
 func (CampaignLink) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("campaign", Campaign.Type).Ref("links").Unique(),
-		edge.To("tracks", Track.Type),
 	}
 }

@@ -12,9 +12,7 @@ import (
 	"affluo/ent/creative"
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
-	"affluo/ent/referral"
 	"affluo/ent/schema"
-	"affluo/ent/track"
 	"affluo/ent/user"
 	"time"
 )
@@ -233,30 +231,6 @@ func init() {
 	leadDescCreatedAt := leadFields[8].Descriptor()
 	// lead.DefaultCreatedAt holds the default value on creation for the created_at field.
 	lead.DefaultCreatedAt = leadDescCreatedAt.Default.(func() time.Time)
-	referralFields := schema.Referral{}.Fields()
-	_ = referralFields
-	// referralDescCreatedAt is the schema descriptor for created_at field.
-	referralDescCreatedAt := referralFields[3].Descriptor()
-	// referral.DefaultCreatedAt holds the default value on creation for the created_at field.
-	referral.DefaultCreatedAt = referralDescCreatedAt.Default.(func() time.Time)
-	// referralDescID is the schema descriptor for id field.
-	referralDescID := referralFields[0].Descriptor()
-	// referral.IDValidator is a validator for the "id" field. It is called by the builders before save.
-	referral.IDValidator = referralDescID.Validators[0].(func(int64) error)
-	trackFields := schema.Track{}.Fields()
-	_ = trackFields
-	// trackDescCreatedAt is the schema descriptor for created_at field.
-	trackDescCreatedAt := trackFields[7].Descriptor()
-	// track.DefaultCreatedAt holds the default value on creation for the created_at field.
-	track.DefaultCreatedAt = trackDescCreatedAt.Default.(func() time.Time)
-	// trackDescIsUniqueClick is the schema descriptor for is_unique_click field.
-	trackDescIsUniqueClick := trackFields[8].Descriptor()
-	// track.DefaultIsUniqueClick holds the default value on creation for the is_unique_click field.
-	track.DefaultIsUniqueClick = trackDescIsUniqueClick.Default.(bool)
-	// trackDescID is the schema descriptor for id field.
-	trackDescID := trackFields[0].Descriptor()
-	// track.IDValidator is a validator for the "id" field. It is called by the builders before save.
-	track.IDValidator = trackDescID.Validators[0].(func(int64) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescEmail is the schema descriptor for email field.

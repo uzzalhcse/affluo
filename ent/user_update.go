@@ -8,10 +8,7 @@ import (
 	"affluo/ent/commissionplan"
 	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
-	"affluo/ent/post"
 	"affluo/ent/predicate"
-	"affluo/ent/referral"
-	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
 	"errors"
@@ -241,36 +238,6 @@ func (uu *UserUpdate) AddCampaigns(c ...*Campaign) *UserUpdate {
 	return uu.AddCampaignIDs(ids...)
 }
 
-// AddReferralIDs adds the "referrals" edge to the Referral entity by IDs.
-func (uu *UserUpdate) AddReferralIDs(ids ...int64) *UserUpdate {
-	uu.mutation.AddReferralIDs(ids...)
-	return uu
-}
-
-// AddReferrals adds the "referrals" edges to the Referral entity.
-func (uu *UserUpdate) AddReferrals(r ...*Referral) *UserUpdate {
-	ids := make([]int64, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return uu.AddReferralIDs(ids...)
-}
-
-// AddTrackIDs adds the "tracks" edge to the Track entity by IDs.
-func (uu *UserUpdate) AddTrackIDs(ids ...int64) *UserUpdate {
-	uu.mutation.AddTrackIDs(ids...)
-	return uu
-}
-
-// AddTracks adds the "tracks" edges to the Track entity.
-func (uu *UserUpdate) AddTracks(t ...*Track) *UserUpdate {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uu.AddTrackIDs(ids...)
-}
-
 // AddPayoutIDs adds the "payouts" edge to the Payout entity by IDs.
 func (uu *UserUpdate) AddPayoutIDs(ids ...string) *UserUpdate {
 	uu.mutation.AddPayoutIDs(ids...)
@@ -284,21 +251,6 @@ func (uu *UserUpdate) AddPayouts(p ...*Payout) *UserUpdate {
 		ids[i] = p[i].ID
 	}
 	return uu.AddPayoutIDs(ids...)
-}
-
-// AddPostIDs adds the "posts" edge to the Post entity by IDs.
-func (uu *UserUpdate) AddPostIDs(ids ...string) *UserUpdate {
-	uu.mutation.AddPostIDs(ids...)
-	return uu
-}
-
-// AddPosts adds the "posts" edges to the Post entity.
-func (uu *UserUpdate) AddPosts(p ...*Post) *UserUpdate {
-	ids := make([]string, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return uu.AddPostIDs(ids...)
 }
 
 // AddStatIDs adds the "stats" edge to the BannerStats entity by IDs.
@@ -376,48 +328,6 @@ func (uu *UserUpdate) RemoveCampaigns(c ...*Campaign) *UserUpdate {
 	return uu.RemoveCampaignIDs(ids...)
 }
 
-// ClearReferrals clears all "referrals" edges to the Referral entity.
-func (uu *UserUpdate) ClearReferrals() *UserUpdate {
-	uu.mutation.ClearReferrals()
-	return uu
-}
-
-// RemoveReferralIDs removes the "referrals" edge to Referral entities by IDs.
-func (uu *UserUpdate) RemoveReferralIDs(ids ...int64) *UserUpdate {
-	uu.mutation.RemoveReferralIDs(ids...)
-	return uu
-}
-
-// RemoveReferrals removes "referrals" edges to Referral entities.
-func (uu *UserUpdate) RemoveReferrals(r ...*Referral) *UserUpdate {
-	ids := make([]int64, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return uu.RemoveReferralIDs(ids...)
-}
-
-// ClearTracks clears all "tracks" edges to the Track entity.
-func (uu *UserUpdate) ClearTracks() *UserUpdate {
-	uu.mutation.ClearTracks()
-	return uu
-}
-
-// RemoveTrackIDs removes the "tracks" edge to Track entities by IDs.
-func (uu *UserUpdate) RemoveTrackIDs(ids ...int64) *UserUpdate {
-	uu.mutation.RemoveTrackIDs(ids...)
-	return uu
-}
-
-// RemoveTracks removes "tracks" edges to Track entities.
-func (uu *UserUpdate) RemoveTracks(t ...*Track) *UserUpdate {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uu.RemoveTrackIDs(ids...)
-}
-
 // ClearPayouts clears all "payouts" edges to the Payout entity.
 func (uu *UserUpdate) ClearPayouts() *UserUpdate {
 	uu.mutation.ClearPayouts()
@@ -437,27 +347,6 @@ func (uu *UserUpdate) RemovePayouts(p ...*Payout) *UserUpdate {
 		ids[i] = p[i].ID
 	}
 	return uu.RemovePayoutIDs(ids...)
-}
-
-// ClearPosts clears all "posts" edges to the Post entity.
-func (uu *UserUpdate) ClearPosts() *UserUpdate {
-	uu.mutation.ClearPosts()
-	return uu
-}
-
-// RemovePostIDs removes the "posts" edge to Post entities by IDs.
-func (uu *UserUpdate) RemovePostIDs(ids ...string) *UserUpdate {
-	uu.mutation.RemovePostIDs(ids...)
-	return uu
-}
-
-// RemovePosts removes "posts" edges to Post entities.
-func (uu *UserUpdate) RemovePosts(p ...*Post) *UserUpdate {
-	ids := make([]string, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return uu.RemovePostIDs(ids...)
 }
 
 // ClearStats clears all "stats" edges to the BannerStats entity.
@@ -667,96 +556,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uu.mutation.ReferralsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReferralsTable,
-			Columns: []string{user.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedReferralsIDs(); len(nodes) > 0 && !uu.mutation.ReferralsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReferralsTable,
-			Columns: []string{user.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.ReferralsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReferralsTable,
-			Columns: []string{user.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.TracksTable,
-			Columns: []string{user.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedTracksIDs(); len(nodes) > 0 && !uu.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.TracksTable,
-			Columns: []string{user.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.TracksIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.TracksTable,
-			Columns: []string{user.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if uu.mutation.PayoutsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -795,51 +594,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(payout.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.PostsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.PostsTable,
-			Columns: []string{user.PostsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedPostsIDs(); len(nodes) > 0 && !uu.mutation.PostsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.PostsTable,
-			Columns: []string{user.PostsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.PostsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.PostsTable,
-			Columns: []string{user.PostsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -1191,36 +945,6 @@ func (uuo *UserUpdateOne) AddCampaigns(c ...*Campaign) *UserUpdateOne {
 	return uuo.AddCampaignIDs(ids...)
 }
 
-// AddReferralIDs adds the "referrals" edge to the Referral entity by IDs.
-func (uuo *UserUpdateOne) AddReferralIDs(ids ...int64) *UserUpdateOne {
-	uuo.mutation.AddReferralIDs(ids...)
-	return uuo
-}
-
-// AddReferrals adds the "referrals" edges to the Referral entity.
-func (uuo *UserUpdateOne) AddReferrals(r ...*Referral) *UserUpdateOne {
-	ids := make([]int64, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return uuo.AddReferralIDs(ids...)
-}
-
-// AddTrackIDs adds the "tracks" edge to the Track entity by IDs.
-func (uuo *UserUpdateOne) AddTrackIDs(ids ...int64) *UserUpdateOne {
-	uuo.mutation.AddTrackIDs(ids...)
-	return uuo
-}
-
-// AddTracks adds the "tracks" edges to the Track entity.
-func (uuo *UserUpdateOne) AddTracks(t ...*Track) *UserUpdateOne {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uuo.AddTrackIDs(ids...)
-}
-
 // AddPayoutIDs adds the "payouts" edge to the Payout entity by IDs.
 func (uuo *UserUpdateOne) AddPayoutIDs(ids ...string) *UserUpdateOne {
 	uuo.mutation.AddPayoutIDs(ids...)
@@ -1234,21 +958,6 @@ func (uuo *UserUpdateOne) AddPayouts(p ...*Payout) *UserUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return uuo.AddPayoutIDs(ids...)
-}
-
-// AddPostIDs adds the "posts" edge to the Post entity by IDs.
-func (uuo *UserUpdateOne) AddPostIDs(ids ...string) *UserUpdateOne {
-	uuo.mutation.AddPostIDs(ids...)
-	return uuo
-}
-
-// AddPosts adds the "posts" edges to the Post entity.
-func (uuo *UserUpdateOne) AddPosts(p ...*Post) *UserUpdateOne {
-	ids := make([]string, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return uuo.AddPostIDs(ids...)
 }
 
 // AddStatIDs adds the "stats" edge to the BannerStats entity by IDs.
@@ -1326,48 +1035,6 @@ func (uuo *UserUpdateOne) RemoveCampaigns(c ...*Campaign) *UserUpdateOne {
 	return uuo.RemoveCampaignIDs(ids...)
 }
 
-// ClearReferrals clears all "referrals" edges to the Referral entity.
-func (uuo *UserUpdateOne) ClearReferrals() *UserUpdateOne {
-	uuo.mutation.ClearReferrals()
-	return uuo
-}
-
-// RemoveReferralIDs removes the "referrals" edge to Referral entities by IDs.
-func (uuo *UserUpdateOne) RemoveReferralIDs(ids ...int64) *UserUpdateOne {
-	uuo.mutation.RemoveReferralIDs(ids...)
-	return uuo
-}
-
-// RemoveReferrals removes "referrals" edges to Referral entities.
-func (uuo *UserUpdateOne) RemoveReferrals(r ...*Referral) *UserUpdateOne {
-	ids := make([]int64, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return uuo.RemoveReferralIDs(ids...)
-}
-
-// ClearTracks clears all "tracks" edges to the Track entity.
-func (uuo *UserUpdateOne) ClearTracks() *UserUpdateOne {
-	uuo.mutation.ClearTracks()
-	return uuo
-}
-
-// RemoveTrackIDs removes the "tracks" edge to Track entities by IDs.
-func (uuo *UserUpdateOne) RemoveTrackIDs(ids ...int64) *UserUpdateOne {
-	uuo.mutation.RemoveTrackIDs(ids...)
-	return uuo
-}
-
-// RemoveTracks removes "tracks" edges to Track entities.
-func (uuo *UserUpdateOne) RemoveTracks(t ...*Track) *UserUpdateOne {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uuo.RemoveTrackIDs(ids...)
-}
-
 // ClearPayouts clears all "payouts" edges to the Payout entity.
 func (uuo *UserUpdateOne) ClearPayouts() *UserUpdateOne {
 	uuo.mutation.ClearPayouts()
@@ -1387,27 +1054,6 @@ func (uuo *UserUpdateOne) RemovePayouts(p ...*Payout) *UserUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return uuo.RemovePayoutIDs(ids...)
-}
-
-// ClearPosts clears all "posts" edges to the Post entity.
-func (uuo *UserUpdateOne) ClearPosts() *UserUpdateOne {
-	uuo.mutation.ClearPosts()
-	return uuo
-}
-
-// RemovePostIDs removes the "posts" edge to Post entities by IDs.
-func (uuo *UserUpdateOne) RemovePostIDs(ids ...string) *UserUpdateOne {
-	uuo.mutation.RemovePostIDs(ids...)
-	return uuo
-}
-
-// RemovePosts removes "posts" edges to Post entities.
-func (uuo *UserUpdateOne) RemovePosts(p ...*Post) *UserUpdateOne {
-	ids := make([]string, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return uuo.RemovePostIDs(ids...)
 }
 
 // ClearStats clears all "stats" edges to the BannerStats entity.
@@ -1647,96 +1293,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uuo.mutation.ReferralsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReferralsTable,
-			Columns: []string{user.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedReferralsIDs(); len(nodes) > 0 && !uuo.mutation.ReferralsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReferralsTable,
-			Columns: []string{user.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.ReferralsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReferralsTable,
-			Columns: []string{user.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.TracksTable,
-			Columns: []string{user.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedTracksIDs(); len(nodes) > 0 && !uuo.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.TracksTable,
-			Columns: []string{user.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.TracksIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.TracksTable,
-			Columns: []string{user.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if uuo.mutation.PayoutsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1775,51 +1331,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(payout.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.PostsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.PostsTable,
-			Columns: []string{user.PostsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedPostsIDs(); len(nodes) > 0 && !uuo.mutation.PostsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.PostsTable,
-			Columns: []string{user.PostsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.PostsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.PostsTable,
-			Columns: []string{user.PostsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

@@ -7,9 +7,7 @@ import (
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/predicate"
-	"affluo/ent/referral"
 	"affluo/ent/schema"
-	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
 	"errors"
@@ -374,36 +372,6 @@ func (cu *CampaignUpdate) AddLinks(c ...*CampaignLink) *CampaignUpdate {
 	return cu.AddLinkIDs(ids...)
 }
 
-// AddTrackIDs adds the "tracks" edge to the Track entity by IDs.
-func (cu *CampaignUpdate) AddTrackIDs(ids ...int64) *CampaignUpdate {
-	cu.mutation.AddTrackIDs(ids...)
-	return cu
-}
-
-// AddTracks adds the "tracks" edges to the Track entity.
-func (cu *CampaignUpdate) AddTracks(t ...*Track) *CampaignUpdate {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return cu.AddTrackIDs(ids...)
-}
-
-// AddReferralIDs adds the "referrals" edge to the Referral entity by IDs.
-func (cu *CampaignUpdate) AddReferralIDs(ids ...int64) *CampaignUpdate {
-	cu.mutation.AddReferralIDs(ids...)
-	return cu
-}
-
-// AddReferrals adds the "referrals" edges to the Referral entity.
-func (cu *CampaignUpdate) AddReferrals(r ...*Referral) *CampaignUpdate {
-	ids := make([]int64, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return cu.AddReferralIDs(ids...)
-}
-
 // AddBannerIDs adds the "banners" edge to the Banner entity by IDs.
 func (cu *CampaignUpdate) AddBannerIDs(ids ...int64) *CampaignUpdate {
 	cu.mutation.AddBannerIDs(ids...)
@@ -449,48 +417,6 @@ func (cu *CampaignUpdate) RemoveLinks(c ...*CampaignLink) *CampaignUpdate {
 		ids[i] = c[i].ID
 	}
 	return cu.RemoveLinkIDs(ids...)
-}
-
-// ClearTracks clears all "tracks" edges to the Track entity.
-func (cu *CampaignUpdate) ClearTracks() *CampaignUpdate {
-	cu.mutation.ClearTracks()
-	return cu
-}
-
-// RemoveTrackIDs removes the "tracks" edge to Track entities by IDs.
-func (cu *CampaignUpdate) RemoveTrackIDs(ids ...int64) *CampaignUpdate {
-	cu.mutation.RemoveTrackIDs(ids...)
-	return cu
-}
-
-// RemoveTracks removes "tracks" edges to Track entities.
-func (cu *CampaignUpdate) RemoveTracks(t ...*Track) *CampaignUpdate {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return cu.RemoveTrackIDs(ids...)
-}
-
-// ClearReferrals clears all "referrals" edges to the Referral entity.
-func (cu *CampaignUpdate) ClearReferrals() *CampaignUpdate {
-	cu.mutation.ClearReferrals()
-	return cu
-}
-
-// RemoveReferralIDs removes the "referrals" edge to Referral entities by IDs.
-func (cu *CampaignUpdate) RemoveReferralIDs(ids ...int64) *CampaignUpdate {
-	cu.mutation.RemoveReferralIDs(ids...)
-	return cu
-}
-
-// RemoveReferrals removes "referrals" edges to Referral entities.
-func (cu *CampaignUpdate) RemoveReferrals(r ...*Referral) *CampaignUpdate {
-	ids := make([]int64, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return cu.RemoveReferralIDs(ids...)
 }
 
 // ClearBanners clears all "banners" edges to the Banner entity.
@@ -746,96 +672,6 @@ func (cu *CampaignUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(campaignlink.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if cu.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.TracksTable,
-			Columns: []string{campaign.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cu.mutation.RemovedTracksIDs(); len(nodes) > 0 && !cu.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.TracksTable,
-			Columns: []string{campaign.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cu.mutation.TracksIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.TracksTable,
-			Columns: []string{campaign.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if cu.mutation.ReferralsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.ReferralsTable,
-			Columns: []string{campaign.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cu.mutation.RemovedReferralsIDs(); len(nodes) > 0 && !cu.mutation.ReferralsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.ReferralsTable,
-			Columns: []string{campaign.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cu.mutation.ReferralsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.ReferralsTable,
-			Columns: []string{campaign.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1247,36 +1083,6 @@ func (cuo *CampaignUpdateOne) AddLinks(c ...*CampaignLink) *CampaignUpdateOne {
 	return cuo.AddLinkIDs(ids...)
 }
 
-// AddTrackIDs adds the "tracks" edge to the Track entity by IDs.
-func (cuo *CampaignUpdateOne) AddTrackIDs(ids ...int64) *CampaignUpdateOne {
-	cuo.mutation.AddTrackIDs(ids...)
-	return cuo
-}
-
-// AddTracks adds the "tracks" edges to the Track entity.
-func (cuo *CampaignUpdateOne) AddTracks(t ...*Track) *CampaignUpdateOne {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return cuo.AddTrackIDs(ids...)
-}
-
-// AddReferralIDs adds the "referrals" edge to the Referral entity by IDs.
-func (cuo *CampaignUpdateOne) AddReferralIDs(ids ...int64) *CampaignUpdateOne {
-	cuo.mutation.AddReferralIDs(ids...)
-	return cuo
-}
-
-// AddReferrals adds the "referrals" edges to the Referral entity.
-func (cuo *CampaignUpdateOne) AddReferrals(r ...*Referral) *CampaignUpdateOne {
-	ids := make([]int64, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return cuo.AddReferralIDs(ids...)
-}
-
 // AddBannerIDs adds the "banners" edge to the Banner entity by IDs.
 func (cuo *CampaignUpdateOne) AddBannerIDs(ids ...int64) *CampaignUpdateOne {
 	cuo.mutation.AddBannerIDs(ids...)
@@ -1322,48 +1128,6 @@ func (cuo *CampaignUpdateOne) RemoveLinks(c ...*CampaignLink) *CampaignUpdateOne
 		ids[i] = c[i].ID
 	}
 	return cuo.RemoveLinkIDs(ids...)
-}
-
-// ClearTracks clears all "tracks" edges to the Track entity.
-func (cuo *CampaignUpdateOne) ClearTracks() *CampaignUpdateOne {
-	cuo.mutation.ClearTracks()
-	return cuo
-}
-
-// RemoveTrackIDs removes the "tracks" edge to Track entities by IDs.
-func (cuo *CampaignUpdateOne) RemoveTrackIDs(ids ...int64) *CampaignUpdateOne {
-	cuo.mutation.RemoveTrackIDs(ids...)
-	return cuo
-}
-
-// RemoveTracks removes "tracks" edges to Track entities.
-func (cuo *CampaignUpdateOne) RemoveTracks(t ...*Track) *CampaignUpdateOne {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return cuo.RemoveTrackIDs(ids...)
-}
-
-// ClearReferrals clears all "referrals" edges to the Referral entity.
-func (cuo *CampaignUpdateOne) ClearReferrals() *CampaignUpdateOne {
-	cuo.mutation.ClearReferrals()
-	return cuo
-}
-
-// RemoveReferralIDs removes the "referrals" edge to Referral entities by IDs.
-func (cuo *CampaignUpdateOne) RemoveReferralIDs(ids ...int64) *CampaignUpdateOne {
-	cuo.mutation.RemoveReferralIDs(ids...)
-	return cuo
-}
-
-// RemoveReferrals removes "referrals" edges to Referral entities.
-func (cuo *CampaignUpdateOne) RemoveReferrals(r ...*Referral) *CampaignUpdateOne {
-	ids := make([]int64, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return cuo.RemoveReferralIDs(ids...)
 }
 
 // ClearBanners clears all "banners" edges to the Banner entity.
@@ -1649,96 +1413,6 @@ func (cuo *CampaignUpdateOne) sqlSave(ctx context.Context) (_node *Campaign, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(campaignlink.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if cuo.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.TracksTable,
-			Columns: []string{campaign.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cuo.mutation.RemovedTracksIDs(); len(nodes) > 0 && !cuo.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.TracksTable,
-			Columns: []string{campaign.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cuo.mutation.TracksIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.TracksTable,
-			Columns: []string{campaign.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if cuo.mutation.ReferralsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.ReferralsTable,
-			Columns: []string{campaign.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cuo.mutation.RemovedReferralsIDs(); len(nodes) > 0 && !cuo.mutation.ReferralsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.ReferralsTable,
-			Columns: []string{campaign.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cuo.mutation.ReferralsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.ReferralsTable,
-			Columns: []string{campaign.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

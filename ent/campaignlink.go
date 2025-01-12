@@ -39,11 +39,9 @@ type CampaignLink struct {
 type CampaignLinkEdges struct {
 	// Campaign holds the value of the campaign edge.
 	Campaign *Campaign `json:"campaign,omitempty"`
-	// Tracks holds the value of the tracks edge.
-	Tracks []*Track `json:"tracks,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [1]bool
 }
 
 // CampaignOrErr returns the Campaign value or an error if the edge
@@ -55,15 +53,6 @@ func (e CampaignLinkEdges) CampaignOrErr() (*Campaign, error) {
 		return nil, &NotFoundError{label: campaign.Label}
 	}
 	return nil, &NotLoadedError{edge: "campaign"}
-}
-
-// TracksOrErr returns the Tracks value or an error if the edge
-// was not loaded in eager-loading.
-func (e CampaignLinkEdges) TracksOrErr() ([]*Track, error) {
-	if e.loadedTypes[1] {
-		return e.Tracks, nil
-	}
-	return nil, &NotLoadedError{edge: "tracks"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -155,11 +144,6 @@ func (cl *CampaignLink) Value(name string) (ent.Value, error) {
 // QueryCampaign queries the "campaign" edge of the CampaignLink entity.
 func (cl *CampaignLink) QueryCampaign() *CampaignQuery {
 	return NewCampaignLinkClient(cl.config).QueryCampaign(cl)
-}
-
-// QueryTracks queries the "tracks" edge of the CampaignLink entity.
-func (cl *CampaignLink) QueryTracks() *TrackQuery {
-	return NewCampaignLinkClient(cl.config).QueryTracks(cl)
 }
 
 // Update returns a builder for updating this CampaignLink.

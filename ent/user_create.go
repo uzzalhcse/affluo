@@ -8,9 +8,6 @@ import (
 	"affluo/ent/commissionplan"
 	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
-	"affluo/ent/post"
-	"affluo/ent/referral"
-	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
 	"errors"
@@ -193,36 +190,6 @@ func (uc *UserCreate) AddCampaigns(c ...*Campaign) *UserCreate {
 	return uc.AddCampaignIDs(ids...)
 }
 
-// AddReferralIDs adds the "referrals" edge to the Referral entity by IDs.
-func (uc *UserCreate) AddReferralIDs(ids ...int64) *UserCreate {
-	uc.mutation.AddReferralIDs(ids...)
-	return uc
-}
-
-// AddReferrals adds the "referrals" edges to the Referral entity.
-func (uc *UserCreate) AddReferrals(r ...*Referral) *UserCreate {
-	ids := make([]int64, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return uc.AddReferralIDs(ids...)
-}
-
-// AddTrackIDs adds the "tracks" edge to the Track entity by IDs.
-func (uc *UserCreate) AddTrackIDs(ids ...int64) *UserCreate {
-	uc.mutation.AddTrackIDs(ids...)
-	return uc
-}
-
-// AddTracks adds the "tracks" edges to the Track entity.
-func (uc *UserCreate) AddTracks(t ...*Track) *UserCreate {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uc.AddTrackIDs(ids...)
-}
-
 // AddPayoutIDs adds the "payouts" edge to the Payout entity by IDs.
 func (uc *UserCreate) AddPayoutIDs(ids ...string) *UserCreate {
 	uc.mutation.AddPayoutIDs(ids...)
@@ -236,21 +203,6 @@ func (uc *UserCreate) AddPayouts(p ...*Payout) *UserCreate {
 		ids[i] = p[i].ID
 	}
 	return uc.AddPayoutIDs(ids...)
-}
-
-// AddPostIDs adds the "posts" edge to the Post entity by IDs.
-func (uc *UserCreate) AddPostIDs(ids ...string) *UserCreate {
-	uc.mutation.AddPostIDs(ids...)
-	return uc
-}
-
-// AddPosts adds the "posts" edges to the Post entity.
-func (uc *UserCreate) AddPosts(p ...*Post) *UserCreate {
-	ids := make([]string, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return uc.AddPostIDs(ids...)
 }
 
 // AddStatIDs adds the "stats" edge to the BannerStats entity by IDs.
@@ -489,38 +441,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := uc.mutation.ReferralsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReferralsTable,
-			Columns: []string{user.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.TracksIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.TracksTable,
-			Columns: []string{user.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	if nodes := uc.mutation.PayoutsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -530,22 +450,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(payout.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.PostsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.PostsTable,
-			Columns: []string{user.PostsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

@@ -5,7 +5,6 @@ package ent
 import (
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
-	"affluo/ent/track"
 	"context"
 	"errors"
 	"fmt"
@@ -91,21 +90,6 @@ func (clc *CampaignLinkCreate) SetNillableCampaignID(id *int64) *CampaignLinkCre
 // SetCampaign sets the "campaign" edge to the Campaign entity.
 func (clc *CampaignLinkCreate) SetCampaign(c *Campaign) *CampaignLinkCreate {
 	return clc.SetCampaignID(c.ID)
-}
-
-// AddTrackIDs adds the "tracks" edge to the Track entity by IDs.
-func (clc *CampaignLinkCreate) AddTrackIDs(ids ...int64) *CampaignLinkCreate {
-	clc.mutation.AddTrackIDs(ids...)
-	return clc
-}
-
-// AddTracks adds the "tracks" edges to the Track entity.
-func (clc *CampaignLinkCreate) AddTracks(t ...*Track) *CampaignLinkCreate {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return clc.AddTrackIDs(ids...)
 }
 
 // Mutation returns the CampaignLinkMutation object of the builder.
@@ -242,22 +226,6 @@ func (clc *CampaignLinkCreate) createSpec() (*CampaignLink, *sqlgraph.CreateSpec
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.campaign_links = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := clc.mutation.TracksIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaignlink.TracksTable,
-			Columns: []string{campaignlink.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

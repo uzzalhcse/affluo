@@ -13,10 +13,7 @@ import (
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
 	"affluo/ent/payout"
-	"affluo/ent/post"
-	"affluo/ent/referral"
 	"affluo/ent/test"
-	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
 	"errors"
@@ -97,10 +94,7 @@ func checkColumn(table, column string) error {
 			gigtracking.Table:    gigtracking.ValidColumn,
 			lead.Table:           lead.ValidColumn,
 			payout.Table:         payout.ValidColumn,
-			post.Table:           post.ValidColumn,
-			referral.Table:       referral.ValidColumn,
 			test.Table:           test.ValidColumn,
-			track.Table:          track.ValidColumn,
 			user.Table:           user.ValidColumn,
 		})
 	})

@@ -73,8 +73,6 @@ func (Campaign) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("owner", User.Type).Ref("campaigns").Unique(),
 		edge.To("links", CampaignLink.Type),
-		edge.To("tracks", Track.Type),
-		edge.To("referrals", Referral.Type),
 		edge.To("banners", Banner.Type),
 	}
 }

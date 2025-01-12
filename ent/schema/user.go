@@ -44,10 +44,7 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("campaigns", Campaign.Type),
-		edge.To("referrals", Referral.Type),
-		edge.To("tracks", Track.Type),
 		edge.To("payouts", Payout.Type), // Add this line
-		edge.To("posts", Post.Type),     // Add this line
 		edge.To("stats", BannerStats.Type),
 		edge.From("gig_trackings", GigTracking.Type).
 			Ref("publisher"),

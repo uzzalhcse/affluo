@@ -7,14 +7,12 @@ import (
 	"affluo/internal/middleware"
 	"affluo/internal/service"
 	"context"
-	"fmt"
-	"log"
-	"time"
-
 	"entgo.io/ent/dialect"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
+	"log"
 )
 
 type Application struct {
@@ -72,7 +70,6 @@ func NewApplication() (*Application, error) {
 }
 
 func (a *Application) Run() {
-	go a.StartBackgroundJobs()
 
 	serverAddress := fmt.Sprintf(":%d", a.Config.Port)
 	if err := a.App.Listen(serverAddress); err != nil {
@@ -86,18 +83,6 @@ func (a *Application) Cleanup() {
 	}
 	if err := a.Redis.Close(); err != nil {
 		log.Printf("Error closing Redis: %v", err)
-	}
-}
-
-func (a *Application) StartBackgroundJobs() {
-	ctx := context.Background()
-	ticker := time.NewTicker(24 * time.Hour)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		if err := a.Services.Reporting.GenerateScheduledReports(ctx); err != nil {
-			log.Printf("Error generating reports: %v", err)
-		}
 	}
 }
 

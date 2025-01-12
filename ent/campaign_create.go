@@ -6,9 +6,7 @@ import (
 	"affluo/ent/banner"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
-	"affluo/ent/referral"
 	"affluo/ent/schema"
-	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
 	"errors"
@@ -290,36 +288,6 @@ func (cc *CampaignCreate) AddLinks(c ...*CampaignLink) *CampaignCreate {
 		ids[i] = c[i].ID
 	}
 	return cc.AddLinkIDs(ids...)
-}
-
-// AddTrackIDs adds the "tracks" edge to the Track entity by IDs.
-func (cc *CampaignCreate) AddTrackIDs(ids ...int64) *CampaignCreate {
-	cc.mutation.AddTrackIDs(ids...)
-	return cc
-}
-
-// AddTracks adds the "tracks" edges to the Track entity.
-func (cc *CampaignCreate) AddTracks(t ...*Track) *CampaignCreate {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return cc.AddTrackIDs(ids...)
-}
-
-// AddReferralIDs adds the "referrals" edge to the Referral entity by IDs.
-func (cc *CampaignCreate) AddReferralIDs(ids ...int64) *CampaignCreate {
-	cc.mutation.AddReferralIDs(ids...)
-	return cc
-}
-
-// AddReferrals adds the "referrals" edges to the Referral entity.
-func (cc *CampaignCreate) AddReferrals(r ...*Referral) *CampaignCreate {
-	ids := make([]int64, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return cc.AddReferralIDs(ids...)
 }
 
 // AddBannerIDs adds the "banners" edge to the Banner entity by IDs.
@@ -614,38 +582,6 @@ func (cc *CampaignCreate) createSpec() (*Campaign, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(campaignlink.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cc.mutation.TracksIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.TracksTable,
-			Columns: []string{campaign.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cc.mutation.ReferralsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaign.ReferralsTable,
-			Columns: []string{campaign.ReferralsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

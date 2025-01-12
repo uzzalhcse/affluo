@@ -41,14 +41,8 @@ const (
 	FieldResetTokenExpiresAt = "reset_token_expires_at"
 	// EdgeCampaigns holds the string denoting the campaigns edge name in mutations.
 	EdgeCampaigns = "campaigns"
-	// EdgeReferrals holds the string denoting the referrals edge name in mutations.
-	EdgeReferrals = "referrals"
-	// EdgeTracks holds the string denoting the tracks edge name in mutations.
-	EdgeTracks = "tracks"
 	// EdgePayouts holds the string denoting the payouts edge name in mutations.
 	EdgePayouts = "payouts"
-	// EdgePosts holds the string denoting the posts edge name in mutations.
-	EdgePosts = "posts"
 	// EdgeStats holds the string denoting the stats edge name in mutations.
 	EdgeStats = "stats"
 	// EdgeGigTrackings holds the string denoting the gig_trackings edge name in mutations.
@@ -64,20 +58,6 @@ const (
 	CampaignsInverseTable = "campaigns"
 	// CampaignsColumn is the table column denoting the campaigns relation/edge.
 	CampaignsColumn = "user_campaigns"
-	// ReferralsTable is the table that holds the referrals relation/edge.
-	ReferralsTable = "referrals"
-	// ReferralsInverseTable is the table name for the Referral entity.
-	// It exists in this package in order to avoid circular dependency with the "referral" package.
-	ReferralsInverseTable = "referrals"
-	// ReferralsColumn is the table column denoting the referrals relation/edge.
-	ReferralsColumn = "user_referrals"
-	// TracksTable is the table that holds the tracks relation/edge.
-	TracksTable = "tracks"
-	// TracksInverseTable is the table name for the Track entity.
-	// It exists in this package in order to avoid circular dependency with the "track" package.
-	TracksInverseTable = "tracks"
-	// TracksColumn is the table column denoting the tracks relation/edge.
-	TracksColumn = "user_tracks"
 	// PayoutsTable is the table that holds the payouts relation/edge.
 	PayoutsTable = "payouts"
 	// PayoutsInverseTable is the table name for the Payout entity.
@@ -85,13 +65,6 @@ const (
 	PayoutsInverseTable = "payouts"
 	// PayoutsColumn is the table column denoting the payouts relation/edge.
 	PayoutsColumn = "user_payouts"
-	// PostsTable is the table that holds the posts relation/edge.
-	PostsTable = "posts"
-	// PostsInverseTable is the table name for the Post entity.
-	// It exists in this package in order to avoid circular dependency with the "post" package.
-	PostsInverseTable = "posts"
-	// PostsColumn is the table column denoting the posts relation/edge.
-	PostsColumn = "user_posts"
 	// StatsTable is the table that holds the stats relation/edge.
 	StatsTable = "banner_stats"
 	// StatsInverseTable is the table name for the BannerStats entity.
@@ -277,34 +250,6 @@ func ByCampaigns(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByReferralsCount orders the results by referrals count.
-func ByReferralsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newReferralsStep(), opts...)
-	}
-}
-
-// ByReferrals orders the results by referrals terms.
-func ByReferrals(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newReferralsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByTracksCount orders the results by tracks count.
-func ByTracksCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newTracksStep(), opts...)
-	}
-}
-
-// ByTracks orders the results by tracks terms.
-func ByTracks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTracksStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByPayoutsCount orders the results by payouts count.
 func ByPayoutsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -316,20 +261,6 @@ func ByPayoutsCount(opts ...sql.OrderTermOption) OrderOption {
 func ByPayouts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newPayoutsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByPostsCount orders the results by posts count.
-func ByPostsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPostsStep(), opts...)
-	}
-}
-
-// ByPosts orders the results by posts terms.
-func ByPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -374,32 +305,11 @@ func newCampaignsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, CampaignsTable, CampaignsColumn),
 	)
 }
-func newReferralsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ReferralsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ReferralsTable, ReferralsColumn),
-	)
-}
-func newTracksStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TracksInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, TracksTable, TracksColumn),
-	)
-}
 func newPayoutsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PayoutsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PayoutsTable, PayoutsColumn),
-	)
-}
-func newPostsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PostsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, PostsTable, PostsColumn),
 	)
 }
 func newStatsStep() *sqlgraph.Step {

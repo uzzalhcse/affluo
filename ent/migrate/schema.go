@@ -337,58 +337,6 @@ var (
 			},
 		},
 	}
-	// PostsColumns holds the columns for the "posts" table.
-	PostsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString, Unique: true},
-		{Name: "title", Type: field.TypeString},
-		{Name: "content", Type: field.TypeString, Size: 2147483647},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "user_posts", Type: field.TypeInt64, Nullable: true},
-	}
-	// PostsTable holds the schema information for the "posts" table.
-	PostsTable = &schema.Table{
-		Name:       "posts",
-		Columns:    PostsColumns,
-		PrimaryKey: []*schema.Column{PostsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "posts_users_posts",
-				Columns:    []*schema.Column{PostsColumns[4]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-	}
-	// ReferralsColumns holds the columns for the "referrals" table.
-	ReferralsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt64, Increment: true},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "approved", "rejected"}},
-		{Name: "commission_amount", Type: field.TypeFloat64},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "processed_at", Type: field.TypeTime, Nullable: true},
-		{Name: "campaign_referrals", Type: field.TypeInt64, Nullable: true},
-		{Name: "user_referrals", Type: field.TypeInt64, Nullable: true},
-	}
-	// ReferralsTable holds the schema information for the "referrals" table.
-	ReferralsTable = &schema.Table{
-		Name:       "referrals",
-		Columns:    ReferralsColumns,
-		PrimaryKey: []*schema.Column{ReferralsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "referrals_campaigns_referrals",
-				Columns:    []*schema.Column{ReferralsColumns[5]},
-				RefColumns: []*schema.Column{CampaignsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "referrals_users_referrals",
-				Columns:    []*schema.Column{ReferralsColumns[6]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-	}
 	// TestsColumns holds the columns for the "tests" table.
 	TestsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -398,48 +346,6 @@ var (
 		Name:       "tests",
 		Columns:    TestsColumns,
 		PrimaryKey: []*schema.Column{TestsColumns[0]},
-	}
-	// TracksColumns holds the columns for the "tracks" table.
-	TracksColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt64, Increment: true},
-		{Name: "ip_address", Type: field.TypeString},
-		{Name: "user_agent", Type: field.TypeString},
-		{Name: "device_fingerprint", Type: field.TypeString},
-		{Name: "referrer", Type: field.TypeString, Nullable: true},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"click", "impression", "conversion"}},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"valid", "suspected_fraud", "blacklisted"}},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "is_unique_click", Type: field.TypeBool, Default: false},
-		{Name: "additional_metadata", Type: field.TypeJSON, Nullable: true},
-		{Name: "campaign_tracks", Type: field.TypeInt64, Nullable: true},
-		{Name: "campaign_link_tracks", Type: field.TypeInt64, Nullable: true},
-		{Name: "user_tracks", Type: field.TypeInt64, Nullable: true},
-	}
-	// TracksTable holds the schema information for the "tracks" table.
-	TracksTable = &schema.Table{
-		Name:       "tracks",
-		Columns:    TracksColumns,
-		PrimaryKey: []*schema.Column{TracksColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "tracks_campaigns_tracks",
-				Columns:    []*schema.Column{TracksColumns[10]},
-				RefColumns: []*schema.Column{CampaignsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "tracks_campaign_links_tracks",
-				Columns:    []*schema.Column{TracksColumns[11]},
-				RefColumns: []*schema.Column{CampaignLinksColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "tracks_users_tracks",
-				Columns:    []*schema.Column{TracksColumns[12]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -516,10 +422,7 @@ var (
 		GigTrackingsTable,
 		LeadsTable,
 		PayoutsTable,
-		PostsTable,
-		ReferralsTable,
 		TestsTable,
-		TracksTable,
 		UsersTable,
 		CampaignBannersTable,
 	}
@@ -535,12 +438,6 @@ func init() {
 	GigTrackingsTable.ForeignKeys[0].RefTable = UsersTable
 	LeadsTable.ForeignKeys[0].RefTable = BannersTable
 	PayoutsTable.ForeignKeys[0].RefTable = UsersTable
-	PostsTable.ForeignKeys[0].RefTable = UsersTable
-	ReferralsTable.ForeignKeys[0].RefTable = CampaignsTable
-	ReferralsTable.ForeignKeys[1].RefTable = UsersTable
-	TracksTable.ForeignKeys[0].RefTable = CampaignsTable
-	TracksTable.ForeignKeys[1].RefTable = CampaignLinksTable
-	TracksTable.ForeignKeys[2].RefTable = UsersTable
 	UsersTable.ForeignKeys[0].RefTable = CommissionPlansTable
 	CampaignBannersTable.ForeignKeys[0].RefTable = CampaignsTable
 	CampaignBannersTable.ForeignKeys[1].RefTable = BannersTable

@@ -8,10 +8,7 @@ import (
 	"affluo/ent/commissionplan"
 	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
-	"affluo/ent/post"
 	"affluo/ent/predicate"
-	"affluo/ent/referral"
-	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
 	"database/sql/driver"
@@ -32,10 +29,7 @@ type UserQuery struct {
 	inters             []Interceptor
 	predicates         []predicate.User
 	withCampaigns      *CampaignQuery
-	withReferrals      *ReferralQuery
-	withTracks         *TrackQuery
 	withPayouts        *PayoutQuery
-	withPosts          *PostQuery
 	withStats          *BannerStatsQuery
 	withGigTrackings   *GigTrackingQuery
 	withCommissionPlan *CommissionPlanQuery
@@ -98,50 +92,6 @@ func (uq *UserQuery) QueryCampaigns() *CampaignQuery {
 	return query
 }
 
-// QueryReferrals chains the current query on the "referrals" edge.
-func (uq *UserQuery) QueryReferrals() *ReferralQuery {
-	query := (&ReferralClient{config: uq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := uq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := uq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(referral.Table, referral.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.ReferralsTable, user.ReferralsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryTracks chains the current query on the "tracks" edge.
-func (uq *UserQuery) QueryTracks() *TrackQuery {
-	query := (&TrackClient{config: uq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := uq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := uq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(track.Table, track.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.TracksTable, user.TracksColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // QueryPayouts chains the current query on the "payouts" edge.
 func (uq *UserQuery) QueryPayouts() *PayoutQuery {
 	query := (&PayoutClient{config: uq.config}).Query()
@@ -157,28 +107,6 @@ func (uq *UserQuery) QueryPayouts() *PayoutQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(payout.Table, payout.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.PayoutsTable, user.PayoutsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryPosts chains the current query on the "posts" edge.
-func (uq *UserQuery) QueryPosts() *PostQuery {
-	query := (&PostClient{config: uq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := uq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := uq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.PostsTable, user.PostsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -445,10 +373,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		inters:             append([]Interceptor{}, uq.inters...),
 		predicates:         append([]predicate.User{}, uq.predicates...),
 		withCampaigns:      uq.withCampaigns.Clone(),
-		withReferrals:      uq.withReferrals.Clone(),
-		withTracks:         uq.withTracks.Clone(),
 		withPayouts:        uq.withPayouts.Clone(),
-		withPosts:          uq.withPosts.Clone(),
 		withStats:          uq.withStats.Clone(),
 		withGigTrackings:   uq.withGigTrackings.Clone(),
 		withCommissionPlan: uq.withCommissionPlan.Clone(),
@@ -469,28 +394,6 @@ func (uq *UserQuery) WithCampaigns(opts ...func(*CampaignQuery)) *UserQuery {
 	return uq
 }
 
-// WithReferrals tells the query-builder to eager-load the nodes that are connected to
-// the "referrals" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithReferrals(opts ...func(*ReferralQuery)) *UserQuery {
-	query := (&ReferralClient{config: uq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	uq.withReferrals = query
-	return uq
-}
-
-// WithTracks tells the query-builder to eager-load the nodes that are connected to
-// the "tracks" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithTracks(opts ...func(*TrackQuery)) *UserQuery {
-	query := (&TrackClient{config: uq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	uq.withTracks = query
-	return uq
-}
-
 // WithPayouts tells the query-builder to eager-load the nodes that are connected to
 // the "payouts" edge. The optional arguments are used to configure the query builder of the edge.
 func (uq *UserQuery) WithPayouts(opts ...func(*PayoutQuery)) *UserQuery {
@@ -499,17 +402,6 @@ func (uq *UserQuery) WithPayouts(opts ...func(*PayoutQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withPayouts = query
-	return uq
-}
-
-// WithPosts tells the query-builder to eager-load the nodes that are connected to
-// the "posts" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithPosts(opts ...func(*PostQuery)) *UserQuery {
-	query := (&PostClient{config: uq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	uq.withPosts = query
 	return uq
 }
 
@@ -625,12 +517,9 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [5]bool{
 			uq.withCampaigns != nil,
-			uq.withReferrals != nil,
-			uq.withTracks != nil,
 			uq.withPayouts != nil,
-			uq.withPosts != nil,
 			uq.withStats != nil,
 			uq.withGigTrackings != nil,
 			uq.withCommissionPlan != nil,
@@ -667,31 +556,10 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
-	if query := uq.withReferrals; query != nil {
-		if err := uq.loadReferrals(ctx, query, nodes,
-			func(n *User) { n.Edges.Referrals = []*Referral{} },
-			func(n *User, e *Referral) { n.Edges.Referrals = append(n.Edges.Referrals, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := uq.withTracks; query != nil {
-		if err := uq.loadTracks(ctx, query, nodes,
-			func(n *User) { n.Edges.Tracks = []*Track{} },
-			func(n *User, e *Track) { n.Edges.Tracks = append(n.Edges.Tracks, e) }); err != nil {
-			return nil, err
-		}
-	}
 	if query := uq.withPayouts; query != nil {
 		if err := uq.loadPayouts(ctx, query, nodes,
 			func(n *User) { n.Edges.Payouts = []*Payout{} },
 			func(n *User, e *Payout) { n.Edges.Payouts = append(n.Edges.Payouts, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := uq.withPosts; query != nil {
-		if err := uq.loadPosts(ctx, query, nodes,
-			func(n *User) { n.Edges.Posts = []*Post{} },
-			func(n *User, e *Post) { n.Edges.Posts = append(n.Edges.Posts, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -749,68 +617,6 @@ func (uq *UserQuery) loadCampaigns(ctx context.Context, query *CampaignQuery, no
 	}
 	return nil
 }
-func (uq *UserQuery) loadReferrals(ctx context.Context, query *ReferralQuery, nodes []*User, init func(*User), assign func(*User, *Referral)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*User)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Referral(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(user.ReferralsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.user_referrals
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "user_referrals" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_referrals" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (uq *UserQuery) loadTracks(ctx context.Context, query *TrackQuery, nodes []*User, init func(*User), assign func(*User, *Track)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*User)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Track(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(user.TracksColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.user_tracks
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "user_tracks" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_tracks" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
 func (uq *UserQuery) loadPayouts(ctx context.Context, query *PayoutQuery, nodes []*User, init func(*User), assign func(*User, *Payout)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int64]*User)
@@ -837,37 +643,6 @@ func (uq *UserQuery) loadPayouts(ctx context.Context, query *PayoutQuery, nodes 
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_payouts" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (uq *UserQuery) loadPosts(ctx context.Context, query *PostQuery, nodes []*User, init func(*User), assign func(*User, *Post)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*User)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Post(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(user.PostsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.user_posts
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "user_posts" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_posts" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

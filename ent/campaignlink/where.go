@@ -348,29 +348,6 @@ func HasCampaignWith(preds ...predicate.Campaign) predicate.CampaignLink {
 	})
 }
 
-// HasTracks applies the HasEdge predicate on the "tracks" edge.
-func HasTracks() predicate.CampaignLink {
-	return predicate.CampaignLink(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TracksTable, TracksColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTracksWith applies the HasEdge predicate on the "tracks" edge with a given conditions (other predicates).
-func HasTracksWith(preds ...predicate.Track) predicate.CampaignLink {
-	return predicate.CampaignLink(func(s *sql.Selector) {
-		step := newTracksStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.CampaignLink) predicate.CampaignLink {
 	return predicate.CampaignLink(sql.AndPredicates(predicates...))

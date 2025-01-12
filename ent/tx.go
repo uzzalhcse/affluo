@@ -32,14 +32,8 @@ type Tx struct {
 	Lead *LeadClient
 	// Payout is the client for interacting with the Payout builders.
 	Payout *PayoutClient
-	// Post is the client for interacting with the Post builders.
-	Post *PostClient
-	// Referral is the client for interacting with the Referral builders.
-	Referral *ReferralClient
 	// Test is the client for interacting with the Test builders.
 	Test *TestClient
-	// Track is the client for interacting with the Track builders.
-	Track *TrackClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -183,10 +177,7 @@ func (tx *Tx) init() {
 	tx.GigTracking = NewGigTrackingClient(tx.config)
 	tx.Lead = NewLeadClient(tx.config)
 	tx.Payout = NewPayoutClient(tx.config)
-	tx.Post = NewPostClient(tx.config)
-	tx.Referral = NewReferralClient(tx.config)
 	tx.Test = NewTestClient(tx.config)
-	tx.Track = NewTrackClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 

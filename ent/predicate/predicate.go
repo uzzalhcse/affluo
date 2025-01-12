@@ -36,17 +36,8 @@ type Lead func(*sql.Selector)
 // Payout is the predicate function for payout builders.
 type Payout func(*sql.Selector)
 
-// Post is the predicate function for post builders.
-type Post func(*sql.Selector)
-
-// Referral is the predicate function for referral builders.
-type Referral func(*sql.Selector)
-
 // Test is the predicate function for test builders.
 type Test func(*sql.Selector)
-
-// Track is the predicate function for track builders.
-type Track func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

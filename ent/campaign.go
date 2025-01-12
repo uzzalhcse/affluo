@@ -71,15 +71,11 @@ type CampaignEdges struct {
 	Owner *User `json:"owner,omitempty"`
 	// Links holds the value of the links edge.
 	Links []*CampaignLink `json:"links,omitempty"`
-	// Tracks holds the value of the tracks edge.
-	Tracks []*Track `json:"tracks,omitempty"`
-	// Referrals holds the value of the referrals edge.
-	Referrals []*Referral `json:"referrals,omitempty"`
 	// Banners holds the value of the banners edge.
 	Banners []*Banner `json:"banners,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [3]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -102,28 +98,10 @@ func (e CampaignEdges) LinksOrErr() ([]*CampaignLink, error) {
 	return nil, &NotLoadedError{edge: "links"}
 }
 
-// TracksOrErr returns the Tracks value or an error if the edge
-// was not loaded in eager-loading.
-func (e CampaignEdges) TracksOrErr() ([]*Track, error) {
-	if e.loadedTypes[2] {
-		return e.Tracks, nil
-	}
-	return nil, &NotLoadedError{edge: "tracks"}
-}
-
-// ReferralsOrErr returns the Referrals value or an error if the edge
-// was not loaded in eager-loading.
-func (e CampaignEdges) ReferralsOrErr() ([]*Referral, error) {
-	if e.loadedTypes[3] {
-		return e.Referrals, nil
-	}
-	return nil, &NotLoadedError{edge: "referrals"}
-}
-
 // BannersOrErr returns the Banners value or an error if the edge
 // was not loaded in eager-loading.
 func (e CampaignEdges) BannersOrErr() ([]*Banner, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[2] {
 		return e.Banners, nil
 	}
 	return nil, &NotLoadedError{edge: "banners"}
@@ -313,16 +291,6 @@ func (c *Campaign) QueryOwner() *UserQuery {
 // QueryLinks queries the "links" edge of the Campaign entity.
 func (c *Campaign) QueryLinks() *CampaignLinkQuery {
 	return NewCampaignClient(c.config).QueryLinks(c)
-}
-
-// QueryTracks queries the "tracks" edge of the Campaign entity.
-func (c *Campaign) QueryTracks() *TrackQuery {
-	return NewCampaignClient(c.config).QueryTracks(c)
-}
-
-// QueryReferrals queries the "referrals" edge of the Campaign entity.
-func (c *Campaign) QueryReferrals() *ReferralQuery {
-	return NewCampaignClient(c.config).QueryReferrals(c)
 }
 
 // QueryBanners queries the "banners" edge of the Campaign entity.

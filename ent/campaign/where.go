@@ -976,52 +976,6 @@ func HasLinksWith(preds ...predicate.CampaignLink) predicate.Campaign {
 	})
 }
 
-// HasTracks applies the HasEdge predicate on the "tracks" edge.
-func HasTracks() predicate.Campaign {
-	return predicate.Campaign(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TracksTable, TracksColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTracksWith applies the HasEdge predicate on the "tracks" edge with a given conditions (other predicates).
-func HasTracksWith(preds ...predicate.Track) predicate.Campaign {
-	return predicate.Campaign(func(s *sql.Selector) {
-		step := newTracksStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasReferrals applies the HasEdge predicate on the "referrals" edge.
-func HasReferrals() predicate.Campaign {
-	return predicate.Campaign(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ReferralsTable, ReferralsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasReferralsWith applies the HasEdge predicate on the "referrals" edge with a given conditions (other predicates).
-func HasReferralsWith(preds ...predicate.Referral) predicate.Campaign {
-	return predicate.Campaign(func(s *sql.Selector) {
-		step := newReferralsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasBanners applies the HasEdge predicate on the "banners" edge.
 func HasBanners() predicate.Campaign {
 	return predicate.Campaign(func(s *sql.Selector) {

@@ -57,10 +57,6 @@ const (
 	EdgeOwner = "owner"
 	// EdgeLinks holds the string denoting the links edge name in mutations.
 	EdgeLinks = "links"
-	// EdgeTracks holds the string denoting the tracks edge name in mutations.
-	EdgeTracks = "tracks"
-	// EdgeReferrals holds the string denoting the referrals edge name in mutations.
-	EdgeReferrals = "referrals"
 	// EdgeBanners holds the string denoting the banners edge name in mutations.
 	EdgeBanners = "banners"
 	// Table holds the table name of the campaign in the database.
@@ -79,20 +75,6 @@ const (
 	LinksInverseTable = "campaign_links"
 	// LinksColumn is the table column denoting the links relation/edge.
 	LinksColumn = "campaign_links"
-	// TracksTable is the table that holds the tracks relation/edge.
-	TracksTable = "tracks"
-	// TracksInverseTable is the table name for the Track entity.
-	// It exists in this package in order to avoid circular dependency with the "track" package.
-	TracksInverseTable = "tracks"
-	// TracksColumn is the table column denoting the tracks relation/edge.
-	TracksColumn = "campaign_tracks"
-	// ReferralsTable is the table that holds the referrals relation/edge.
-	ReferralsTable = "referrals"
-	// ReferralsInverseTable is the table name for the Referral entity.
-	// It exists in this package in order to avoid circular dependency with the "referral" package.
-	ReferralsInverseTable = "referrals"
-	// ReferralsColumn is the table column denoting the referrals relation/edge.
-	ReferralsColumn = "campaign_referrals"
 	// BannersTable is the table that holds the banners relation/edge. The primary key declared below.
 	BannersTable = "campaign_banners"
 	// BannersInverseTable is the table name for the Banner entity.
@@ -371,34 +353,6 @@ func ByLinks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByTracksCount orders the results by tracks count.
-func ByTracksCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newTracksStep(), opts...)
-	}
-}
-
-// ByTracks orders the results by tracks terms.
-func ByTracks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTracksStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByReferralsCount orders the results by referrals count.
-func ByReferralsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newReferralsStep(), opts...)
-	}
-}
-
-// ByReferrals orders the results by referrals terms.
-func ByReferrals(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newReferralsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByBannersCount orders the results by banners count.
 func ByBannersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -424,20 +378,6 @@ func newLinksStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LinksInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, LinksTable, LinksColumn),
-	)
-}
-func newTracksStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TracksInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, TracksTable, TracksColumn),
-	)
-}
-func newReferralsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ReferralsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ReferralsTable, ReferralsColumn),
 	)
 }
 func newBannersStep() *sqlgraph.Step {

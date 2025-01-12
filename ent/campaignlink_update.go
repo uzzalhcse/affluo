@@ -6,7 +6,6 @@ import (
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/predicate"
-	"affluo/ent/track"
 	"context"
 	"errors"
 	"fmt"
@@ -119,21 +118,6 @@ func (clu *CampaignLinkUpdate) SetCampaign(c *Campaign) *CampaignLinkUpdate {
 	return clu.SetCampaignID(c.ID)
 }
 
-// AddTrackIDs adds the "tracks" edge to the Track entity by IDs.
-func (clu *CampaignLinkUpdate) AddTrackIDs(ids ...int64) *CampaignLinkUpdate {
-	clu.mutation.AddTrackIDs(ids...)
-	return clu
-}
-
-// AddTracks adds the "tracks" edges to the Track entity.
-func (clu *CampaignLinkUpdate) AddTracks(t ...*Track) *CampaignLinkUpdate {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return clu.AddTrackIDs(ids...)
-}
-
 // Mutation returns the CampaignLinkMutation object of the builder.
 func (clu *CampaignLinkUpdate) Mutation() *CampaignLinkMutation {
 	return clu.mutation
@@ -143,27 +127,6 @@ func (clu *CampaignLinkUpdate) Mutation() *CampaignLinkMutation {
 func (clu *CampaignLinkUpdate) ClearCampaign() *CampaignLinkUpdate {
 	clu.mutation.ClearCampaign()
 	return clu
-}
-
-// ClearTracks clears all "tracks" edges to the Track entity.
-func (clu *CampaignLinkUpdate) ClearTracks() *CampaignLinkUpdate {
-	clu.mutation.ClearTracks()
-	return clu
-}
-
-// RemoveTrackIDs removes the "tracks" edge to Track entities by IDs.
-func (clu *CampaignLinkUpdate) RemoveTrackIDs(ids ...int64) *CampaignLinkUpdate {
-	clu.mutation.RemoveTrackIDs(ids...)
-	return clu
-}
-
-// RemoveTracks removes "tracks" edges to Track entities.
-func (clu *CampaignLinkUpdate) RemoveTracks(t ...*Track) *CampaignLinkUpdate {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return clu.RemoveTrackIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -239,51 +202,6 @@ func (clu *CampaignLinkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(campaign.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if clu.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaignlink.TracksTable,
-			Columns: []string{campaignlink.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := clu.mutation.RemovedTracksIDs(); len(nodes) > 0 && !clu.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaignlink.TracksTable,
-			Columns: []string{campaignlink.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := clu.mutation.TracksIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaignlink.TracksTable,
-			Columns: []string{campaignlink.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -400,21 +318,6 @@ func (cluo *CampaignLinkUpdateOne) SetCampaign(c *Campaign) *CampaignLinkUpdateO
 	return cluo.SetCampaignID(c.ID)
 }
 
-// AddTrackIDs adds the "tracks" edge to the Track entity by IDs.
-func (cluo *CampaignLinkUpdateOne) AddTrackIDs(ids ...int64) *CampaignLinkUpdateOne {
-	cluo.mutation.AddTrackIDs(ids...)
-	return cluo
-}
-
-// AddTracks adds the "tracks" edges to the Track entity.
-func (cluo *CampaignLinkUpdateOne) AddTracks(t ...*Track) *CampaignLinkUpdateOne {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return cluo.AddTrackIDs(ids...)
-}
-
 // Mutation returns the CampaignLinkMutation object of the builder.
 func (cluo *CampaignLinkUpdateOne) Mutation() *CampaignLinkMutation {
 	return cluo.mutation
@@ -424,27 +327,6 @@ func (cluo *CampaignLinkUpdateOne) Mutation() *CampaignLinkMutation {
 func (cluo *CampaignLinkUpdateOne) ClearCampaign() *CampaignLinkUpdateOne {
 	cluo.mutation.ClearCampaign()
 	return cluo
-}
-
-// ClearTracks clears all "tracks" edges to the Track entity.
-func (cluo *CampaignLinkUpdateOne) ClearTracks() *CampaignLinkUpdateOne {
-	cluo.mutation.ClearTracks()
-	return cluo
-}
-
-// RemoveTrackIDs removes the "tracks" edge to Track entities by IDs.
-func (cluo *CampaignLinkUpdateOne) RemoveTrackIDs(ids ...int64) *CampaignLinkUpdateOne {
-	cluo.mutation.RemoveTrackIDs(ids...)
-	return cluo
-}
-
-// RemoveTracks removes "tracks" edges to Track entities.
-func (cluo *CampaignLinkUpdateOne) RemoveTracks(t ...*Track) *CampaignLinkUpdateOne {
-	ids := make([]int64, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return cluo.RemoveTrackIDs(ids...)
 }
 
 // Where appends a list predicates to the CampaignLinkUpdate builder.
@@ -550,51 +432,6 @@ func (cluo *CampaignLinkUpdateOne) sqlSave(ctx context.Context) (_node *Campaign
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(campaign.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if cluo.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaignlink.TracksTable,
-			Columns: []string{campaignlink.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cluo.mutation.RemovedTracksIDs(); len(nodes) > 0 && !cluo.mutation.TracksCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaignlink.TracksTable,
-			Columns: []string{campaignlink.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cluo.mutation.TracksIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   campaignlink.TracksTable,
-			Columns: []string{campaignlink.TracksColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(track.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

@@ -6,9 +6,7 @@ import (
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/predicate"
-	"affluo/ent/track"
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -26,7 +24,6 @@ type CampaignLinkQuery struct {
 	inters       []Interceptor
 	predicates   []predicate.CampaignLink
 	withCampaign *CampaignQuery
-	withTracks   *TrackQuery
 	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -79,28 +76,6 @@ func (clq *CampaignLinkQuery) QueryCampaign() *CampaignQuery {
 			sqlgraph.From(campaignlink.Table, campaignlink.FieldID, selector),
 			sqlgraph.To(campaign.Table, campaign.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, campaignlink.CampaignTable, campaignlink.CampaignColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(clq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryTracks chains the current query on the "tracks" edge.
-func (clq *CampaignLinkQuery) QueryTracks() *TrackQuery {
-	query := (&TrackClient{config: clq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := clq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := clq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(campaignlink.Table, campaignlink.FieldID, selector),
-			sqlgraph.To(track.Table, track.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, campaignlink.TracksTable, campaignlink.TracksColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(clq.driver.Dialect(), step)
 		return fromU, nil
@@ -301,7 +276,6 @@ func (clq *CampaignLinkQuery) Clone() *CampaignLinkQuery {
 		inters:       append([]Interceptor{}, clq.inters...),
 		predicates:   append([]predicate.CampaignLink{}, clq.predicates...),
 		withCampaign: clq.withCampaign.Clone(),
-		withTracks:   clq.withTracks.Clone(),
 		// clone intermediate query.
 		sql:  clq.sql.Clone(),
 		path: clq.path,
@@ -316,17 +290,6 @@ func (clq *CampaignLinkQuery) WithCampaign(opts ...func(*CampaignQuery)) *Campai
 		opt(query)
 	}
 	clq.withCampaign = query
-	return clq
-}
-
-// WithTracks tells the query-builder to eager-load the nodes that are connected to
-// the "tracks" edge. The optional arguments are used to configure the query builder of the edge.
-func (clq *CampaignLinkQuery) WithTracks(opts ...func(*TrackQuery)) *CampaignLinkQuery {
-	query := (&TrackClient{config: clq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	clq.withTracks = query
 	return clq
 }
 
@@ -409,9 +372,8 @@ func (clq *CampaignLinkQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		nodes       = []*CampaignLink{}
 		withFKs     = clq.withFKs
 		_spec       = clq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [1]bool{
 			clq.withCampaign != nil,
-			clq.withTracks != nil,
 		}
 	)
 	if clq.withCampaign != nil {
@@ -441,13 +403,6 @@ func (clq *CampaignLinkQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	if query := clq.withCampaign; query != nil {
 		if err := clq.loadCampaign(ctx, query, nodes, nil,
 			func(n *CampaignLink, e *Campaign) { n.Edges.Campaign = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := clq.withTracks; query != nil {
-		if err := clq.loadTracks(ctx, query, nodes,
-			func(n *CampaignLink) { n.Edges.Tracks = []*Track{} },
-			func(n *CampaignLink, e *Track) { n.Edges.Tracks = append(n.Edges.Tracks, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -483,37 +438,6 @@ func (clq *CampaignLinkQuery) loadCampaign(ctx context.Context, query *CampaignQ
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
-	}
-	return nil
-}
-func (clq *CampaignLinkQuery) loadTracks(ctx context.Context, query *TrackQuery, nodes []*CampaignLink, init func(*CampaignLink), assign func(*CampaignLink, *Track)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*CampaignLink)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Track(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(campaignlink.TracksColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.campaign_link_tracks
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "campaign_link_tracks" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "campaign_link_tracks" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
 	}
 	return nil
 }

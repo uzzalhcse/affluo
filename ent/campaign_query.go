@@ -7,8 +7,6 @@ import (
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
 	"affluo/ent/predicate"
-	"affluo/ent/referral"
-	"affluo/ent/track"
 	"affluo/ent/user"
 	"context"
 	"database/sql/driver"
@@ -24,16 +22,14 @@ import (
 // CampaignQuery is the builder for querying Campaign entities.
 type CampaignQuery struct {
 	config
-	ctx           *QueryContext
-	order         []campaign.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.Campaign
-	withOwner     *UserQuery
-	withLinks     *CampaignLinkQuery
-	withTracks    *TrackQuery
-	withReferrals *ReferralQuery
-	withBanners   *BannerQuery
-	withFKs       bool
+	ctx         *QueryContext
+	order       []campaign.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Campaign
+	withOwner   *UserQuery
+	withLinks   *CampaignLinkQuery
+	withBanners *BannerQuery
+	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -107,50 +103,6 @@ func (cq *CampaignQuery) QueryLinks() *CampaignLinkQuery {
 			sqlgraph.From(campaign.Table, campaign.FieldID, selector),
 			sqlgraph.To(campaignlink.Table, campaignlink.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, campaign.LinksTable, campaign.LinksColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryTracks chains the current query on the "tracks" edge.
-func (cq *CampaignQuery) QueryTracks() *TrackQuery {
-	query := (&TrackClient{config: cq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := cq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := cq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(campaign.Table, campaign.FieldID, selector),
-			sqlgraph.To(track.Table, track.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, campaign.TracksTable, campaign.TracksColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryReferrals chains the current query on the "referrals" edge.
-func (cq *CampaignQuery) QueryReferrals() *ReferralQuery {
-	query := (&ReferralClient{config: cq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := cq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := cq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(campaign.Table, campaign.FieldID, selector),
-			sqlgraph.To(referral.Table, referral.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, campaign.ReferralsTable, campaign.ReferralsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
@@ -367,16 +319,14 @@ func (cq *CampaignQuery) Clone() *CampaignQuery {
 		return nil
 	}
 	return &CampaignQuery{
-		config:        cq.config,
-		ctx:           cq.ctx.Clone(),
-		order:         append([]campaign.OrderOption{}, cq.order...),
-		inters:        append([]Interceptor{}, cq.inters...),
-		predicates:    append([]predicate.Campaign{}, cq.predicates...),
-		withOwner:     cq.withOwner.Clone(),
-		withLinks:     cq.withLinks.Clone(),
-		withTracks:    cq.withTracks.Clone(),
-		withReferrals: cq.withReferrals.Clone(),
-		withBanners:   cq.withBanners.Clone(),
+		config:      cq.config,
+		ctx:         cq.ctx.Clone(),
+		order:       append([]campaign.OrderOption{}, cq.order...),
+		inters:      append([]Interceptor{}, cq.inters...),
+		predicates:  append([]predicate.Campaign{}, cq.predicates...),
+		withOwner:   cq.withOwner.Clone(),
+		withLinks:   cq.withLinks.Clone(),
+		withBanners: cq.withBanners.Clone(),
 		// clone intermediate query.
 		sql:  cq.sql.Clone(),
 		path: cq.path,
@@ -402,28 +352,6 @@ func (cq *CampaignQuery) WithLinks(opts ...func(*CampaignLinkQuery)) *CampaignQu
 		opt(query)
 	}
 	cq.withLinks = query
-	return cq
-}
-
-// WithTracks tells the query-builder to eager-load the nodes that are connected to
-// the "tracks" edge. The optional arguments are used to configure the query builder of the edge.
-func (cq *CampaignQuery) WithTracks(opts ...func(*TrackQuery)) *CampaignQuery {
-	query := (&TrackClient{config: cq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	cq.withTracks = query
-	return cq
-}
-
-// WithReferrals tells the query-builder to eager-load the nodes that are connected to
-// the "referrals" edge. The optional arguments are used to configure the query builder of the edge.
-func (cq *CampaignQuery) WithReferrals(opts ...func(*ReferralQuery)) *CampaignQuery {
-	query := (&ReferralClient{config: cq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	cq.withReferrals = query
 	return cq
 }
 
@@ -517,11 +445,9 @@ func (cq *CampaignQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Cam
 		nodes       = []*Campaign{}
 		withFKs     = cq.withFKs
 		_spec       = cq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [3]bool{
 			cq.withOwner != nil,
 			cq.withLinks != nil,
-			cq.withTracks != nil,
-			cq.withReferrals != nil,
 			cq.withBanners != nil,
 		}
 	)
@@ -559,20 +485,6 @@ func (cq *CampaignQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Cam
 		if err := cq.loadLinks(ctx, query, nodes,
 			func(n *Campaign) { n.Edges.Links = []*CampaignLink{} },
 			func(n *Campaign, e *CampaignLink) { n.Edges.Links = append(n.Edges.Links, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := cq.withTracks; query != nil {
-		if err := cq.loadTracks(ctx, query, nodes,
-			func(n *Campaign) { n.Edges.Tracks = []*Track{} },
-			func(n *Campaign, e *Track) { n.Edges.Tracks = append(n.Edges.Tracks, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := cq.withReferrals; query != nil {
-		if err := cq.loadReferrals(ctx, query, nodes,
-			func(n *Campaign) { n.Edges.Referrals = []*Referral{} },
-			func(n *Campaign, e *Referral) { n.Edges.Referrals = append(n.Edges.Referrals, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -644,68 +556,6 @@ func (cq *CampaignQuery) loadLinks(ctx context.Context, query *CampaignLinkQuery
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "campaign_links" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (cq *CampaignQuery) loadTracks(ctx context.Context, query *TrackQuery, nodes []*Campaign, init func(*Campaign), assign func(*Campaign, *Track)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*Campaign)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Track(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(campaign.TracksColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.campaign_tracks
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "campaign_tracks" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "campaign_tracks" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (cq *CampaignQuery) loadReferrals(ctx context.Context, query *ReferralQuery, nodes []*Campaign, init func(*Campaign), assign func(*Campaign, *Referral)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*Campaign)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Referral(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(campaign.ReferralsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.campaign_referrals
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "campaign_referrals" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "campaign_referrals" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

@@ -53,14 +53,8 @@ type User struct {
 type UserEdges struct {
 	// Campaigns holds the value of the campaigns edge.
 	Campaigns []*Campaign `json:"campaigns,omitempty"`
-	// Referrals holds the value of the referrals edge.
-	Referrals []*Referral `json:"referrals,omitempty"`
-	// Tracks holds the value of the tracks edge.
-	Tracks []*Track `json:"tracks,omitempty"`
 	// Payouts holds the value of the payouts edge.
 	Payouts []*Payout `json:"payouts,omitempty"`
-	// Posts holds the value of the posts edge.
-	Posts []*Post `json:"posts,omitempty"`
 	// Stats holds the value of the stats edge.
 	Stats []*BannerStats `json:"stats,omitempty"`
 	// GigTrackings holds the value of the gig_trackings edge.
@@ -69,7 +63,7 @@ type UserEdges struct {
 	CommissionPlan *CommissionPlan `json:"commission_plan,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [5]bool
 }
 
 // CampaignsOrErr returns the Campaigns value or an error if the edge
@@ -81,46 +75,19 @@ func (e UserEdges) CampaignsOrErr() ([]*Campaign, error) {
 	return nil, &NotLoadedError{edge: "campaigns"}
 }
 
-// ReferralsOrErr returns the Referrals value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) ReferralsOrErr() ([]*Referral, error) {
-	if e.loadedTypes[1] {
-		return e.Referrals, nil
-	}
-	return nil, &NotLoadedError{edge: "referrals"}
-}
-
-// TracksOrErr returns the Tracks value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) TracksOrErr() ([]*Track, error) {
-	if e.loadedTypes[2] {
-		return e.Tracks, nil
-	}
-	return nil, &NotLoadedError{edge: "tracks"}
-}
-
 // PayoutsOrErr returns the Payouts value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) PayoutsOrErr() ([]*Payout, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[1] {
 		return e.Payouts, nil
 	}
 	return nil, &NotLoadedError{edge: "payouts"}
 }
 
-// PostsOrErr returns the Posts value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) PostsOrErr() ([]*Post, error) {
-	if e.loadedTypes[4] {
-		return e.Posts, nil
-	}
-	return nil, &NotLoadedError{edge: "posts"}
-}
-
 // StatsOrErr returns the Stats value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) StatsOrErr() ([]*BannerStats, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[2] {
 		return e.Stats, nil
 	}
 	return nil, &NotLoadedError{edge: "stats"}
@@ -129,7 +96,7 @@ func (e UserEdges) StatsOrErr() ([]*BannerStats, error) {
 // GigTrackingsOrErr returns the GigTrackings value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) GigTrackingsOrErr() ([]*GigTracking, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[3] {
 		return e.GigTrackings, nil
 	}
 	return nil, &NotLoadedError{edge: "gig_trackings"}
@@ -140,7 +107,7 @@ func (e UserEdges) GigTrackingsOrErr() ([]*GigTracking, error) {
 func (e UserEdges) CommissionPlanOrErr() (*CommissionPlan, error) {
 	if e.CommissionPlan != nil {
 		return e.CommissionPlan, nil
-	} else if e.loadedTypes[7] {
+	} else if e.loadedTypes[4] {
 		return nil, &NotFoundError{label: commissionplan.Label}
 	}
 	return nil, &NotLoadedError{edge: "commission_plan"}
@@ -279,24 +246,9 @@ func (u *User) QueryCampaigns() *CampaignQuery {
 	return NewUserClient(u.config).QueryCampaigns(u)
 }
 
-// QueryReferrals queries the "referrals" edge of the User entity.
-func (u *User) QueryReferrals() *ReferralQuery {
-	return NewUserClient(u.config).QueryReferrals(u)
-}
-
-// QueryTracks queries the "tracks" edge of the User entity.
-func (u *User) QueryTracks() *TrackQuery {
-	return NewUserClient(u.config).QueryTracks(u)
-}
-
 // QueryPayouts queries the "payouts" edge of the User entity.
 func (u *User) QueryPayouts() *PayoutQuery {
 	return NewUserClient(u.config).QueryPayouts(u)
-}
-
-// QueryPosts queries the "posts" edge of the User entity.
-func (u *User) QueryPosts() *PostQuery {
-	return NewUserClient(u.config).QueryPosts(u)
 }
 
 // QueryStats queries the "stats" edge of the User entity.

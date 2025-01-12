@@ -21,10 +21,7 @@ import (
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
 	"affluo/ent/payout"
-	"affluo/ent/post"
-	"affluo/ent/referral"
 	"affluo/ent/test"
-	"affluo/ent/track"
 	"affluo/ent/user"
 
 	"entgo.io/ent"
@@ -58,14 +55,8 @@ type Client struct {
 	Lead *LeadClient
 	// Payout is the client for interacting with the Payout builders.
 	Payout *PayoutClient
-	// Post is the client for interacting with the Post builders.
-	Post *PostClient
-	// Referral is the client for interacting with the Referral builders.
-	Referral *ReferralClient
 	// Test is the client for interacting with the Test builders.
 	Test *TestClient
-	// Track is the client for interacting with the Track builders.
-	Track *TrackClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -89,10 +80,7 @@ func (c *Client) init() {
 	c.GigTracking = NewGigTrackingClient(c.config)
 	c.Lead = NewLeadClient(c.config)
 	c.Payout = NewPayoutClient(c.config)
-	c.Post = NewPostClient(c.config)
-	c.Referral = NewReferralClient(c.config)
 	c.Test = NewTestClient(c.config)
-	c.Track = NewTrackClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -196,10 +184,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		GigTracking:    NewGigTrackingClient(cfg),
 		Lead:           NewLeadClient(cfg),
 		Payout:         NewPayoutClient(cfg),
-		Post:           NewPostClient(cfg),
-		Referral:       NewReferralClient(cfg),
 		Test:           NewTestClient(cfg),
-		Track:          NewTrackClient(cfg),
 		User:           NewUserClient(cfg),
 	}, nil
 }
@@ -230,10 +215,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		GigTracking:    NewGigTrackingClient(cfg),
 		Lead:           NewLeadClient(cfg),
 		Payout:         NewPayoutClient(cfg),
-		Post:           NewPostClient(cfg),
-		Referral:       NewReferralClient(cfg),
 		Test:           NewTestClient(cfg),
-		Track:          NewTrackClient(cfg),
 		User:           NewUserClient(cfg),
 	}, nil
 }
@@ -265,8 +247,7 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink,
-		c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout, c.Post,
-		c.Referral, c.Test, c.Track, c.User,
+		c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout, c.Test, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -277,8 +258,7 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Banner, c.BannerCreative, c.BannerStats, c.Campaign, c.CampaignLink,
-		c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout, c.Post,
-		c.Referral, c.Test, c.Track, c.User,
+		c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout, c.Test, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -307,14 +287,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Lead.mutate(ctx, m)
 	case *PayoutMutation:
 		return c.Payout.mutate(ctx, m)
-	case *PostMutation:
-		return c.Post.mutate(ctx, m)
-	case *ReferralMutation:
-		return c.Referral.mutate(ctx, m)
 	case *TestMutation:
 		return c.Test.mutate(ctx, m)
-	case *TrackMutation:
-		return c.Track.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
@@ -1005,38 +979,6 @@ func (c *CampaignClient) QueryLinks(ca *Campaign) *CampaignLinkQuery {
 	return query
 }
 
-// QueryTracks queries the tracks edge of a Campaign.
-func (c *CampaignClient) QueryTracks(ca *Campaign) *TrackQuery {
-	query := (&TrackClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ca.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(campaign.Table, campaign.FieldID, id),
-			sqlgraph.To(track.Table, track.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, campaign.TracksTable, campaign.TracksColumn),
-		)
-		fromV = sqlgraph.Neighbors(ca.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryReferrals queries the referrals edge of a Campaign.
-func (c *CampaignClient) QueryReferrals(ca *Campaign) *ReferralQuery {
-	query := (&ReferralClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ca.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(campaign.Table, campaign.FieldID, id),
-			sqlgraph.To(referral.Table, referral.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, campaign.ReferralsTable, campaign.ReferralsColumn),
-		)
-		fromV = sqlgraph.Neighbors(ca.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryBanners queries the banners edge of a Campaign.
 func (c *CampaignClient) QueryBanners(ca *Campaign) *BannerQuery {
 	query := (&BannerClient{config: c.config}).Query()
@@ -1195,22 +1137,6 @@ func (c *CampaignLinkClient) QueryCampaign(cl *CampaignLink) *CampaignQuery {
 			sqlgraph.From(campaignlink.Table, campaignlink.FieldID, id),
 			sqlgraph.To(campaign.Table, campaign.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, campaignlink.CampaignTable, campaignlink.CampaignColumn),
-		)
-		fromV = sqlgraph.Neighbors(cl.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryTracks queries the tracks edge of a CampaignLink.
-func (c *CampaignLinkClient) QueryTracks(cl *CampaignLink) *TrackQuery {
-	query := (&TrackClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := cl.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(campaignlink.Table, campaignlink.FieldID, id),
-			sqlgraph.To(track.Table, track.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, campaignlink.TracksTable, campaignlink.TracksColumn),
 		)
 		fromV = sqlgraph.Neighbors(cl.driver.Dialect(), step)
 		return fromV, nil
@@ -2004,320 +1930,6 @@ func (c *PayoutClient) mutate(ctx context.Context, m *PayoutMutation) (Value, er
 	}
 }
 
-// PostClient is a client for the Post schema.
-type PostClient struct {
-	config
-}
-
-// NewPostClient returns a client for the Post from the given config.
-func NewPostClient(c config) *PostClient {
-	return &PostClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `post.Hooks(f(g(h())))`.
-func (c *PostClient) Use(hooks ...Hook) {
-	c.hooks.Post = append(c.hooks.Post, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `post.Intercept(f(g(h())))`.
-func (c *PostClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Post = append(c.inters.Post, interceptors...)
-}
-
-// Create returns a builder for creating a Post entity.
-func (c *PostClient) Create() *PostCreate {
-	mutation := newPostMutation(c.config, OpCreate)
-	return &PostCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Post entities.
-func (c *PostClient) CreateBulk(builders ...*PostCreate) *PostCreateBulk {
-	return &PostCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *PostClient) MapCreateBulk(slice any, setFunc func(*PostCreate, int)) *PostCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &PostCreateBulk{err: fmt.Errorf("calling to PostClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*PostCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &PostCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Post.
-func (c *PostClient) Update() *PostUpdate {
-	mutation := newPostMutation(c.config, OpUpdate)
-	return &PostUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *PostClient) UpdateOne(po *Post) *PostUpdateOne {
-	mutation := newPostMutation(c.config, OpUpdateOne, withPost(po))
-	return &PostUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *PostClient) UpdateOneID(id string) *PostUpdateOne {
-	mutation := newPostMutation(c.config, OpUpdateOne, withPostID(id))
-	return &PostUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Post.
-func (c *PostClient) Delete() *PostDelete {
-	mutation := newPostMutation(c.config, OpDelete)
-	return &PostDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *PostClient) DeleteOne(po *Post) *PostDeleteOne {
-	return c.DeleteOneID(po.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *PostClient) DeleteOneID(id string) *PostDeleteOne {
-	builder := c.Delete().Where(post.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &PostDeleteOne{builder}
-}
-
-// Query returns a query builder for Post.
-func (c *PostClient) Query() *PostQuery {
-	return &PostQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypePost},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Post entity by its id.
-func (c *PostClient) Get(ctx context.Context, id string) (*Post, error) {
-	return c.Query().Where(post.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *PostClient) GetX(ctx context.Context, id string) *Post {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryAuthor queries the author edge of a Post.
-func (c *PostClient) QueryAuthor(po *Post) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := po.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(post.Table, post.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, post.AuthorTable, post.AuthorColumn),
-		)
-		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *PostClient) Hooks() []Hook {
-	return c.hooks.Post
-}
-
-// Interceptors returns the client interceptors.
-func (c *PostClient) Interceptors() []Interceptor {
-	return c.inters.Post
-}
-
-func (c *PostClient) mutate(ctx context.Context, m *PostMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&PostCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&PostUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&PostUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&PostDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Post mutation op: %q", m.Op())
-	}
-}
-
-// ReferralClient is a client for the Referral schema.
-type ReferralClient struct {
-	config
-}
-
-// NewReferralClient returns a client for the Referral from the given config.
-func NewReferralClient(c config) *ReferralClient {
-	return &ReferralClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `referral.Hooks(f(g(h())))`.
-func (c *ReferralClient) Use(hooks ...Hook) {
-	c.hooks.Referral = append(c.hooks.Referral, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `referral.Intercept(f(g(h())))`.
-func (c *ReferralClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Referral = append(c.inters.Referral, interceptors...)
-}
-
-// Create returns a builder for creating a Referral entity.
-func (c *ReferralClient) Create() *ReferralCreate {
-	mutation := newReferralMutation(c.config, OpCreate)
-	return &ReferralCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Referral entities.
-func (c *ReferralClient) CreateBulk(builders ...*ReferralCreate) *ReferralCreateBulk {
-	return &ReferralCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *ReferralClient) MapCreateBulk(slice any, setFunc func(*ReferralCreate, int)) *ReferralCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &ReferralCreateBulk{err: fmt.Errorf("calling to ReferralClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*ReferralCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &ReferralCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Referral.
-func (c *ReferralClient) Update() *ReferralUpdate {
-	mutation := newReferralMutation(c.config, OpUpdate)
-	return &ReferralUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *ReferralClient) UpdateOne(r *Referral) *ReferralUpdateOne {
-	mutation := newReferralMutation(c.config, OpUpdateOne, withReferral(r))
-	return &ReferralUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *ReferralClient) UpdateOneID(id int64) *ReferralUpdateOne {
-	mutation := newReferralMutation(c.config, OpUpdateOne, withReferralID(id))
-	return &ReferralUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Referral.
-func (c *ReferralClient) Delete() *ReferralDelete {
-	mutation := newReferralMutation(c.config, OpDelete)
-	return &ReferralDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *ReferralClient) DeleteOne(r *Referral) *ReferralDeleteOne {
-	return c.DeleteOneID(r.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ReferralClient) DeleteOneID(id int64) *ReferralDeleteOne {
-	builder := c.Delete().Where(referral.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &ReferralDeleteOne{builder}
-}
-
-// Query returns a query builder for Referral.
-func (c *ReferralClient) Query() *ReferralQuery {
-	return &ReferralQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeReferral},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Referral entity by its id.
-func (c *ReferralClient) Get(ctx context.Context, id int64) (*Referral, error) {
-	return c.Query().Where(referral.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *ReferralClient) GetX(ctx context.Context, id int64) *Referral {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryReferrer queries the referrer edge of a Referral.
-func (c *ReferralClient) QueryReferrer(r *Referral) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := r.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(referral.Table, referral.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, referral.ReferrerTable, referral.ReferrerColumn),
-		)
-		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCampaign queries the campaign edge of a Referral.
-func (c *ReferralClient) QueryCampaign(r *Referral) *CampaignQuery {
-	query := (&CampaignClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := r.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(referral.Table, referral.FieldID, id),
-			sqlgraph.To(campaign.Table, campaign.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, referral.CampaignTable, referral.CampaignColumn),
-		)
-		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *ReferralClient) Hooks() []Hook {
-	return c.hooks.Referral
-}
-
-// Interceptors returns the client interceptors.
-func (c *ReferralClient) Interceptors() []Interceptor {
-	return c.inters.Referral
-}
-
-func (c *ReferralClient) mutate(ctx context.Context, m *ReferralMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&ReferralCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&ReferralUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&ReferralUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&ReferralDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Referral mutation op: %q", m.Op())
-	}
-}
-
 // TestClient is a client for the Test schema.
 type TestClient struct {
 	config
@@ -2451,187 +2063,6 @@ func (c *TestClient) mutate(ctx context.Context, m *TestMutation) (Value, error)
 	}
 }
 
-// TrackClient is a client for the Track schema.
-type TrackClient struct {
-	config
-}
-
-// NewTrackClient returns a client for the Track from the given config.
-func NewTrackClient(c config) *TrackClient {
-	return &TrackClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `track.Hooks(f(g(h())))`.
-func (c *TrackClient) Use(hooks ...Hook) {
-	c.hooks.Track = append(c.hooks.Track, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `track.Intercept(f(g(h())))`.
-func (c *TrackClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Track = append(c.inters.Track, interceptors...)
-}
-
-// Create returns a builder for creating a Track entity.
-func (c *TrackClient) Create() *TrackCreate {
-	mutation := newTrackMutation(c.config, OpCreate)
-	return &TrackCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Track entities.
-func (c *TrackClient) CreateBulk(builders ...*TrackCreate) *TrackCreateBulk {
-	return &TrackCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *TrackClient) MapCreateBulk(slice any, setFunc func(*TrackCreate, int)) *TrackCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &TrackCreateBulk{err: fmt.Errorf("calling to TrackClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*TrackCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &TrackCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Track.
-func (c *TrackClient) Update() *TrackUpdate {
-	mutation := newTrackMutation(c.config, OpUpdate)
-	return &TrackUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *TrackClient) UpdateOne(t *Track) *TrackUpdateOne {
-	mutation := newTrackMutation(c.config, OpUpdateOne, withTrack(t))
-	return &TrackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *TrackClient) UpdateOneID(id int64) *TrackUpdateOne {
-	mutation := newTrackMutation(c.config, OpUpdateOne, withTrackID(id))
-	return &TrackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Track.
-func (c *TrackClient) Delete() *TrackDelete {
-	mutation := newTrackMutation(c.config, OpDelete)
-	return &TrackDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *TrackClient) DeleteOne(t *Track) *TrackDeleteOne {
-	return c.DeleteOneID(t.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *TrackClient) DeleteOneID(id int64) *TrackDeleteOne {
-	builder := c.Delete().Where(track.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &TrackDeleteOne{builder}
-}
-
-// Query returns a query builder for Track.
-func (c *TrackClient) Query() *TrackQuery {
-	return &TrackQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeTrack},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Track entity by its id.
-func (c *TrackClient) Get(ctx context.Context, id int64) (*Track, error) {
-	return c.Query().Where(track.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *TrackClient) GetX(ctx context.Context, id int64) *Track {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryUser queries the user edge of a Track.
-func (c *TrackClient) QueryUser(t *Track) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(track.Table, track.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, track.UserTable, track.UserColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCampaign queries the campaign edge of a Track.
-func (c *TrackClient) QueryCampaign(t *Track) *CampaignQuery {
-	query := (&CampaignClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(track.Table, track.FieldID, id),
-			sqlgraph.To(campaign.Table, campaign.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, track.CampaignTable, track.CampaignColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryLink queries the link edge of a Track.
-func (c *TrackClient) QueryLink(t *Track) *CampaignLinkQuery {
-	query := (&CampaignLinkClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(track.Table, track.FieldID, id),
-			sqlgraph.To(campaignlink.Table, campaignlink.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, track.LinkTable, track.LinkColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *TrackClient) Hooks() []Hook {
-	return c.hooks.Track
-}
-
-// Interceptors returns the client interceptors.
-func (c *TrackClient) Interceptors() []Interceptor {
-	return c.inters.Track
-}
-
-func (c *TrackClient) mutate(ctx context.Context, m *TrackMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&TrackCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&TrackUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&TrackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&TrackDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Track mutation op: %q", m.Op())
-	}
-}
-
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -2756,38 +2187,6 @@ func (c *UserClient) QueryCampaigns(u *User) *CampaignQuery {
 	return query
 }
 
-// QueryReferrals queries the referrals edge of a User.
-func (c *UserClient) QueryReferrals(u *User) *ReferralQuery {
-	query := (&ReferralClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(referral.Table, referral.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.ReferralsTable, user.ReferralsColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryTracks queries the tracks edge of a User.
-func (c *UserClient) QueryTracks(u *User) *TrackQuery {
-	query := (&TrackClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(track.Table, track.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.TracksTable, user.TracksColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryPayouts queries the payouts edge of a User.
 func (c *UserClient) QueryPayouts(u *User) *PayoutQuery {
 	query := (&PayoutClient{config: c.config}).Query()
@@ -2797,22 +2196,6 @@ func (c *UserClient) QueryPayouts(u *User) *PayoutQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(payout.Table, payout.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.PayoutsTable, user.PayoutsColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryPosts queries the posts edge of a User.
-func (c *UserClient) QueryPosts(u *User) *PostQuery {
-	query := (&PostClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.PostsTable, user.PostsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -2897,12 +2280,10 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 type (
 	hooks struct {
 		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, CommissionPlan,
-		Creative, GigTracking, Lead, Payout, Post, Referral, Test, Track,
-		User []ent.Hook
+		Creative, GigTracking, Lead, Payout, Test, User []ent.Hook
 	}
 	inters struct {
 		Banner, BannerCreative, BannerStats, Campaign, CampaignLink, CommissionPlan,
-		Creative, GigTracking, Lead, Payout, Post, Referral, Test, Track,
-		User []ent.Interceptor
+		Creative, GigTracking, Lead, Payout, Test, User []ent.Interceptor
 	}
 )
