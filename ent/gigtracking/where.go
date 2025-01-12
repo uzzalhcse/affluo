@@ -60,6 +60,11 @@ func Date(v time.Time) predicate.GigTracking {
 	return predicate.GigTracking(sql.FieldEQ(FieldDate, v))
 }
 
+// AffiliateUserID applies equality check predicate on the "affiliate_user_id" field. It's identical to AffiliateUserIDEQ.
+func AffiliateUserID(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldEQ(FieldAffiliateUserID, v))
+}
+
 // Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
 func Type(v string) predicate.GigTracking {
 	return predicate.GigTracking(sql.FieldEQ(FieldType, v))
@@ -133,6 +138,81 @@ func DateLT(v time.Time) predicate.GigTracking {
 // DateLTE applies the LTE predicate on the "date" field.
 func DateLTE(v time.Time) predicate.GigTracking {
 	return predicate.GigTracking(sql.FieldLTE(FieldDate, v))
+}
+
+// AffiliateUserIDEQ applies the EQ predicate on the "affiliate_user_id" field.
+func AffiliateUserIDEQ(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldEQ(FieldAffiliateUserID, v))
+}
+
+// AffiliateUserIDNEQ applies the NEQ predicate on the "affiliate_user_id" field.
+func AffiliateUserIDNEQ(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldNEQ(FieldAffiliateUserID, v))
+}
+
+// AffiliateUserIDIn applies the In predicate on the "affiliate_user_id" field.
+func AffiliateUserIDIn(vs ...string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldIn(FieldAffiliateUserID, vs...))
+}
+
+// AffiliateUserIDNotIn applies the NotIn predicate on the "affiliate_user_id" field.
+func AffiliateUserIDNotIn(vs ...string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldNotIn(FieldAffiliateUserID, vs...))
+}
+
+// AffiliateUserIDGT applies the GT predicate on the "affiliate_user_id" field.
+func AffiliateUserIDGT(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldGT(FieldAffiliateUserID, v))
+}
+
+// AffiliateUserIDGTE applies the GTE predicate on the "affiliate_user_id" field.
+func AffiliateUserIDGTE(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldGTE(FieldAffiliateUserID, v))
+}
+
+// AffiliateUserIDLT applies the LT predicate on the "affiliate_user_id" field.
+func AffiliateUserIDLT(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldLT(FieldAffiliateUserID, v))
+}
+
+// AffiliateUserIDLTE applies the LTE predicate on the "affiliate_user_id" field.
+func AffiliateUserIDLTE(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldLTE(FieldAffiliateUserID, v))
+}
+
+// AffiliateUserIDContains applies the Contains predicate on the "affiliate_user_id" field.
+func AffiliateUserIDContains(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldContains(FieldAffiliateUserID, v))
+}
+
+// AffiliateUserIDHasPrefix applies the HasPrefix predicate on the "affiliate_user_id" field.
+func AffiliateUserIDHasPrefix(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldHasPrefix(FieldAffiliateUserID, v))
+}
+
+// AffiliateUserIDHasSuffix applies the HasSuffix predicate on the "affiliate_user_id" field.
+func AffiliateUserIDHasSuffix(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldHasSuffix(FieldAffiliateUserID, v))
+}
+
+// AffiliateUserIDIsNil applies the IsNil predicate on the "affiliate_user_id" field.
+func AffiliateUserIDIsNil() predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldIsNull(FieldAffiliateUserID))
+}
+
+// AffiliateUserIDNotNil applies the NotNil predicate on the "affiliate_user_id" field.
+func AffiliateUserIDNotNil() predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldNotNull(FieldAffiliateUserID))
+}
+
+// AffiliateUserIDEqualFold applies the EqualFold predicate on the "affiliate_user_id" field.
+func AffiliateUserIDEqualFold(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldEqualFold(FieldAffiliateUserID, v))
+}
+
+// AffiliateUserIDContainsFold applies the ContainsFold predicate on the "affiliate_user_id" field.
+func AffiliateUserIDContainsFold(v string) predicate.GigTracking {
+	return predicate.GigTracking(sql.FieldContainsFold(FieldAffiliateUserID, v))
 }
 
 // TypeEQ applies the EQ predicate on the "type" field.

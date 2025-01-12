@@ -11,11 +11,12 @@ import (
 )
 
 type TrackingHandler struct {
-	trackingService *service.TrackingService
+	trackingService  *service.TrackingService
+	affiliateService *service.AffiliateService
 }
 
-func NewTrackingHandler(trackingService *service.TrackingService) *TrackingHandler {
-	return &TrackingHandler{trackingService: trackingService}
+func NewTrackingHandler(trackingService *service.TrackingService, affiliateService *service.AffiliateService) *TrackingHandler {
+	return &TrackingHandler{trackingService: trackingService, affiliateService: affiliateService}
 }
 
 func (h *TrackingHandler) RecordImpression(c *fiber.Ctx) error {
@@ -38,24 +39,24 @@ func (h *TrackingHandler) RecordImpression(c *fiber.Ctx) error {
 	return Success(c, fiber.Map{"status": "recorded"})
 }
 
+// RecordClick handles the click tracking with encrypted tracking code
 func (h *TrackingHandler) RecordClick(c *fiber.Ctx) error {
-	bannerID, err := c.ParamsInt("id")
-	publisherId := c.QueryInt("pub")
-	if err != nil {
-		return Error(c, "Invalid banner ID", err.Error())
-	}
+	bannerID := c.QueryInt("banner_id")
+	publisherID := c.QueryInt("pub")
 
-	req := new(dto.ClickRequest)
-	if err := c.BodyParser(req); err != nil {
-		return Error(c, "Invalid request body", err.Error())
-	}
-
-	err = h.trackingService.RecordClick(c.Context(), int64(bannerID), int64(publisherId), req)
+	clickUrl, err := h.trackingService.RecordClick(c.Context(), int64(bannerID), int64(publisherID))
 	if err != nil {
 		return Error(c, "Failed to record click", err.Error())
 	}
 
-	return Success(c, fiber.Map{"status": "recorded"})
+	// Create tracking code and encrypt it
+	trackingCode := fmt.Sprintf("publisher-%d_banner-%d", publisherID, bannerID)
+	encryptedCode, err := helper.Encrypt(trackingCode)
+	if err != nil {
+		return Error(c, "Failed to generate tracking code", err.Error())
+	}
+	redirectUrl := fmt.Sprintf("%s?track_id=%s", clickUrl, encryptedCode)
+	return c.Redirect(redirectUrl, 301)
 }
 
 func (h *TrackingHandler) RecordLead(c *fiber.Ctx) error {
@@ -125,26 +126,49 @@ func (h *TrackingHandler) GetGigReports(c *fiber.Ctx) error {
 }
 
 func (h *TrackingHandler) VisitTracking(c *fiber.Ctx) error {
-	pubId := c.Query("pub")
+	pubId := c.QueryInt("pub")
 	landingPage := c.Query("lp")
 	term := c.Query("type")
+	terget := c.Query("target")
 	utm_query := c.Query("utm_query")
-	currentIP := c.IP()
-	trackingHash, err := h.trackingService.SyncVisit(c.Context(), pubId, landingPage, term, utm_query, currentIP)
+
+	trackingCode := fmt.Sprintf("publisher-%d_%s-%s", pubId, terget, term)
+	encryptedCode, err := helper.Encrypt(trackingCode)
+
+	err = h.trackingService.SyncVisit(c.Context(), int64(pubId), landingPage, term, utm_query, encryptedCode)
 	if err != nil {
 		return Error(c, "Something went wrong", err.Error())
 	}
-
-	redirectUrl := fmt.Sprintf("%s?track_id=%s", landingPage, trackingHash)
+	redirectUrl := fmt.Sprintf("%s?track_id=%s", landingPage, encryptedCode)
 
 	return c.Redirect(redirectUrl, 301)
 }
 func (h *TrackingHandler) GigLeadCallBack(c *fiber.Ctx) error {
-	track_id := c.Query("track_id")
-	// todo check if item_id is valid
-	err := h.trackingService.GigLead(c.Context(), track_id)
+	trackId := c.Query("track_id")
+	eventType := c.Query("event_type")
+	affiliateUserId := c.Query("affiliate_user_id")
+	publisherID, targetType, _, err := helper.DecodeTrackingCode(trackId)
 	if err != nil {
-		return Error(c, "Something went wrong", err.Error())
+		return Error(c, "Failed to decrypt tracking code", err.Error())
+	}
+
+	if eventType == "lead" {
+		err = h.trackingService.GigLead(c.Context(), publisherID, trackId, targetType, affiliateUserId)
+		if err != nil {
+			return Error(c, "Something went wrong", err.Error())
+		}
+	} else if eventType == "create_account" {
+		req := new(dto.CreateAffiliateRequest)
+		req.UserID = publisherID
+		req.Source = targetType
+		req.TrackingCode = trackId
+		req.AffiliateUserID = affiliateUserId
+		_, err = h.affiliateService.CreateAffiliate(c.Context(), req)
+		if err != nil {
+			return Error(c, "Failed to create affiliate", err.Error())
+		}
+	} else {
+		return fmt.Errorf("invalid event type")
 	}
 	return Success(c, fiber.Map{"status": "recorded"})
 }

@@ -77,7 +77,7 @@ func (a *Application) SetupRoutes() {
 	{
 		trackingGroup.Use(middleware.AntiFraud(a.Services.AntiFraud))
 		trackingGroup.Post("/impression/:id", a.Handlers.Tracking.RecordImpression)
-		trackingGroup.Post("/click/:id", a.Handlers.Tracking.RecordClick)
+		trackingGroup.Get("/click", a.Handlers.Tracking.RecordClick)
 		trackingGroup.Post("/lead/:id", a.Handlers.Tracking.RecordLead)
 
 		trackingGroup.Get("/pixel/:id", a.Handlers.Tracking.PixelTracking)
@@ -93,9 +93,9 @@ func (a *Application) SetupRoutes() {
 		statsGroup.Get("/banner", a.Middleware.Auth.Authenticate(), a.Handlers.Tracking.GetStats)
 		statsGroup.Get("/gigs", a.Middleware.Auth.Authenticate(), a.Handlers.Tracking.GetGigReports)
 	}
-	webhookGroup := a.App.Group("/api/callback")
+	webhookGroup := a.App.Group("/api")
 	{
-		webhookGroup.Get("/gigs", a.Middleware.Auth.Authenticate(), a.Handlers.Tracking.GigLeadCallBack)
+		webhookGroup.Get("/callback", a.Middleware.Auth.Authenticate(), a.Handlers.Tracking.GigLeadCallBack)
 	}
 
 }

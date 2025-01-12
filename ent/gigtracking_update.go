@@ -43,6 +43,26 @@ func (gtu *GigTrackingUpdate) SetNillableDate(t *time.Time) *GigTrackingUpdate {
 	return gtu
 }
 
+// SetAffiliateUserID sets the "affiliate_user_id" field.
+func (gtu *GigTrackingUpdate) SetAffiliateUserID(s string) *GigTrackingUpdate {
+	gtu.mutation.SetAffiliateUserID(s)
+	return gtu
+}
+
+// SetNillableAffiliateUserID sets the "affiliate_user_id" field if the given value is not nil.
+func (gtu *GigTrackingUpdate) SetNillableAffiliateUserID(s *string) *GigTrackingUpdate {
+	if s != nil {
+		gtu.SetAffiliateUserID(*s)
+	}
+	return gtu
+}
+
+// ClearAffiliateUserID clears the value of the "affiliate_user_id" field.
+func (gtu *GigTrackingUpdate) ClearAffiliateUserID() *GigTrackingUpdate {
+	gtu.mutation.ClearAffiliateUserID()
+	return gtu
+}
+
 // SetType sets the "type" field.
 func (gtu *GigTrackingUpdate) SetType(s string) *GigTrackingUpdate {
 	gtu.mutation.SetType(s)
@@ -239,6 +259,12 @@ func (gtu *GigTrackingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := gtu.mutation.Date(); ok {
 		_spec.SetField(gigtracking.FieldDate, field.TypeTime, value)
 	}
+	if value, ok := gtu.mutation.AffiliateUserID(); ok {
+		_spec.SetField(gigtracking.FieldAffiliateUserID, field.TypeString, value)
+	}
+	if gtu.mutation.AffiliateUserIDCleared() {
+		_spec.ClearField(gigtracking.FieldAffiliateUserID, field.TypeString)
+	}
 	if value, ok := gtu.mutation.GetType(); ok {
 		_spec.SetField(gigtracking.FieldType, field.TypeString, value)
 	}
@@ -332,6 +358,26 @@ func (gtuo *GigTrackingUpdateOne) SetNillableDate(t *time.Time) *GigTrackingUpda
 	if t != nil {
 		gtuo.SetDate(*t)
 	}
+	return gtuo
+}
+
+// SetAffiliateUserID sets the "affiliate_user_id" field.
+func (gtuo *GigTrackingUpdateOne) SetAffiliateUserID(s string) *GigTrackingUpdateOne {
+	gtuo.mutation.SetAffiliateUserID(s)
+	return gtuo
+}
+
+// SetNillableAffiliateUserID sets the "affiliate_user_id" field if the given value is not nil.
+func (gtuo *GigTrackingUpdateOne) SetNillableAffiliateUserID(s *string) *GigTrackingUpdateOne {
+	if s != nil {
+		gtuo.SetAffiliateUserID(*s)
+	}
+	return gtuo
+}
+
+// ClearAffiliateUserID clears the value of the "affiliate_user_id" field.
+func (gtuo *GigTrackingUpdateOne) ClearAffiliateUserID() *GigTrackingUpdateOne {
+	gtuo.mutation.ClearAffiliateUserID()
 	return gtuo
 }
 
@@ -560,6 +606,12 @@ func (gtuo *GigTrackingUpdateOne) sqlSave(ctx context.Context) (_node *GigTracki
 	}
 	if value, ok := gtuo.mutation.Date(); ok {
 		_spec.SetField(gigtracking.FieldDate, field.TypeTime, value)
+	}
+	if value, ok := gtuo.mutation.AffiliateUserID(); ok {
+		_spec.SetField(gigtracking.FieldAffiliateUserID, field.TypeString, value)
+	}
+	if gtuo.mutation.AffiliateUserIDCleared() {
+		_spec.ClearField(gigtracking.FieldAffiliateUserID, field.TypeString)
 	}
 	if value, ok := gtuo.mutation.GetType(); ok {
 		_spec.SetField(gigtracking.FieldType, field.TypeString, value)

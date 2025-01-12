@@ -37,6 +37,7 @@ func (s *AffiliateService) CreateAffiliate(ctx context.Context, req *dto.CreateA
 		SetCommission(req.Commission).
 		SetUserID(req.UserID).
 		SetAffiliateUserID(req.AffiliateUserID).
+		SetTrackingCode(req.TrackingCode).
 		Save(ctx)
 }
 

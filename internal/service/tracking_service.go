@@ -2,8 +2,8 @@
 package service
 
 import (
-	"affluo/constant"
 	"affluo/ent"
+	"affluo/ent/affiliate"
 	"affluo/ent/banner"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
@@ -13,12 +13,10 @@ import (
 	"affluo/ent/user"
 	"affluo/internal/dto"
 	"context"
-	"crypto/md5"
 	"errors"
 	"fmt"
 	"math"
 	"math/rand"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -49,22 +47,13 @@ func (s *TrackingService) RecordImpression(ctx context.Context, bannerID, publis
 	}
 	defer tx.Rollback()
 	// Get publisher's commission plan
-	commission, err := tx.CommissionPlan.Query().
-		Where(
-			commissionplan.HasPublishersWith(user.IDEQ(publisherId)),
-			commissionplan.IsActive(true),
-		).
-		First(ctx)
-
-	if err != nil && !ent.IsNotFound(err) {
+	commission, err := s.getActiveCommissionPlan(ctx, tx, publisherId)
+	if err != nil {
 		return err
 	}
 
-	impressionRate := constant.BannerImpressions // Default rate
+	impressionRate := commission.ImpressionCommission
 	earning := 0.0
-	if commission != nil {
-		impressionRate = commission.ImpressionCommission
-	}
 
 	// Get or create stats for today
 	stats, err := tx.BannerStats.Query().
@@ -110,35 +99,88 @@ func (s *TrackingService) RecordImpression(ctx context.Context, bannerID, publis
 }
 
 // RecordClick records a banner click
-func (s *TrackingService) RecordClick(ctx context.Context, bannerID, publisherID int64, req *dto.ClickRequest) error {
+func (s *TrackingService) RecordClick(ctx context.Context, bannerID, publisherID int64) (string, error) {
 	date := time.Now().UTC().Truncate(24 * time.Hour)
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return err
+		return "", fmt.Errorf("starting transaction: %w", err)
 	}
 	defer tx.Rollback()
 
+	// Add timeout context to prevent long-running queries
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	// Add Limit(1) to ensure we only get one result
 	stats, err := tx.BannerStats.Query().
 		Where(
 			bannerstats.HasBannerWith(banner.IDEQ(bannerID)),
 			bannerstats.DateEQ(date),
 			bannerstats.HasPublisherWith(user.IDEQ(publisherID)),
 		).
-		First(ctx)
+		WithBanner().
+		Limit(1).
+		First(ctxWithTimeout)
 
 	if ent.IsNotFound(err) {
 		stats, err = tx.BannerStats.Create().
 			SetBannerID(bannerID).
 			SetPublisherID(publisherID).
 			SetDate(date).
-			Save(ctx)
+			Save(ctxWithTimeout)
 	}
 	if err != nil {
-		return err
+		return "", fmt.Errorf("querying banner stats: %w", err)
 	}
-	// Get publisher's commission plan
-	commission, err := tx.CommissionPlan.Query().
+
+	commission, err := s.getActiveCommissionPlan(ctxWithTimeout, tx, publisherID)
+	if err != nil {
+		return "", fmt.Errorf("getting commission plan: %w", err)
+	}
+
+	clickRate := commission.ClickCommission
+	impressionRate := commission.ImpressionCommission
+
+	// Calculate stats
+	newClicks := stats.Clicks + 1
+	impressions := stats.Impressions
+	newCTR := float64(0)
+	if impressions > 0 {
+		newCTR = float64(newClicks) / float64(impressions)
+	}
+
+	// Calculate earnings
+	clickEarnings := float64(newClicks) * clickRate
+	impressionEarnings := float64(impressions) * impressionRate
+	totalEarnings := clickEarnings + impressionEarnings
+
+	// Update stats in a single query
+	_, err = tx.BannerStats.UpdateOne(stats).
+		SetClicks(newClicks).
+		SetCtr(newCTR).
+		SetEarnings(totalEarnings).
+		Save(ctxWithTimeout)
+	if err != nil {
+		return "", fmt.Errorf("updating banner stats: %w", err)
+	}
+
+	// Update smart weight
+	if err := s.updateSmartWeight(ctxWithTimeout, tx, bannerID); err != nil {
+		return "", fmt.Errorf("updating smart weight: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return "", fmt.Errorf("committing transaction: %w", err)
+	}
+
+	return stats.Edges.Banner.ClickURL, nil
+}
+
+// Separate function for getting commission plan
+func (s *TrackingService) getActiveCommissionPlan(ctx context.Context, tx *ent.Tx, publisherID int64) (*ent.CommissionPlan, error) {
+	// First try to get personal commission plan
+	personalPlan, err := tx.CommissionPlan.Query().
 		Where(
 			commissionplan.HasPublishersWith(user.IDEQ(publisherID)),
 			commissionplan.IsActive(true),
@@ -146,68 +188,45 @@ func (s *TrackingService) RecordClick(ctx context.Context, bannerID, publisherID
 		First(ctx)
 
 	if err != nil && !ent.IsNotFound(err) {
-		return err
+		return nil, fmt.Errorf("error querying personal commission plan: %w", err)
 	}
 
-	clickRate := constant.BannerCPC // Default rate
-	if commission != nil {
-		clickRate = commission.ClickCommission
+	if personalPlan != nil {
+		return personalPlan, nil
 	}
 
-	// Update click count and CTR
-	newClicks := stats.Clicks + 1
-	impressions := stats.Impressions
-	newCTR := float64(0)
-	if impressions > 0 {
-		newCTR = float64(newClicks) / float64(impressions)
-	}
-	// Calculate new earnings
-	clickEarnings := float64(newClicks) * clickRate
-	impressionEarnings := float64(impressions) * commission.ImpressionCommission
-	totalEarnings := clickEarnings + impressionEarnings
+	// If no personal plan found, get default plan
+	defaultPlan, err := tx.CommissionPlan.Query().
+		Where(
+			commissionplan.IsDefault(true),
+			commissionplan.IsActive(true),
+		).
+		First(ctx)
 
-	_, err = tx.BannerStats.UpdateOne(stats).
-		SetClicks(newClicks).
-		SetCtr(newCTR).
-		SetEarnings(totalEarnings).
-		Save(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Update smart weight based on performance
-	err = s.updateSmartWeight(ctx, tx, bannerID)
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
-func (s *TrackingService) SyncVisit(ctx context.Context, pubId, landingPage, term, utm_query, currentIP string) (string, error) {
-	date := time.Now().UTC().Truncate(24 * time.Hour)
-
-	trackingID := fmt.Sprintf("%s_%s_%s_%s_%s", pubId, landingPage, term, currentIP, date.Format("2006-01-02"))
-	trackingHash := fmt.Sprintf("%x", md5.Sum([]byte(trackingID)))
-	// Parse publisher ID
-	publisherId, err := strconv.ParseInt(pubId, 10, 64)
-	if err != nil {
-		return trackingHash, fmt.Errorf("invalid publisher id: %w", err)
-	}
-
-	// Check if publisher exists
-	publisher, err := s.client.User.Get(ctx, publisherId)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return trackingHash, fmt.Errorf("publisher not found: %d", publisherId)
+			return nil, fmt.Errorf("no active commission plan found for publisher %d", publisherID)
 		}
-		return trackingHash, fmt.Errorf("error fetching publisher: %w", err)
+		return nil, fmt.Errorf("error querying default commission plan: %w", err)
+	}
+
+	return defaultPlan, nil
+}
+func (s *TrackingService) SyncVisit(ctx context.Context, pubId int64, landingPage, term, utm_query, trackingHash string) error {
+	date := time.Now().UTC().Truncate(24 * time.Hour)
+	// Check if publisher exists
+	publisher, err := s.client.User.Get(ctx, pubId)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("publisher not found: %d", pubId)
+		}
+		return fmt.Errorf("error fetching publisher: %w", err)
 	}
 
 	// Try to find existing tracking for the date
 	tracking, err := s.client.GigTracking.Query().
 		Where(
-			gigtracking.HasPublisherWith(user.ID(publisherId)),
+			gigtracking.HasPublisherWith(user.ID(pubId)),
 			gigtracking.Type(term),
 			gigtracking.Lp(landingPage),
 			gigtracking.DateEQ(date),
@@ -216,7 +235,7 @@ func (s *TrackingService) SyncVisit(ctx context.Context, pubId, landingPage, ter
 
 	if err != nil {
 		if !ent.IsNotFound(err) {
-			return trackingHash, fmt.Errorf("error querying tracking: %w", err)
+			return fmt.Errorf("error querying tracking: %w", err)
 		}
 
 		// Create new tracking if not found
@@ -230,7 +249,7 @@ func (s *TrackingService) SyncVisit(ctx context.Context, pubId, landingPage, ter
 			Save(ctx)
 
 		if err != nil {
-			return trackingHash, fmt.Errorf("error creating tracking: %w", err)
+			return fmt.Errorf("error creating tracking: %w", err)
 		}
 	} else {
 		fmt.Printf("Found existing tracking: %+v\n", tracking)
@@ -242,46 +261,103 @@ func (s *TrackingService) SyncVisit(ctx context.Context, pubId, landingPage, ter
 
 		fmt.Printf("after update: %+v\n", tracking)
 		if err != nil {
-			return trackingHash, fmt.Errorf("error updating tracking: %w", err)
+			return fmt.Errorf("error updating tracking: %w", err)
 		}
 	}
 
-	return trackingHash, nil
+	return nil
 }
-func (s *TrackingService) GigLead(ctx context.Context, track_id string) error {
-	if track_id == "" {
-		return fmt.Errorf("invalid track ID")
+
+func (s *TrackingService) GigLead(ctx context.Context, publisherID int64, trackID, targetType, affiliateUserID string) error {
+	// Input validation
+	if err := validateInput(trackID, affiliateUserID); err != nil {
+		return fmt.Errorf("input validation failed: %w", err)
 	}
 
-	// Query existing tracking record
-	tracking, err := s.client.GigTracking.
-		Query().
-		Where(
-			gigtracking.TrackID(track_id),
-		).
-		First(ctx)
+	// Start transaction with timeout context
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 
+	tx, err := s.client.Tx(ctxWithTimeout)
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Execute business logic within transaction
+	if err := s.processGigLead(ctxWithTimeout, tx, publisherID, trackID, targetType, affiliateUserID); err != nil {
+		return err
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+func validateInput(trackID, affiliateUserID string) error {
+	if trackID == "" {
+		return fmt.Errorf("track ID cannot be empty")
+	}
+	if affiliateUserID == "" {
+		return fmt.Errorf("affiliate user ID cannot be empty")
+	}
+	return nil
+}
+
+func (s *TrackingService) processGigLead(ctx context.Context, tx *ent.Tx, publisherID int64, trackID, targetType, affiliateUserID string) error {
+	// Query existing tracking record
+	tracking, err := tx.GigTracking.Query().
+		Where(gigtracking.TrackID(trackID)).
+		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("tracking record not found for ID: %s", track_id)
+			return fmt.Errorf("tracking record not found for ID: %s", trackID)
 		}
-		return fmt.Errorf("error querying tracking record: %w", err)
+		return fmt.Errorf("failed to query tracking record: %w", err)
 	}
 
-	// Check if lead is expired (more than 2 days old)
+	// Validate lead expiration
 	if time.Since(tracking.Date) > 48*time.Hour {
-		return fmt.Errorf("lead expired: more than 2 days old")
+		return fmt.Errorf("lead expired: tracking record is more than 48 hours old")
 	}
 
-	// Update the tracking record to mark it as a valid lead
-	_, err = tracking.
-		Update().
-		SetRevenue(constant.GigCPL).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
-
+	// Get commission plan
+	commission, err := s.getActiveCommissionPlan(ctx, tx, publisherID)
 	if err != nil {
-		return fmt.Errorf("error updating tracking record: %w", err)
+		return fmt.Errorf("failed to get commission plan: %w", err)
+	}
+
+	// Update tracking record and affiliate commission atomically
+	if err := s.updateTrackingAndCommission(ctx, tx, tracking, commission, targetType, affiliateUserID, trackID); err != nil {
+		return fmt.Errorf("failed to update tracking and commission: %w", err)
+	}
+
+	return nil
+}
+
+func (s *TrackingService) updateTrackingAndCommission(ctx context.Context, tx *ent.Tx, tracking *ent.GigTracking, commission *ent.CommissionPlan, targetType, affiliateUserID, trackingCode string) error {
+	// Update tracking record
+	if err := tracking.Update().
+		SetRevenue(commission.LeadCommission).
+		SetUpdatedAt(time.Now()).
+		SetType(targetType).
+		SetAffiliateUserID(affiliateUserID).
+		Exec(ctx); err != nil {
+		return fmt.Errorf("failed to update tracking record: %w", err)
+	}
+
+	// Update affiliate commission
+	if err := tx.Affiliate.Update().
+		Where(
+			affiliate.TrackingCode(trackingCode),
+			affiliate.AffiliateUserID(affiliateUserID),
+		).
+		AddCommission(commission.LeadCommission). // Use AddCommission instead of SetCommission to increment
+		Exec(ctx); err != nil {
+		return fmt.Errorf("failed to update affiliate commission: %w", err)
 	}
 
 	return nil

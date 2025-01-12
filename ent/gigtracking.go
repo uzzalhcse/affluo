@@ -20,6 +20,8 @@ type GigTracking struct {
 	ID int64 `json:"id,omitempty"`
 	// Date holds the value of the "date" field.
 	Date time.Time `json:"date,omitempty"`
+	// AffiliateUserID holds the value of the "affiliate_user_id" field.
+	AffiliateUserID string `json:"affiliate_user_id,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
 	// UtmQuery holds the value of the "utm_query" field.
@@ -70,7 +72,7 @@ func (*GigTracking) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case gigtracking.FieldID:
 			values[i] = new(sql.NullInt64)
-		case gigtracking.FieldType, gigtracking.FieldUtmQuery, gigtracking.FieldLp, gigtracking.FieldTrackID:
+		case gigtracking.FieldAffiliateUserID, gigtracking.FieldType, gigtracking.FieldUtmQuery, gigtracking.FieldLp, gigtracking.FieldTrackID:
 			values[i] = new(sql.NullString)
 		case gigtracking.FieldDate, gigtracking.FieldCreatedAt, gigtracking.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -102,6 +104,12 @@ func (gt *GigTracking) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field date", values[i])
 			} else if value.Valid {
 				gt.Date = value.Time
+			}
+		case gigtracking.FieldAffiliateUserID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field affiliate_user_id", values[i])
+			} else if value.Valid {
+				gt.AffiliateUserID = value.String
 			}
 		case gigtracking.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -195,6 +203,9 @@ func (gt *GigTracking) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", gt.ID))
 	builder.WriteString("date=")
 	builder.WriteString(gt.Date.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("affiliate_user_id=")
+	builder.WriteString(gt.AffiliateUserID)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(gt.Type)

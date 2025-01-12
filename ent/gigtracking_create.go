@@ -35,6 +35,20 @@ func (gtc *GigTrackingCreate) SetNillableDate(t *time.Time) *GigTrackingCreate {
 	return gtc
 }
 
+// SetAffiliateUserID sets the "affiliate_user_id" field.
+func (gtc *GigTrackingCreate) SetAffiliateUserID(s string) *GigTrackingCreate {
+	gtc.mutation.SetAffiliateUserID(s)
+	return gtc
+}
+
+// SetNillableAffiliateUserID sets the "affiliate_user_id" field if the given value is not nil.
+func (gtc *GigTrackingCreate) SetNillableAffiliateUserID(s *string) *GigTrackingCreate {
+	if s != nil {
+		gtc.SetAffiliateUserID(*s)
+	}
+	return gtc
+}
+
 // SetType sets the "type" field.
 func (gtc *GigTrackingCreate) SetType(s string) *GigTrackingCreate {
 	gtc.mutation.SetType(s)
@@ -262,6 +276,10 @@ func (gtc *GigTrackingCreate) createSpec() (*GigTracking, *sqlgraph.CreateSpec) 
 	if value, ok := gtc.mutation.Date(); ok {
 		_spec.SetField(gigtracking.FieldDate, field.TypeTime, value)
 		_node.Date = value
+	}
+	if value, ok := gtc.mutation.AffiliateUserID(); ok {
+		_spec.SetField(gigtracking.FieldAffiliateUserID, field.TypeString, value)
+		_node.AffiliateUserID = value
 	}
 	if value, ok := gtc.mutation.GetType(); ok {
 		_spec.SetField(gigtracking.FieldType, field.TypeString, value)

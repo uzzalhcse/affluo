@@ -278,6 +278,7 @@ var (
 	GigTrackingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
 		{Name: "date", Type: field.TypeTime},
+		{Name: "affiliate_user_id", Type: field.TypeString, Nullable: true},
 		{Name: "type", Type: field.TypeString, Default: "services"},
 		{Name: "utm_query", Type: field.TypeString, Nullable: true},
 		{Name: "lp", Type: field.TypeString, Nullable: true},
@@ -295,7 +296,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "gig_trackings_users_publisher",
-				Columns:    []*schema.Column{GigTrackingsColumns[9]},
+				Columns:    []*schema.Column{GigTrackingsColumns[10]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -304,12 +305,12 @@ var (
 			{
 				Name:    "gigtracking_date_lp_type_track_id_gig_tracking_publisher",
 				Unique:  true,
-				Columns: []*schema.Column{GigTrackingsColumns[1], GigTrackingsColumns[4], GigTrackingsColumns[2], GigTrackingsColumns[5], GigTrackingsColumns[9]},
+				Columns: []*schema.Column{GigTrackingsColumns[1], GigTrackingsColumns[5], GigTrackingsColumns[3], GigTrackingsColumns[6], GigTrackingsColumns[10]},
 			},
 			{
 				Name:    "gigtracking_gig_tracking_publisher",
 				Unique:  false,
-				Columns: []*schema.Column{GigTrackingsColumns[9]},
+				Columns: []*schema.Column{GigTrackingsColumns[10]},
 			},
 		},
 	}

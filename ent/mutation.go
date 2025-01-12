@@ -9362,24 +9362,25 @@ func (m *CreativeMutation) ResetEdge(name string) error {
 // GigTrackingMutation represents an operation that mutates the GigTracking nodes in the graph.
 type GigTrackingMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int64
-	date             *time.Time
-	_type            *string
-	utm_query        *string
-	lp               *string
-	track_id         *string
-	revenue          *float64
-	addrevenue       *float64
-	created_at       *time.Time
-	updated_at       *time.Time
-	clearedFields    map[string]struct{}
-	publisher        *int64
-	clearedpublisher bool
-	done             bool
-	oldValue         func(context.Context) (*GigTracking, error)
-	predicates       []predicate.GigTracking
+	op                Op
+	typ               string
+	id                *int64
+	date              *time.Time
+	affiliate_user_id *string
+	_type             *string
+	utm_query         *string
+	lp                *string
+	track_id          *string
+	revenue           *float64
+	addrevenue        *float64
+	created_at        *time.Time
+	updated_at        *time.Time
+	clearedFields     map[string]struct{}
+	publisher         *int64
+	clearedpublisher  bool
+	done              bool
+	oldValue          func(context.Context) (*GigTracking, error)
+	predicates        []predicate.GigTracking
 }
 
 var _ ent.Mutation = (*GigTrackingMutation)(nil)
@@ -9520,6 +9521,55 @@ func (m *GigTrackingMutation) OldDate(ctx context.Context) (v time.Time, err err
 // ResetDate resets all changes to the "date" field.
 func (m *GigTrackingMutation) ResetDate() {
 	m.date = nil
+}
+
+// SetAffiliateUserID sets the "affiliate_user_id" field.
+func (m *GigTrackingMutation) SetAffiliateUserID(s string) {
+	m.affiliate_user_id = &s
+}
+
+// AffiliateUserID returns the value of the "affiliate_user_id" field in the mutation.
+func (m *GigTrackingMutation) AffiliateUserID() (r string, exists bool) {
+	v := m.affiliate_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAffiliateUserID returns the old "affiliate_user_id" field's value of the GigTracking entity.
+// If the GigTracking object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GigTrackingMutation) OldAffiliateUserID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAffiliateUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAffiliateUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAffiliateUserID: %w", err)
+	}
+	return oldValue.AffiliateUserID, nil
+}
+
+// ClearAffiliateUserID clears the value of the "affiliate_user_id" field.
+func (m *GigTrackingMutation) ClearAffiliateUserID() {
+	m.affiliate_user_id = nil
+	m.clearedFields[gigtracking.FieldAffiliateUserID] = struct{}{}
+}
+
+// AffiliateUserIDCleared returns if the "affiliate_user_id" field was cleared in this mutation.
+func (m *GigTrackingMutation) AffiliateUserIDCleared() bool {
+	_, ok := m.clearedFields[gigtracking.FieldAffiliateUserID]
+	return ok
+}
+
+// ResetAffiliateUserID resets all changes to the "affiliate_user_id" field.
+func (m *GigTrackingMutation) ResetAffiliateUserID() {
+	m.affiliate_user_id = nil
+	delete(m.clearedFields, gigtracking.FieldAffiliateUserID)
 }
 
 // SetType sets the "type" field.
@@ -9906,9 +9956,12 @@ func (m *GigTrackingMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GigTrackingMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.date != nil {
 		fields = append(fields, gigtracking.FieldDate)
+	}
+	if m.affiliate_user_id != nil {
+		fields = append(fields, gigtracking.FieldAffiliateUserID)
 	}
 	if m._type != nil {
 		fields = append(fields, gigtracking.FieldType)
@@ -9941,6 +9994,8 @@ func (m *GigTrackingMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case gigtracking.FieldDate:
 		return m.Date()
+	case gigtracking.FieldAffiliateUserID:
+		return m.AffiliateUserID()
 	case gigtracking.FieldType:
 		return m.GetType()
 	case gigtracking.FieldUtmQuery:
@@ -9966,6 +10021,8 @@ func (m *GigTrackingMutation) OldField(ctx context.Context, name string) (ent.Va
 	switch name {
 	case gigtracking.FieldDate:
 		return m.OldDate(ctx)
+	case gigtracking.FieldAffiliateUserID:
+		return m.OldAffiliateUserID(ctx)
 	case gigtracking.FieldType:
 		return m.OldType(ctx)
 	case gigtracking.FieldUtmQuery:
@@ -9995,6 +10052,13 @@ func (m *GigTrackingMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDate(v)
+		return nil
+	case gigtracking.FieldAffiliateUserID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAffiliateUserID(v)
 		return nil
 	case gigtracking.FieldType:
 		v, ok := value.(string)
@@ -10090,6 +10154,9 @@ func (m *GigTrackingMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *GigTrackingMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(gigtracking.FieldAffiliateUserID) {
+		fields = append(fields, gigtracking.FieldAffiliateUserID)
+	}
 	if m.FieldCleared(gigtracking.FieldUtmQuery) {
 		fields = append(fields, gigtracking.FieldUtmQuery)
 	}
@@ -10113,6 +10180,9 @@ func (m *GigTrackingMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *GigTrackingMutation) ClearField(name string) error {
 	switch name {
+	case gigtracking.FieldAffiliateUserID:
+		m.ClearAffiliateUserID()
+		return nil
 	case gigtracking.FieldUtmQuery:
 		m.ClearUtmQuery()
 		return nil
@@ -10132,6 +10202,9 @@ func (m *GigTrackingMutation) ResetField(name string) error {
 	switch name {
 	case gigtracking.FieldDate:
 		m.ResetDate()
+		return nil
+	case gigtracking.FieldAffiliateUserID:
+		m.ResetAffiliateUserID()
 		return nil
 	case gigtracking.FieldType:
 		m.ResetType()

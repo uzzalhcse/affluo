@@ -19,7 +19,7 @@ func NewContainer(services *service.Container) *Container {
 	return &Container{
 		User:       NewUserHandler(services.User),
 		Campaign:   NewCampaignHandler(services.Campaign),
-		Tracking:   NewTrackingHandler(services.Tracking),
+		Tracking:   NewTrackingHandler(services.Tracking, services.Affiliate),
 		Auth:       NewAuthHandler(services.Auth), // Initialize Auth Handler
 		Banner:     NewBannerHandler(services.Banner),
 		Commission: NewCommissionHandler(services.Commission),

@@ -447,9 +447,10 @@ func (s *BannerService) generateHTMLCode(banner *ent.Banner, creative *ent.Creat
 	dimensions := strings.Split(banner.Size, "x")
 	width, height := dimensions[0], dimensions[1]
 
+	trackingUrl := fmt.Sprintf("%s/api/tracking/click?banner_id=%d&pub=%d", constant.TrackingDomain, banner.ID, publisherId)
 	return fmt.Sprintf(`
     <div class="aff-banner" style="position:relative;display:inline-block">
-        <a href="javascript:void(0);" style="text-decoration:none">
+        <a href="%s" style="text-decoration:none">
             <img src="%s" 
                 width="%s" 
                 height="%s" 
@@ -457,13 +458,12 @@ func (s *BannerService) generateHTMLCode(banner *ent.Banner, creative *ent.Creat
                 style="border:none;display:block" 
             />
         </a>
-        <script>%s</script>
     </div>`,
+		trackingUrl,
 		creative.ImageURL,
 		width,
 		height,
 		banner.Name,
-		s.generateTrackingScript(banner, publisherId),
 	)
 }
 func (s *BannerService) generateTrackingScript(banner *ent.Banner, publisherId int64) string {

@@ -18,6 +18,7 @@ func (GigTracking) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("id").Unique(),
 		field.Time("date").Default(time.Now),
+		field.String("affiliate_user_id").Optional(),
 		field.String("type").Default("services"),
 		field.String("utm_query").Optional(),
 		field.String("lp").Optional(),

@@ -16,6 +16,8 @@ const (
 	FieldID = "id"
 	// FieldDate holds the string denoting the date field in the database.
 	FieldDate = "date"
+	// FieldAffiliateUserID holds the string denoting the affiliate_user_id field in the database.
+	FieldAffiliateUserID = "affiliate_user_id"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
 	// FieldUtmQuery holds the string denoting the utm_query field in the database.
@@ -47,6 +49,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldDate,
+	FieldAffiliateUserID,
 	FieldType,
 	FieldUtmQuery,
 	FieldLp,
@@ -103,6 +106,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByDate orders the results by the date field.
 func ByDate(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDate, opts...).ToFunc()
+}
+
+// ByAffiliateUserID orders the results by the affiliate_user_id field.
+func ByAffiliateUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAffiliateUserID, opts...).ToFunc()
 }
 
 // ByType orders the results by the type field.
