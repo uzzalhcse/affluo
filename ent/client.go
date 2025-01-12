@@ -17,8 +17,10 @@ import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/commissionhistory"
 	"affluo/ent/commissionplan"
 	"affluo/ent/creative"
+	"affluo/ent/earninghistory"
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
 	"affluo/ent/payout"
@@ -48,10 +50,14 @@ type Client struct {
 	Campaign *CampaignClient
 	// CampaignLink is the client for interacting with the CampaignLink builders.
 	CampaignLink *CampaignLinkClient
+	// CommissionHistory is the client for interacting with the CommissionHistory builders.
+	CommissionHistory *CommissionHistoryClient
 	// CommissionPlan is the client for interacting with the CommissionPlan builders.
 	CommissionPlan *CommissionPlanClient
 	// Creative is the client for interacting with the Creative builders.
 	Creative *CreativeClient
+	// EarningHistory is the client for interacting with the EarningHistory builders.
+	EarningHistory *EarningHistoryClient
 	// GigTracking is the client for interacting with the GigTracking builders.
 	GigTracking *GigTrackingClient
 	// Lead is the client for interacting with the Lead builders.
@@ -79,8 +85,10 @@ func (c *Client) init() {
 	c.BannerStats = NewBannerStatsClient(c.config)
 	c.Campaign = NewCampaignClient(c.config)
 	c.CampaignLink = NewCampaignLinkClient(c.config)
+	c.CommissionHistory = NewCommissionHistoryClient(c.config)
 	c.CommissionPlan = NewCommissionPlanClient(c.config)
 	c.Creative = NewCreativeClient(c.config)
+	c.EarningHistory = NewEarningHistoryClient(c.config)
 	c.GigTracking = NewGigTrackingClient(c.config)
 	c.Lead = NewLeadClient(c.config)
 	c.Payout = NewPayoutClient(c.config)
@@ -176,21 +184,23 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		Affiliate:      NewAffiliateClient(cfg),
-		Banner:         NewBannerClient(cfg),
-		BannerCreative: NewBannerCreativeClient(cfg),
-		BannerStats:    NewBannerStatsClient(cfg),
-		Campaign:       NewCampaignClient(cfg),
-		CampaignLink:   NewCampaignLinkClient(cfg),
-		CommissionPlan: NewCommissionPlanClient(cfg),
-		Creative:       NewCreativeClient(cfg),
-		GigTracking:    NewGigTrackingClient(cfg),
-		Lead:           NewLeadClient(cfg),
-		Payout:         NewPayoutClient(cfg),
-		Test:           NewTestClient(cfg),
-		User:           NewUserClient(cfg),
+		ctx:               ctx,
+		config:            cfg,
+		Affiliate:         NewAffiliateClient(cfg),
+		Banner:            NewBannerClient(cfg),
+		BannerCreative:    NewBannerCreativeClient(cfg),
+		BannerStats:       NewBannerStatsClient(cfg),
+		Campaign:          NewCampaignClient(cfg),
+		CampaignLink:      NewCampaignLinkClient(cfg),
+		CommissionHistory: NewCommissionHistoryClient(cfg),
+		CommissionPlan:    NewCommissionPlanClient(cfg),
+		Creative:          NewCreativeClient(cfg),
+		EarningHistory:    NewEarningHistoryClient(cfg),
+		GigTracking:       NewGigTrackingClient(cfg),
+		Lead:              NewLeadClient(cfg),
+		Payout:            NewPayoutClient(cfg),
+		Test:              NewTestClient(cfg),
+		User:              NewUserClient(cfg),
 	}, nil
 }
 
@@ -208,21 +218,23 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		Affiliate:      NewAffiliateClient(cfg),
-		Banner:         NewBannerClient(cfg),
-		BannerCreative: NewBannerCreativeClient(cfg),
-		BannerStats:    NewBannerStatsClient(cfg),
-		Campaign:       NewCampaignClient(cfg),
-		CampaignLink:   NewCampaignLinkClient(cfg),
-		CommissionPlan: NewCommissionPlanClient(cfg),
-		Creative:       NewCreativeClient(cfg),
-		GigTracking:    NewGigTrackingClient(cfg),
-		Lead:           NewLeadClient(cfg),
-		Payout:         NewPayoutClient(cfg),
-		Test:           NewTestClient(cfg),
-		User:           NewUserClient(cfg),
+		ctx:               ctx,
+		config:            cfg,
+		Affiliate:         NewAffiliateClient(cfg),
+		Banner:            NewBannerClient(cfg),
+		BannerCreative:    NewBannerCreativeClient(cfg),
+		BannerStats:       NewBannerStatsClient(cfg),
+		Campaign:          NewCampaignClient(cfg),
+		CampaignLink:      NewCampaignLinkClient(cfg),
+		CommissionHistory: NewCommissionHistoryClient(cfg),
+		CommissionPlan:    NewCommissionPlanClient(cfg),
+		Creative:          NewCreativeClient(cfg),
+		EarningHistory:    NewEarningHistoryClient(cfg),
+		GigTracking:       NewGigTrackingClient(cfg),
+		Lead:              NewLeadClient(cfg),
+		Payout:            NewPayoutClient(cfg),
+		Test:              NewTestClient(cfg),
+		User:              NewUserClient(cfg),
 	}, nil
 }
 
@@ -253,8 +265,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Affiliate, c.Banner, c.BannerCreative, c.BannerStats, c.Campaign,
-		c.CampaignLink, c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout,
-		c.Test, c.User,
+		c.CampaignLink, c.CommissionHistory, c.CommissionPlan, c.Creative,
+		c.EarningHistory, c.GigTracking, c.Lead, c.Payout, c.Test, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -265,8 +277,8 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Affiliate, c.Banner, c.BannerCreative, c.BannerStats, c.Campaign,
-		c.CampaignLink, c.CommissionPlan, c.Creative, c.GigTracking, c.Lead, c.Payout,
-		c.Test, c.User,
+		c.CampaignLink, c.CommissionHistory, c.CommissionPlan, c.Creative,
+		c.EarningHistory, c.GigTracking, c.Lead, c.Payout, c.Test, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -287,10 +299,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Campaign.mutate(ctx, m)
 	case *CampaignLinkMutation:
 		return c.CampaignLink.mutate(ctx, m)
+	case *CommissionHistoryMutation:
+		return c.CommissionHistory.mutate(ctx, m)
 	case *CommissionPlanMutation:
 		return c.CommissionPlan.mutate(ctx, m)
 	case *CreativeMutation:
 		return c.Creative.mutate(ctx, m)
+	case *EarningHistoryMutation:
+		return c.EarningHistory.mutate(ctx, m)
 	case *GigTrackingMutation:
 		return c.GigTracking.mutate(ctx, m)
 	case *LeadMutation:
@@ -1328,6 +1344,155 @@ func (c *CampaignLinkClient) mutate(ctx context.Context, m *CampaignLinkMutation
 	}
 }
 
+// CommissionHistoryClient is a client for the CommissionHistory schema.
+type CommissionHistoryClient struct {
+	config
+}
+
+// NewCommissionHistoryClient returns a client for the CommissionHistory from the given config.
+func NewCommissionHistoryClient(c config) *CommissionHistoryClient {
+	return &CommissionHistoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `commissionhistory.Hooks(f(g(h())))`.
+func (c *CommissionHistoryClient) Use(hooks ...Hook) {
+	c.hooks.CommissionHistory = append(c.hooks.CommissionHistory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `commissionhistory.Intercept(f(g(h())))`.
+func (c *CommissionHistoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CommissionHistory = append(c.inters.CommissionHistory, interceptors...)
+}
+
+// Create returns a builder for creating a CommissionHistory entity.
+func (c *CommissionHistoryClient) Create() *CommissionHistoryCreate {
+	mutation := newCommissionHistoryMutation(c.config, OpCreate)
+	return &CommissionHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CommissionHistory entities.
+func (c *CommissionHistoryClient) CreateBulk(builders ...*CommissionHistoryCreate) *CommissionHistoryCreateBulk {
+	return &CommissionHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CommissionHistoryClient) MapCreateBulk(slice any, setFunc func(*CommissionHistoryCreate, int)) *CommissionHistoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CommissionHistoryCreateBulk{err: fmt.Errorf("calling to CommissionHistoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CommissionHistoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CommissionHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CommissionHistory.
+func (c *CommissionHistoryClient) Update() *CommissionHistoryUpdate {
+	mutation := newCommissionHistoryMutation(c.config, OpUpdate)
+	return &CommissionHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CommissionHistoryClient) UpdateOne(ch *CommissionHistory) *CommissionHistoryUpdateOne {
+	mutation := newCommissionHistoryMutation(c.config, OpUpdateOne, withCommissionHistory(ch))
+	return &CommissionHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CommissionHistoryClient) UpdateOneID(id int64) *CommissionHistoryUpdateOne {
+	mutation := newCommissionHistoryMutation(c.config, OpUpdateOne, withCommissionHistoryID(id))
+	return &CommissionHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CommissionHistory.
+func (c *CommissionHistoryClient) Delete() *CommissionHistoryDelete {
+	mutation := newCommissionHistoryMutation(c.config, OpDelete)
+	return &CommissionHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CommissionHistoryClient) DeleteOne(ch *CommissionHistory) *CommissionHistoryDeleteOne {
+	return c.DeleteOneID(ch.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CommissionHistoryClient) DeleteOneID(id int64) *CommissionHistoryDeleteOne {
+	builder := c.Delete().Where(commissionhistory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CommissionHistoryDeleteOne{builder}
+}
+
+// Query returns a query builder for CommissionHistory.
+func (c *CommissionHistoryClient) Query() *CommissionHistoryQuery {
+	return &CommissionHistoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCommissionHistory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CommissionHistory entity by its id.
+func (c *CommissionHistoryClient) Get(ctx context.Context, id int64) (*CommissionHistory, error) {
+	return c.Query().Where(commissionhistory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CommissionHistoryClient) GetX(ctx context.Context, id int64) *CommissionHistory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a CommissionHistory.
+func (c *CommissionHistoryClient) QueryUser(ch *CommissionHistory) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ch.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(commissionhistory.Table, commissionhistory.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, commissionhistory.UserTable, commissionhistory.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CommissionHistoryClient) Hooks() []Hook {
+	return c.hooks.CommissionHistory
+}
+
+// Interceptors returns the client interceptors.
+func (c *CommissionHistoryClient) Interceptors() []Interceptor {
+	return c.inters.CommissionHistory
+}
+
+func (c *CommissionHistoryClient) mutate(ctx context.Context, m *CommissionHistoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CommissionHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CommissionHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CommissionHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CommissionHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CommissionHistory mutation op: %q", m.Op())
+	}
+}
+
 // CommissionPlanClient is a client for the CommissionPlan schema.
 type CommissionPlanClient struct {
 	config
@@ -1639,6 +1804,155 @@ func (c *CreativeClient) mutate(ctx context.Context, m *CreativeMutation) (Value
 		return (&CreativeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Creative mutation op: %q", m.Op())
+	}
+}
+
+// EarningHistoryClient is a client for the EarningHistory schema.
+type EarningHistoryClient struct {
+	config
+}
+
+// NewEarningHistoryClient returns a client for the EarningHistory from the given config.
+func NewEarningHistoryClient(c config) *EarningHistoryClient {
+	return &EarningHistoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `earninghistory.Hooks(f(g(h())))`.
+func (c *EarningHistoryClient) Use(hooks ...Hook) {
+	c.hooks.EarningHistory = append(c.hooks.EarningHistory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `earninghistory.Intercept(f(g(h())))`.
+func (c *EarningHistoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EarningHistory = append(c.inters.EarningHistory, interceptors...)
+}
+
+// Create returns a builder for creating a EarningHistory entity.
+func (c *EarningHistoryClient) Create() *EarningHistoryCreate {
+	mutation := newEarningHistoryMutation(c.config, OpCreate)
+	return &EarningHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EarningHistory entities.
+func (c *EarningHistoryClient) CreateBulk(builders ...*EarningHistoryCreate) *EarningHistoryCreateBulk {
+	return &EarningHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EarningHistoryClient) MapCreateBulk(slice any, setFunc func(*EarningHistoryCreate, int)) *EarningHistoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EarningHistoryCreateBulk{err: fmt.Errorf("calling to EarningHistoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EarningHistoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EarningHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EarningHistory.
+func (c *EarningHistoryClient) Update() *EarningHistoryUpdate {
+	mutation := newEarningHistoryMutation(c.config, OpUpdate)
+	return &EarningHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EarningHistoryClient) UpdateOne(eh *EarningHistory) *EarningHistoryUpdateOne {
+	mutation := newEarningHistoryMutation(c.config, OpUpdateOne, withEarningHistory(eh))
+	return &EarningHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EarningHistoryClient) UpdateOneID(id int64) *EarningHistoryUpdateOne {
+	mutation := newEarningHistoryMutation(c.config, OpUpdateOne, withEarningHistoryID(id))
+	return &EarningHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EarningHistory.
+func (c *EarningHistoryClient) Delete() *EarningHistoryDelete {
+	mutation := newEarningHistoryMutation(c.config, OpDelete)
+	return &EarningHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EarningHistoryClient) DeleteOne(eh *EarningHistory) *EarningHistoryDeleteOne {
+	return c.DeleteOneID(eh.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EarningHistoryClient) DeleteOneID(id int64) *EarningHistoryDeleteOne {
+	builder := c.Delete().Where(earninghistory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EarningHistoryDeleteOne{builder}
+}
+
+// Query returns a query builder for EarningHistory.
+func (c *EarningHistoryClient) Query() *EarningHistoryQuery {
+	return &EarningHistoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEarningHistory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EarningHistory entity by its id.
+func (c *EarningHistoryClient) Get(ctx context.Context, id int64) (*EarningHistory, error) {
+	return c.Query().Where(earninghistory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EarningHistoryClient) GetX(ctx context.Context, id int64) *EarningHistory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a EarningHistory.
+func (c *EarningHistoryClient) QueryUser(eh *EarningHistory) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := eh.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(earninghistory.Table, earninghistory.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, earninghistory.UserTable, earninghistory.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(eh.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EarningHistoryClient) Hooks() []Hook {
+	return c.hooks.EarningHistory
+}
+
+// Interceptors returns the client interceptors.
+func (c *EarningHistoryClient) Interceptors() []Interceptor {
+	return c.inters.EarningHistory
+}
+
+func (c *EarningHistoryClient) mutate(ctx context.Context, m *EarningHistoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EarningHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EarningHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EarningHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EarningHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EarningHistory mutation op: %q", m.Op())
 	}
 }
 
@@ -2426,6 +2740,38 @@ func (c *UserClient) QueryAffiliates(u *User) *AffiliateQuery {
 	return query
 }
 
+// QueryEarningHistories queries the earning_histories edge of a User.
+func (c *UserClient) QueryEarningHistories(u *User) *EarningHistoryQuery {
+	query := (&EarningHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(earninghistory.Table, earninghistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.EarningHistoriesTable, user.EarningHistoriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCommissionHistories queries the commission_histories edge of a User.
+func (c *UserClient) QueryCommissionHistories(u *User) *CommissionHistoryQuery {
+	query := (&CommissionHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(commissionhistory.Table, commissionhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CommissionHistoriesTable, user.CommissionHistoriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -2455,11 +2801,12 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 type (
 	hooks struct {
 		Affiliate, Banner, BannerCreative, BannerStats, Campaign, CampaignLink,
-		CommissionPlan, Creative, GigTracking, Lead, Payout, Test, User []ent.Hook
+		CommissionHistory, CommissionPlan, Creative, EarningHistory, GigTracking, Lead,
+		Payout, Test, User []ent.Hook
 	}
 	inters struct {
 		Affiliate, Banner, BannerCreative, BannerStats, Campaign, CampaignLink,
-		CommissionPlan, Creative, GigTracking, Lead, Payout, Test,
-		User []ent.Interceptor
+		CommissionHistory, CommissionPlan, Creative, EarningHistory, GigTracking, Lead,
+		Payout, Test, User []ent.Interceptor
 	}
 )

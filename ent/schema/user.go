@@ -52,6 +52,8 @@ func (User) Edges() []ent.Edge {
 			Ref("publishers").
 			Unique(),
 		edge.To("affiliates", Affiliate.Type),
+		edge.To("earning_histories", EarningHistory.Type),
+		edge.To("commission_histories", CommissionHistory.Type),
 	}
 }
 func (User) Indexes() []ent.Index {

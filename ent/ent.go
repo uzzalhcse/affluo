@@ -9,8 +9,10 @@ import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/commissionhistory"
 	"affluo/ent/commissionplan"
 	"affluo/ent/creative"
+	"affluo/ent/earninghistory"
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
 	"affluo/ent/payout"
@@ -85,19 +87,21 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			affiliate.Table:      affiliate.ValidColumn,
-			banner.Table:         banner.ValidColumn,
-			bannercreative.Table: bannercreative.ValidColumn,
-			bannerstats.Table:    bannerstats.ValidColumn,
-			campaign.Table:       campaign.ValidColumn,
-			campaignlink.Table:   campaignlink.ValidColumn,
-			commissionplan.Table: commissionplan.ValidColumn,
-			creative.Table:       creative.ValidColumn,
-			gigtracking.Table:    gigtracking.ValidColumn,
-			lead.Table:           lead.ValidColumn,
-			payout.Table:         payout.ValidColumn,
-			test.Table:           test.ValidColumn,
-			user.Table:           user.ValidColumn,
+			affiliate.Table:         affiliate.ValidColumn,
+			banner.Table:            banner.ValidColumn,
+			bannercreative.Table:    bannercreative.ValidColumn,
+			bannerstats.Table:       bannerstats.ValidColumn,
+			campaign.Table:          campaign.ValidColumn,
+			campaignlink.Table:      campaignlink.ValidColumn,
+			commissionhistory.Table: commissionhistory.ValidColumn,
+			commissionplan.Table:    commissionplan.ValidColumn,
+			creative.Table:          creative.ValidColumn,
+			earninghistory.Table:    earninghistory.ValidColumn,
+			gigtracking.Table:       gigtracking.ValidColumn,
+			lead.Table:              lead.ValidColumn,
+			payout.Table:            payout.ValidColumn,
+			test.Table:              test.ValidColumn,
+			user.Table:              user.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

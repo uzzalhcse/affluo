@@ -11,8 +11,8 @@ var (
 	// AffiliatesColumns holds the columns for the "affiliates" table.
 	AffiliatesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
-		{Name: "tracking_code", Type: field.TypeString, Nullable: true},
-		{Name: "affiliate_user_id", Type: field.TypeString},
+		{Name: "tracking_code", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "affiliate_user_id", Type: field.TypeString, Unique: true, Size: 255},
 		{Name: "source", Type: field.TypeEnum, Enums: []string{"banner", "services", "products"}, Default: "banner"},
 		{Name: "registration_date", Type: field.TypeTime},
 		{Name: "first_transaction_date", Type: field.TypeTime, Nullable: true},
@@ -237,6 +237,32 @@ var (
 			},
 		},
 	}
+	// CommissionHistoriesColumns holds the columns for the "commission_histories" table.
+	CommissionHistoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "amount", Type: field.TypeFloat64},
+		{Name: "affiliate_user_id", Type: field.TypeString},
+		{Name: "trx_id", Type: field.TypeString, Nullable: true},
+		{Name: "track_id", Type: field.TypeString, Nullable: true},
+		{Name: "commission_rate", Type: field.TypeFloat64},
+		{Name: "is_first_order", Type: field.TypeBool},
+		{Name: "date", Type: field.TypeString, Default: "2025-01-12"},
+		{Name: "user_commission_histories", Type: field.TypeInt64},
+	}
+	// CommissionHistoriesTable holds the schema information for the "commission_histories" table.
+	CommissionHistoriesTable = &schema.Table{
+		Name:       "commission_histories",
+		Columns:    CommissionHistoriesColumns,
+		PrimaryKey: []*schema.Column{CommissionHistoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "commission_histories_users_commission_histories",
+				Columns:    []*schema.Column{CommissionHistoriesColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// CommissionPlansColumns holds the columns for the "commission_plans" table.
 	CommissionPlansColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -245,10 +271,10 @@ var (
 		{Name: "type", Type: field.TypeEnum, Enums: []string{"fixed", "percentage"}},
 		{Name: "click_commission", Type: field.TypeFloat64, Default: 0},
 		{Name: "impression_commission", Type: field.TypeFloat64, Default: 0},
-		{Name: "lead_commission", Type: field.TypeFloat64, Default: 0},
+		{Name: "first_lead_commission", Type: field.TypeFloat64, Default: 25},
+		{Name: "repeat_lead_commission", Type: field.TypeFloat64, Default: 10},
+		{Name: "valid_months", Type: field.TypeInt, Default: 12},
 		{Name: "minimum_payout", Type: field.TypeFloat64, Default: 0},
-		{Name: "valid_from", Type: field.TypeTime, Nullable: true},
-		{Name: "valid_until", Type: field.TypeTime, Nullable: true},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "is_default", Type: field.TypeBool, Default: false},
 	}
@@ -273,6 +299,30 @@ var (
 		Name:       "creatives",
 		Columns:    CreativesColumns,
 		PrimaryKey: []*schema.Column{CreativesColumns[0]},
+	}
+	// EarningHistoriesColumns holds the columns for the "earning_histories" table.
+	EarningHistoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "amount", Type: field.TypeFloat64},
+		{Name: "event_type", Type: field.TypeString},
+		{Name: "source", Type: field.TypeString},
+		{Name: "track_id", Type: field.TypeString, Nullable: true},
+		{Name: "date", Type: field.TypeString, Default: "2025-01-12"},
+		{Name: "user_earning_histories", Type: field.TypeInt64},
+	}
+	// EarningHistoriesTable holds the schema information for the "earning_histories" table.
+	EarningHistoriesTable = &schema.Table{
+		Name:       "earning_histories",
+		Columns:    EarningHistoriesColumns,
+		PrimaryKey: []*schema.Column{EarningHistoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "earning_histories_users_earning_histories",
+				Columns:    []*schema.Column{EarningHistoriesColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// GigTrackingsColumns holds the columns for the "gig_trackings" table.
 	GigTrackingsColumns = []*schema.Column{
@@ -445,8 +495,10 @@ var (
 		BannerStatsTable,
 		CampaignsTable,
 		CampaignLinksTable,
+		CommissionHistoriesTable,
 		CommissionPlansTable,
 		CreativesTable,
+		EarningHistoriesTable,
 		GigTrackingsTable,
 		LeadsTable,
 		PayoutsTable,
@@ -464,6 +516,8 @@ func init() {
 	BannerStatsTable.ForeignKeys[1].RefTable = UsersTable
 	CampaignsTable.ForeignKeys[0].RefTable = UsersTable
 	CampaignLinksTable.ForeignKeys[0].RefTable = CampaignsTable
+	CommissionHistoriesTable.ForeignKeys[0].RefTable = UsersTable
+	EarningHistoriesTable.ForeignKeys[0].RefTable = UsersTable
 	GigTrackingsTable.ForeignKeys[0].RefTable = UsersTable
 	LeadsTable.ForeignKeys[0].RefTable = BannersTable
 	PayoutsTable.ForeignKeys[0].RefTable = UsersTable

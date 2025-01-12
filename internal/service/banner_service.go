@@ -276,6 +276,7 @@ func (s *BannerService) UpdateBanner(ctx context.Context, id int64, req *dto.Cre
 		SetName(req.Name).
 		SetDescription(req.Description).
 		SetType(banner.Type(req.Type)).
+		SetClickURL(req.ClickURL).
 		SetSize(req.Size).
 		SetStatus(banner.Status(req.Status)).
 		SetAllowedCountries(req.AllowedCountries)

@@ -80,6 +80,18 @@ func (f CampaignLinkFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CampaignLinkMutation", m)
 }
 
+// The CommissionHistoryFunc type is an adapter to allow the use of ordinary
+// function as CommissionHistory mutator.
+type CommissionHistoryFunc func(context.Context, *ent.CommissionHistoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CommissionHistoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CommissionHistoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommissionHistoryMutation", m)
+}
+
 // The CommissionPlanFunc type is an adapter to allow the use of ordinary
 // function as CommissionPlan mutator.
 type CommissionPlanFunc func(context.Context, *ent.CommissionPlanMutation) (ent.Value, error)
@@ -102,6 +114,18 @@ func (f CreativeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CreativeMutation", m)
+}
+
+// The EarningHistoryFunc type is an adapter to allow the use of ordinary
+// function as EarningHistory mutator.
+type EarningHistoryFunc func(context.Context, *ent.EarningHistoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EarningHistoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EarningHistoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EarningHistoryMutation", m)
 }
 
 // The GigTrackingFunc type is an adapter to allow the use of ordinary

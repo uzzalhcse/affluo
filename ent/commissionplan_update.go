@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -119,24 +118,66 @@ func (cpu *CommissionPlanUpdate) AddImpressionCommission(f float64) *CommissionP
 	return cpu
 }
 
-// SetLeadCommission sets the "lead_commission" field.
-func (cpu *CommissionPlanUpdate) SetLeadCommission(f float64) *CommissionPlanUpdate {
-	cpu.mutation.ResetLeadCommission()
-	cpu.mutation.SetLeadCommission(f)
+// SetFirstLeadCommission sets the "first_lead_commission" field.
+func (cpu *CommissionPlanUpdate) SetFirstLeadCommission(f float64) *CommissionPlanUpdate {
+	cpu.mutation.ResetFirstLeadCommission()
+	cpu.mutation.SetFirstLeadCommission(f)
 	return cpu
 }
 
-// SetNillableLeadCommission sets the "lead_commission" field if the given value is not nil.
-func (cpu *CommissionPlanUpdate) SetNillableLeadCommission(f *float64) *CommissionPlanUpdate {
+// SetNillableFirstLeadCommission sets the "first_lead_commission" field if the given value is not nil.
+func (cpu *CommissionPlanUpdate) SetNillableFirstLeadCommission(f *float64) *CommissionPlanUpdate {
 	if f != nil {
-		cpu.SetLeadCommission(*f)
+		cpu.SetFirstLeadCommission(*f)
 	}
 	return cpu
 }
 
-// AddLeadCommission adds f to the "lead_commission" field.
-func (cpu *CommissionPlanUpdate) AddLeadCommission(f float64) *CommissionPlanUpdate {
-	cpu.mutation.AddLeadCommission(f)
+// AddFirstLeadCommission adds f to the "first_lead_commission" field.
+func (cpu *CommissionPlanUpdate) AddFirstLeadCommission(f float64) *CommissionPlanUpdate {
+	cpu.mutation.AddFirstLeadCommission(f)
+	return cpu
+}
+
+// SetRepeatLeadCommission sets the "repeat_lead_commission" field.
+func (cpu *CommissionPlanUpdate) SetRepeatLeadCommission(f float64) *CommissionPlanUpdate {
+	cpu.mutation.ResetRepeatLeadCommission()
+	cpu.mutation.SetRepeatLeadCommission(f)
+	return cpu
+}
+
+// SetNillableRepeatLeadCommission sets the "repeat_lead_commission" field if the given value is not nil.
+func (cpu *CommissionPlanUpdate) SetNillableRepeatLeadCommission(f *float64) *CommissionPlanUpdate {
+	if f != nil {
+		cpu.SetRepeatLeadCommission(*f)
+	}
+	return cpu
+}
+
+// AddRepeatLeadCommission adds f to the "repeat_lead_commission" field.
+func (cpu *CommissionPlanUpdate) AddRepeatLeadCommission(f float64) *CommissionPlanUpdate {
+	cpu.mutation.AddRepeatLeadCommission(f)
+	return cpu
+}
+
+// SetValidMonths sets the "valid_months" field.
+func (cpu *CommissionPlanUpdate) SetValidMonths(i int) *CommissionPlanUpdate {
+	cpu.mutation.ResetValidMonths()
+	cpu.mutation.SetValidMonths(i)
+	return cpu
+}
+
+// SetNillableValidMonths sets the "valid_months" field if the given value is not nil.
+func (cpu *CommissionPlanUpdate) SetNillableValidMonths(i *int) *CommissionPlanUpdate {
+	if i != nil {
+		cpu.SetValidMonths(*i)
+	}
+	return cpu
+}
+
+// AddValidMonths adds i to the "valid_months" field.
+func (cpu *CommissionPlanUpdate) AddValidMonths(i int) *CommissionPlanUpdate {
+	cpu.mutation.AddValidMonths(i)
 	return cpu
 }
 
@@ -158,46 +199,6 @@ func (cpu *CommissionPlanUpdate) SetNillableMinimumPayout(f *float64) *Commissio
 // AddMinimumPayout adds f to the "minimum_payout" field.
 func (cpu *CommissionPlanUpdate) AddMinimumPayout(f float64) *CommissionPlanUpdate {
 	cpu.mutation.AddMinimumPayout(f)
-	return cpu
-}
-
-// SetValidFrom sets the "valid_from" field.
-func (cpu *CommissionPlanUpdate) SetValidFrom(t time.Time) *CommissionPlanUpdate {
-	cpu.mutation.SetValidFrom(t)
-	return cpu
-}
-
-// SetNillableValidFrom sets the "valid_from" field if the given value is not nil.
-func (cpu *CommissionPlanUpdate) SetNillableValidFrom(t *time.Time) *CommissionPlanUpdate {
-	if t != nil {
-		cpu.SetValidFrom(*t)
-	}
-	return cpu
-}
-
-// ClearValidFrom clears the value of the "valid_from" field.
-func (cpu *CommissionPlanUpdate) ClearValidFrom() *CommissionPlanUpdate {
-	cpu.mutation.ClearValidFrom()
-	return cpu
-}
-
-// SetValidUntil sets the "valid_until" field.
-func (cpu *CommissionPlanUpdate) SetValidUntil(t time.Time) *CommissionPlanUpdate {
-	cpu.mutation.SetValidUntil(t)
-	return cpu
-}
-
-// SetNillableValidUntil sets the "valid_until" field if the given value is not nil.
-func (cpu *CommissionPlanUpdate) SetNillableValidUntil(t *time.Time) *CommissionPlanUpdate {
-	if t != nil {
-		cpu.SetValidUntil(*t)
-	}
-	return cpu
-}
-
-// ClearValidUntil clears the value of the "valid_until" field.
-func (cpu *CommissionPlanUpdate) ClearValidUntil() *CommissionPlanUpdate {
-	cpu.mutation.ClearValidUntil()
 	return cpu
 }
 
@@ -348,29 +349,29 @@ func (cpu *CommissionPlanUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if value, ok := cpu.mutation.AddedImpressionCommission(); ok {
 		_spec.AddField(commissionplan.FieldImpressionCommission, field.TypeFloat64, value)
 	}
-	if value, ok := cpu.mutation.LeadCommission(); ok {
-		_spec.SetField(commissionplan.FieldLeadCommission, field.TypeFloat64, value)
+	if value, ok := cpu.mutation.FirstLeadCommission(); ok {
+		_spec.SetField(commissionplan.FieldFirstLeadCommission, field.TypeFloat64, value)
 	}
-	if value, ok := cpu.mutation.AddedLeadCommission(); ok {
-		_spec.AddField(commissionplan.FieldLeadCommission, field.TypeFloat64, value)
+	if value, ok := cpu.mutation.AddedFirstLeadCommission(); ok {
+		_spec.AddField(commissionplan.FieldFirstLeadCommission, field.TypeFloat64, value)
+	}
+	if value, ok := cpu.mutation.RepeatLeadCommission(); ok {
+		_spec.SetField(commissionplan.FieldRepeatLeadCommission, field.TypeFloat64, value)
+	}
+	if value, ok := cpu.mutation.AddedRepeatLeadCommission(); ok {
+		_spec.AddField(commissionplan.FieldRepeatLeadCommission, field.TypeFloat64, value)
+	}
+	if value, ok := cpu.mutation.ValidMonths(); ok {
+		_spec.SetField(commissionplan.FieldValidMonths, field.TypeInt, value)
+	}
+	if value, ok := cpu.mutation.AddedValidMonths(); ok {
+		_spec.AddField(commissionplan.FieldValidMonths, field.TypeInt, value)
 	}
 	if value, ok := cpu.mutation.MinimumPayout(); ok {
 		_spec.SetField(commissionplan.FieldMinimumPayout, field.TypeFloat64, value)
 	}
 	if value, ok := cpu.mutation.AddedMinimumPayout(); ok {
 		_spec.AddField(commissionplan.FieldMinimumPayout, field.TypeFloat64, value)
-	}
-	if value, ok := cpu.mutation.ValidFrom(); ok {
-		_spec.SetField(commissionplan.FieldValidFrom, field.TypeTime, value)
-	}
-	if cpu.mutation.ValidFromCleared() {
-		_spec.ClearField(commissionplan.FieldValidFrom, field.TypeTime)
-	}
-	if value, ok := cpu.mutation.ValidUntil(); ok {
-		_spec.SetField(commissionplan.FieldValidUntil, field.TypeTime, value)
-	}
-	if cpu.mutation.ValidUntilCleared() {
-		_spec.ClearField(commissionplan.FieldValidUntil, field.TypeTime)
 	}
 	if value, ok := cpu.mutation.IsActive(); ok {
 		_spec.SetField(commissionplan.FieldIsActive, field.TypeBool, value)
@@ -533,24 +534,66 @@ func (cpuo *CommissionPlanUpdateOne) AddImpressionCommission(f float64) *Commiss
 	return cpuo
 }
 
-// SetLeadCommission sets the "lead_commission" field.
-func (cpuo *CommissionPlanUpdateOne) SetLeadCommission(f float64) *CommissionPlanUpdateOne {
-	cpuo.mutation.ResetLeadCommission()
-	cpuo.mutation.SetLeadCommission(f)
+// SetFirstLeadCommission sets the "first_lead_commission" field.
+func (cpuo *CommissionPlanUpdateOne) SetFirstLeadCommission(f float64) *CommissionPlanUpdateOne {
+	cpuo.mutation.ResetFirstLeadCommission()
+	cpuo.mutation.SetFirstLeadCommission(f)
 	return cpuo
 }
 
-// SetNillableLeadCommission sets the "lead_commission" field if the given value is not nil.
-func (cpuo *CommissionPlanUpdateOne) SetNillableLeadCommission(f *float64) *CommissionPlanUpdateOne {
+// SetNillableFirstLeadCommission sets the "first_lead_commission" field if the given value is not nil.
+func (cpuo *CommissionPlanUpdateOne) SetNillableFirstLeadCommission(f *float64) *CommissionPlanUpdateOne {
 	if f != nil {
-		cpuo.SetLeadCommission(*f)
+		cpuo.SetFirstLeadCommission(*f)
 	}
 	return cpuo
 }
 
-// AddLeadCommission adds f to the "lead_commission" field.
-func (cpuo *CommissionPlanUpdateOne) AddLeadCommission(f float64) *CommissionPlanUpdateOne {
-	cpuo.mutation.AddLeadCommission(f)
+// AddFirstLeadCommission adds f to the "first_lead_commission" field.
+func (cpuo *CommissionPlanUpdateOne) AddFirstLeadCommission(f float64) *CommissionPlanUpdateOne {
+	cpuo.mutation.AddFirstLeadCommission(f)
+	return cpuo
+}
+
+// SetRepeatLeadCommission sets the "repeat_lead_commission" field.
+func (cpuo *CommissionPlanUpdateOne) SetRepeatLeadCommission(f float64) *CommissionPlanUpdateOne {
+	cpuo.mutation.ResetRepeatLeadCommission()
+	cpuo.mutation.SetRepeatLeadCommission(f)
+	return cpuo
+}
+
+// SetNillableRepeatLeadCommission sets the "repeat_lead_commission" field if the given value is not nil.
+func (cpuo *CommissionPlanUpdateOne) SetNillableRepeatLeadCommission(f *float64) *CommissionPlanUpdateOne {
+	if f != nil {
+		cpuo.SetRepeatLeadCommission(*f)
+	}
+	return cpuo
+}
+
+// AddRepeatLeadCommission adds f to the "repeat_lead_commission" field.
+func (cpuo *CommissionPlanUpdateOne) AddRepeatLeadCommission(f float64) *CommissionPlanUpdateOne {
+	cpuo.mutation.AddRepeatLeadCommission(f)
+	return cpuo
+}
+
+// SetValidMonths sets the "valid_months" field.
+func (cpuo *CommissionPlanUpdateOne) SetValidMonths(i int) *CommissionPlanUpdateOne {
+	cpuo.mutation.ResetValidMonths()
+	cpuo.mutation.SetValidMonths(i)
+	return cpuo
+}
+
+// SetNillableValidMonths sets the "valid_months" field if the given value is not nil.
+func (cpuo *CommissionPlanUpdateOne) SetNillableValidMonths(i *int) *CommissionPlanUpdateOne {
+	if i != nil {
+		cpuo.SetValidMonths(*i)
+	}
+	return cpuo
+}
+
+// AddValidMonths adds i to the "valid_months" field.
+func (cpuo *CommissionPlanUpdateOne) AddValidMonths(i int) *CommissionPlanUpdateOne {
+	cpuo.mutation.AddValidMonths(i)
 	return cpuo
 }
 
@@ -572,46 +615,6 @@ func (cpuo *CommissionPlanUpdateOne) SetNillableMinimumPayout(f *float64) *Commi
 // AddMinimumPayout adds f to the "minimum_payout" field.
 func (cpuo *CommissionPlanUpdateOne) AddMinimumPayout(f float64) *CommissionPlanUpdateOne {
 	cpuo.mutation.AddMinimumPayout(f)
-	return cpuo
-}
-
-// SetValidFrom sets the "valid_from" field.
-func (cpuo *CommissionPlanUpdateOne) SetValidFrom(t time.Time) *CommissionPlanUpdateOne {
-	cpuo.mutation.SetValidFrom(t)
-	return cpuo
-}
-
-// SetNillableValidFrom sets the "valid_from" field if the given value is not nil.
-func (cpuo *CommissionPlanUpdateOne) SetNillableValidFrom(t *time.Time) *CommissionPlanUpdateOne {
-	if t != nil {
-		cpuo.SetValidFrom(*t)
-	}
-	return cpuo
-}
-
-// ClearValidFrom clears the value of the "valid_from" field.
-func (cpuo *CommissionPlanUpdateOne) ClearValidFrom() *CommissionPlanUpdateOne {
-	cpuo.mutation.ClearValidFrom()
-	return cpuo
-}
-
-// SetValidUntil sets the "valid_until" field.
-func (cpuo *CommissionPlanUpdateOne) SetValidUntil(t time.Time) *CommissionPlanUpdateOne {
-	cpuo.mutation.SetValidUntil(t)
-	return cpuo
-}
-
-// SetNillableValidUntil sets the "valid_until" field if the given value is not nil.
-func (cpuo *CommissionPlanUpdateOne) SetNillableValidUntil(t *time.Time) *CommissionPlanUpdateOne {
-	if t != nil {
-		cpuo.SetValidUntil(*t)
-	}
-	return cpuo
-}
-
-// ClearValidUntil clears the value of the "valid_until" field.
-func (cpuo *CommissionPlanUpdateOne) ClearValidUntil() *CommissionPlanUpdateOne {
-	cpuo.mutation.ClearValidUntil()
 	return cpuo
 }
 
@@ -792,29 +795,29 @@ func (cpuo *CommissionPlanUpdateOne) sqlSave(ctx context.Context) (_node *Commis
 	if value, ok := cpuo.mutation.AddedImpressionCommission(); ok {
 		_spec.AddField(commissionplan.FieldImpressionCommission, field.TypeFloat64, value)
 	}
-	if value, ok := cpuo.mutation.LeadCommission(); ok {
-		_spec.SetField(commissionplan.FieldLeadCommission, field.TypeFloat64, value)
+	if value, ok := cpuo.mutation.FirstLeadCommission(); ok {
+		_spec.SetField(commissionplan.FieldFirstLeadCommission, field.TypeFloat64, value)
 	}
-	if value, ok := cpuo.mutation.AddedLeadCommission(); ok {
-		_spec.AddField(commissionplan.FieldLeadCommission, field.TypeFloat64, value)
+	if value, ok := cpuo.mutation.AddedFirstLeadCommission(); ok {
+		_spec.AddField(commissionplan.FieldFirstLeadCommission, field.TypeFloat64, value)
+	}
+	if value, ok := cpuo.mutation.RepeatLeadCommission(); ok {
+		_spec.SetField(commissionplan.FieldRepeatLeadCommission, field.TypeFloat64, value)
+	}
+	if value, ok := cpuo.mutation.AddedRepeatLeadCommission(); ok {
+		_spec.AddField(commissionplan.FieldRepeatLeadCommission, field.TypeFloat64, value)
+	}
+	if value, ok := cpuo.mutation.ValidMonths(); ok {
+		_spec.SetField(commissionplan.FieldValidMonths, field.TypeInt, value)
+	}
+	if value, ok := cpuo.mutation.AddedValidMonths(); ok {
+		_spec.AddField(commissionplan.FieldValidMonths, field.TypeInt, value)
 	}
 	if value, ok := cpuo.mutation.MinimumPayout(); ok {
 		_spec.SetField(commissionplan.FieldMinimumPayout, field.TypeFloat64, value)
 	}
 	if value, ok := cpuo.mutation.AddedMinimumPayout(); ok {
 		_spec.AddField(commissionplan.FieldMinimumPayout, field.TypeFloat64, value)
-	}
-	if value, ok := cpuo.mutation.ValidFrom(); ok {
-		_spec.SetField(commissionplan.FieldValidFrom, field.TypeTime, value)
-	}
-	if cpuo.mutation.ValidFromCleared() {
-		_spec.ClearField(commissionplan.FieldValidFrom, field.TypeTime)
-	}
-	if value, ok := cpuo.mutation.ValidUntil(); ok {
-		_spec.SetField(commissionplan.FieldValidUntil, field.TypeTime, value)
-	}
-	if cpuo.mutation.ValidUntilCleared() {
-		_spec.ClearField(commissionplan.FieldValidUntil, field.TypeTime)
 	}
 	if value, ok := cpuo.mutation.IsActive(); ok {
 		_spec.SetField(commissionplan.FieldIsActive, field.TypeBool, value)

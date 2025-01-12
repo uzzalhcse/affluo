@@ -197,6 +197,16 @@ func (au *AffiliateUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (au *AffiliateUpdate) check() error {
+	if v, ok := au.mutation.TrackingCode(); ok {
+		if err := affiliate.TrackingCodeValidator(v); err != nil {
+			return &ValidationError{Name: "tracking_code", err: fmt.Errorf(`ent: validator failed for field "Affiliate.tracking_code": %w`, err)}
+		}
+	}
+	if v, ok := au.mutation.AffiliateUserID(); ok {
+		if err := affiliate.AffiliateUserIDValidator(v); err != nil {
+			return &ValidationError{Name: "affiliate_user_id", err: fmt.Errorf(`ent: validator failed for field "Affiliate.affiliate_user_id": %w`, err)}
+		}
+	}
 	if v, ok := au.mutation.Source(); ok {
 		if err := affiliate.SourceValidator(v); err != nil {
 			return &ValidationError{Name: "source", err: fmt.Errorf(`ent: validator failed for field "Affiliate.source": %w`, err)}
@@ -480,6 +490,16 @@ func (auo *AffiliateUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (auo *AffiliateUpdateOne) check() error {
+	if v, ok := auo.mutation.TrackingCode(); ok {
+		if err := affiliate.TrackingCodeValidator(v); err != nil {
+			return &ValidationError{Name: "tracking_code", err: fmt.Errorf(`ent: validator failed for field "Affiliate.tracking_code": %w`, err)}
+		}
+	}
+	if v, ok := auo.mutation.AffiliateUserID(); ok {
+		if err := affiliate.AffiliateUserIDValidator(v); err != nil {
+			return &ValidationError{Name: "affiliate_user_id", err: fmt.Errorf(`ent: validator failed for field "Affiliate.affiliate_user_id": %w`, err)}
+		}
+	}
 	if v, ok := auo.mutation.Source(); ok {
 		if err := affiliate.SourceValidator(v); err != nil {
 			return &ValidationError{Name: "source", err: fmt.Errorf(`ent: validator failed for field "Affiliate.source": %w`, err)}

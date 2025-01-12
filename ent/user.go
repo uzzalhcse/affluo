@@ -63,9 +63,13 @@ type UserEdges struct {
 	CommissionPlan *CommissionPlan `json:"commission_plan,omitempty"`
 	// Affiliates holds the value of the affiliates edge.
 	Affiliates []*Affiliate `json:"affiliates,omitempty"`
+	// EarningHistories holds the value of the earning_histories edge.
+	EarningHistories []*EarningHistory `json:"earning_histories,omitempty"`
+	// CommissionHistories holds the value of the commission_histories edge.
+	CommissionHistories []*CommissionHistory `json:"commission_histories,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [8]bool
 }
 
 // CampaignsOrErr returns the Campaigns value or an error if the edge
@@ -122,6 +126,24 @@ func (e UserEdges) AffiliatesOrErr() ([]*Affiliate, error) {
 		return e.Affiliates, nil
 	}
 	return nil, &NotLoadedError{edge: "affiliates"}
+}
+
+// EarningHistoriesOrErr returns the EarningHistories value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) EarningHistoriesOrErr() ([]*EarningHistory, error) {
+	if e.loadedTypes[6] {
+		return e.EarningHistories, nil
+	}
+	return nil, &NotLoadedError{edge: "earning_histories"}
+}
+
+// CommissionHistoriesOrErr returns the CommissionHistories value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CommissionHistoriesOrErr() ([]*CommissionHistory, error) {
+	if e.loadedTypes[7] {
+		return e.CommissionHistories, nil
+	}
+	return nil, &NotLoadedError{edge: "commission_histories"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -280,6 +302,16 @@ func (u *User) QueryCommissionPlan() *CommissionPlanQuery {
 // QueryAffiliates queries the "affiliates" edge of the User entity.
 func (u *User) QueryAffiliates() *AffiliateQuery {
 	return NewUserClient(u.config).QueryAffiliates(u)
+}
+
+// QueryEarningHistories queries the "earning_histories" edge of the User entity.
+func (u *User) QueryEarningHistories() *EarningHistoryQuery {
+	return NewUserClient(u.config).QueryEarningHistories(u)
+}
+
+// QueryCommissionHistories queries the "commission_histories" edge of the User entity.
+func (u *User) QueryCommissionHistories() *CommissionHistoryQuery {
+	return NewUserClient(u.config).QueryCommissionHistories(u)
 }
 
 // Update returns a builder for updating this User.

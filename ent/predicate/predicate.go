@@ -24,11 +24,17 @@ type Campaign func(*sql.Selector)
 // CampaignLink is the predicate function for campaignlink builders.
 type CampaignLink func(*sql.Selector)
 
+// CommissionHistory is the predicate function for commissionhistory builders.
+type CommissionHistory func(*sql.Selector)
+
 // CommissionPlan is the predicate function for commissionplan builders.
 type CommissionPlan func(*sql.Selector)
 
 // Creative is the predicate function for creative builders.
 type Creative func(*sql.Selector)
+
+// EarningHistory is the predicate function for earninghistory builders.
+type EarningHistory func(*sql.Selector)
 
 // GigTracking is the predicate function for gigtracking builders.
 type GigTracking func(*sql.Selector)

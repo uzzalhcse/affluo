@@ -87,7 +87,7 @@ func (a *Application) Cleanup() {
 }
 
 func setupMiddleware(app *fiber.App) {
-	app.Use(middleware.Recover())
+	//app.Use(middleware.Recover())
 	app.Use(middleware.Logger())
 	// Add CORS middleware
 	app.Use(middleware.ConfigureCORS())

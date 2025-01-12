@@ -6,7 +6,6 @@ import (
 	"affluo/ent/commissionplan"
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -27,14 +26,14 @@ type CommissionPlan struct {
 	ClickCommission float64 `json:"click_commission,omitempty"`
 	// ImpressionCommission holds the value of the "impression_commission" field.
 	ImpressionCommission float64 `json:"impression_commission,omitempty"`
-	// LeadCommission holds the value of the "lead_commission" field.
-	LeadCommission float64 `json:"lead_commission,omitempty"`
+	// FirstLeadCommission holds the value of the "first_lead_commission" field.
+	FirstLeadCommission float64 `json:"first_lead_commission,omitempty"`
+	// RepeatLeadCommission holds the value of the "repeat_lead_commission" field.
+	RepeatLeadCommission float64 `json:"repeat_lead_commission,omitempty"`
+	// ValidMonths holds the value of the "valid_months" field.
+	ValidMonths int `json:"valid_months,omitempty"`
 	// MinimumPayout holds the value of the "minimum_payout" field.
 	MinimumPayout float64 `json:"minimum_payout,omitempty"`
-	// ValidFrom holds the value of the "valid_from" field.
-	ValidFrom time.Time `json:"valid_from,omitempty"`
-	// ValidUntil holds the value of the "valid_until" field.
-	ValidUntil time.Time `json:"valid_until,omitempty"`
 	// IsActive holds the value of the "is_active" field.
 	IsActive bool `json:"is_active,omitempty"`
 	// IsDefault holds the value of the "is_default" field.
@@ -70,14 +69,12 @@ func (*CommissionPlan) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case commissionplan.FieldIsActive, commissionplan.FieldIsDefault:
 			values[i] = new(sql.NullBool)
-		case commissionplan.FieldClickCommission, commissionplan.FieldImpressionCommission, commissionplan.FieldLeadCommission, commissionplan.FieldMinimumPayout:
+		case commissionplan.FieldClickCommission, commissionplan.FieldImpressionCommission, commissionplan.FieldFirstLeadCommission, commissionplan.FieldRepeatLeadCommission, commissionplan.FieldMinimumPayout:
 			values[i] = new(sql.NullFloat64)
-		case commissionplan.FieldID:
+		case commissionplan.FieldID, commissionplan.FieldValidMonths:
 			values[i] = new(sql.NullInt64)
 		case commissionplan.FieldName, commissionplan.FieldDescription, commissionplan.FieldType:
 			values[i] = new(sql.NullString)
-		case commissionplan.FieldValidFrom, commissionplan.FieldValidUntil:
-			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -129,29 +126,29 @@ func (cp *CommissionPlan) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				cp.ImpressionCommission = value.Float64
 			}
-		case commissionplan.FieldLeadCommission:
+		case commissionplan.FieldFirstLeadCommission:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
-				return fmt.Errorf("unexpected type %T for field lead_commission", values[i])
+				return fmt.Errorf("unexpected type %T for field first_lead_commission", values[i])
 			} else if value.Valid {
-				cp.LeadCommission = value.Float64
+				cp.FirstLeadCommission = value.Float64
+			}
+		case commissionplan.FieldRepeatLeadCommission:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field repeat_lead_commission", values[i])
+			} else if value.Valid {
+				cp.RepeatLeadCommission = value.Float64
+			}
+		case commissionplan.FieldValidMonths:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field valid_months", values[i])
+			} else if value.Valid {
+				cp.ValidMonths = int(value.Int64)
 			}
 		case commissionplan.FieldMinimumPayout:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
 				return fmt.Errorf("unexpected type %T for field minimum_payout", values[i])
 			} else if value.Valid {
 				cp.MinimumPayout = value.Float64
-			}
-		case commissionplan.FieldValidFrom:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field valid_from", values[i])
-			} else if value.Valid {
-				cp.ValidFrom = value.Time
-			}
-		case commissionplan.FieldValidUntil:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field valid_until", values[i])
-			} else if value.Valid {
-				cp.ValidUntil = value.Time
 			}
 		case commissionplan.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -221,17 +218,17 @@ func (cp *CommissionPlan) String() string {
 	builder.WriteString("impression_commission=")
 	builder.WriteString(fmt.Sprintf("%v", cp.ImpressionCommission))
 	builder.WriteString(", ")
-	builder.WriteString("lead_commission=")
-	builder.WriteString(fmt.Sprintf("%v", cp.LeadCommission))
+	builder.WriteString("first_lead_commission=")
+	builder.WriteString(fmt.Sprintf("%v", cp.FirstLeadCommission))
+	builder.WriteString(", ")
+	builder.WriteString("repeat_lead_commission=")
+	builder.WriteString(fmt.Sprintf("%v", cp.RepeatLeadCommission))
+	builder.WriteString(", ")
+	builder.WriteString("valid_months=")
+	builder.WriteString(fmt.Sprintf("%v", cp.ValidMonths))
 	builder.WriteString(", ")
 	builder.WriteString("minimum_payout=")
 	builder.WriteString(fmt.Sprintf("%v", cp.MinimumPayout))
-	builder.WriteString(", ")
-	builder.WriteString("valid_from=")
-	builder.WriteString(cp.ValidFrom.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("valid_until=")
-	builder.WriteString(cp.ValidUntil.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", cp.IsActive))

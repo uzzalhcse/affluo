@@ -51,6 +51,10 @@ const (
 	EdgeCommissionPlan = "commission_plan"
 	// EdgeAffiliates holds the string denoting the affiliates edge name in mutations.
 	EdgeAffiliates = "affiliates"
+	// EdgeEarningHistories holds the string denoting the earning_histories edge name in mutations.
+	EdgeEarningHistories = "earning_histories"
+	// EdgeCommissionHistories holds the string denoting the commission_histories edge name in mutations.
+	EdgeCommissionHistories = "commission_histories"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// CampaignsTable is the table that holds the campaigns relation/edge.
@@ -95,6 +99,20 @@ const (
 	AffiliatesInverseTable = "affiliates"
 	// AffiliatesColumn is the table column denoting the affiliates relation/edge.
 	AffiliatesColumn = "user_affiliates"
+	// EarningHistoriesTable is the table that holds the earning_histories relation/edge.
+	EarningHistoriesTable = "earning_histories"
+	// EarningHistoriesInverseTable is the table name for the EarningHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "earninghistory" package.
+	EarningHistoriesInverseTable = "earning_histories"
+	// EarningHistoriesColumn is the table column denoting the earning_histories relation/edge.
+	EarningHistoriesColumn = "user_earning_histories"
+	// CommissionHistoriesTable is the table that holds the commission_histories relation/edge.
+	CommissionHistoriesTable = "commission_histories"
+	// CommissionHistoriesInverseTable is the table name for the CommissionHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "commissionhistory" package.
+	CommissionHistoriesInverseTable = "commission_histories"
+	// CommissionHistoriesColumn is the table column denoting the commission_histories relation/edge.
+	CommissionHistoriesColumn = "user_commission_histories"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -321,6 +339,34 @@ func ByAffiliates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAffiliatesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByEarningHistoriesCount orders the results by earning_histories count.
+func ByEarningHistoriesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newEarningHistoriesStep(), opts...)
+	}
+}
+
+// ByEarningHistories orders the results by earning_histories terms.
+func ByEarningHistories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newEarningHistoriesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCommissionHistoriesCount orders the results by commission_histories count.
+func ByCommissionHistoriesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCommissionHistoriesStep(), opts...)
+	}
+}
+
+// ByCommissionHistories orders the results by commission_histories terms.
+func ByCommissionHistories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCommissionHistoriesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newCampaignsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -361,5 +407,19 @@ func newAffiliatesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AffiliatesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AffiliatesTable, AffiliatesColumn),
+	)
+}
+func newEarningHistoriesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(EarningHistoriesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, EarningHistoriesTable, EarningHistoriesColumn),
+	)
+}
+func newCommissionHistoriesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CommissionHistoriesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CommissionHistoriesTable, CommissionHistoriesColumn),
 	)
 }

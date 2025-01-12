@@ -14,8 +14,8 @@ type Affiliate struct {
 func (Affiliate) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("id").Unique().Positive(),
-		field.String("tracking_code").Optional(),
-		field.String("affiliate_user_id"),
+		field.String("tracking_code").Optional().MaxLen(255),
+		field.String("affiliate_user_id").Unique().MaxLen(255),
 		field.Enum("source").Values(
 			"banner",
 			"services",

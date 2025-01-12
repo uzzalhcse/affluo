@@ -7,11 +7,10 @@ type CreateCommissionPlanRequest struct {
 	Type                 string  `json:"type"`
 	ClickCommission      float64 `json:"click_commission"`
 	ImpressionCommission float64 `json:"impression_commission"`
-	LeadCommission       float64 `json:"lead_commission"`
-	SaleCommissionRate   float64 `json:"sale_commission_rate"`
+	FirstLeadCommission  float64 `json:"first_lead_commission"`
+	RepeatLeadCommission float64 `json:"repeat_lead_commission"`
+	ValidMonths          int     `json:"valid_months"`
 	MinimumPayout        float64 `json:"minimum_payout"`
-	ValidFrom            string  `json:"valid_from"`
-	ValidUntil           string  `json:"valid_until"`
 	IsActive             bool    `json:"is_active"`
 	IsDefault            bool    `json:"is_default"`
 }
@@ -23,11 +22,10 @@ type CommissionPlanResponse struct {
 	Type                 string  `json:"type"`
 	ClickCommission      float64 `json:"click_commission"`
 	ImpressionCommission float64 `json:"impression_commission"`
-	LeadCommission       float64 `json:"lead_commission"`
-	SaleCommissionRate   float64 `json:"sale_commission_rate"`
+	FirstLeadCommission  float64 `json:"first_lead_commission"`
+	RepeatLeadCommission float64 `json:"repeat_lead_commission"`
+	ValidMonths          int     `json:"valid_months"`
 	MinimumPayout        float64 `json:"minimum_payout"`
-	ValidFrom            string  `json:"valid_from"`
-	ValidUntil           string  `json:"valid_until"`
 	IsActive             bool    `json:"is_active"`
 	IsDefault            bool    `json:"is_default"`
 }

@@ -6,7 +6,9 @@ import (
 	"affluo/ent/affiliate"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/commissionhistory"
 	"affluo/ent/commissionplan"
+	"affluo/ent/earninghistory"
 	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
 	"affluo/ent/user"
@@ -270,6 +272,36 @@ func (uc *UserCreate) AddAffiliates(a ...*Affiliate) *UserCreate {
 	return uc.AddAffiliateIDs(ids...)
 }
 
+// AddEarningHistoryIDs adds the "earning_histories" edge to the EarningHistory entity by IDs.
+func (uc *UserCreate) AddEarningHistoryIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddEarningHistoryIDs(ids...)
+	return uc
+}
+
+// AddEarningHistories adds the "earning_histories" edges to the EarningHistory entity.
+func (uc *UserCreate) AddEarningHistories(e ...*EarningHistory) *UserCreate {
+	ids := make([]int64, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return uc.AddEarningHistoryIDs(ids...)
+}
+
+// AddCommissionHistoryIDs adds the "commission_histories" edge to the CommissionHistory entity by IDs.
+func (uc *UserCreate) AddCommissionHistoryIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddCommissionHistoryIDs(ids...)
+	return uc
+}
+
+// AddCommissionHistories adds the "commission_histories" edges to the CommissionHistory entity.
+func (uc *UserCreate) AddCommissionHistories(c ...*CommissionHistory) *UserCreate {
+	ids := make([]int64, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uc.AddCommissionHistoryIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uc *UserCreate) Mutation() *UserMutation {
 	return uc.mutation
@@ -531,6 +563,38 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(affiliate.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.EarningHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.EarningHistoriesTable,
+			Columns: []string{user.EarningHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(earninghistory.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.CommissionHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommissionHistoriesTable,
+			Columns: []string{user.CommissionHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionhistory.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

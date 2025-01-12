@@ -7,7 +7,6 @@ import (
 	"affluo/ent/user"
 	"affluo/internal/dto"
 	"context"
-	"time"
 )
 
 type CommissionService struct {
@@ -21,8 +20,6 @@ func NewCommissionService(client *ent.Client) *CommissionService {
 }
 
 func (s *CommissionService) CreateCommissionPlan(ctx context.Context, req *dto.CreateCommissionPlanRequest) (*ent.CommissionPlan, error) {
-	validFrom, _ := time.Parse("2006-01-02", req.ValidFrom)
-	validUntil, _ := time.Parse("2006-01-02", req.ValidUntil)
 
 	return s.client.CommissionPlan.Create().
 		SetName(req.Name).
@@ -30,10 +27,10 @@ func (s *CommissionService) CreateCommissionPlan(ctx context.Context, req *dto.C
 		SetType(commissionplan.Type(req.Type)).
 		SetClickCommission(req.ClickCommission).
 		SetImpressionCommission(req.ImpressionCommission).
-		SetLeadCommission(req.LeadCommission).
+		SetFirstLeadCommission(req.FirstLeadCommission).
+		SetRepeatLeadCommission(req.RepeatLeadCommission).
+		SetValidMonths(req.ValidMonths).
 		SetMinimumPayout(req.MinimumPayout).
-		SetValidFrom(validFrom).
-		SetValidUntil(validUntil).
 		SetIsDefault(req.IsDefault).
 		SetIsActive(req.IsActive).
 		Save(ctx)
@@ -66,8 +63,6 @@ func (s *CommissionService) GetCommissionPlanByID(ctx context.Context, planID in
 }
 
 func (s *CommissionService) UpdateCommissionPlan(ctx context.Context, planID int64, req *dto.CreateCommissionPlanRequest) (*ent.CommissionPlan, error) {
-	validFrom, _ := time.Parse("2006-01-02", req.ValidFrom)
-	validUntil, _ := time.Parse("2006-01-02", req.ValidUntil)
 
 	return s.client.CommissionPlan.UpdateOneID(int(planID)).
 		SetName(req.Name).
@@ -75,10 +70,10 @@ func (s *CommissionService) UpdateCommissionPlan(ctx context.Context, planID int
 		SetType(commissionplan.Type(req.Type)).
 		SetClickCommission(req.ClickCommission).
 		SetImpressionCommission(req.ImpressionCommission).
-		SetLeadCommission(req.LeadCommission).
+		SetFirstLeadCommission(req.FirstLeadCommission).
+		SetRepeatLeadCommission(req.RepeatLeadCommission).
+		SetValidMonths(req.ValidMonths).
 		SetMinimumPayout(req.MinimumPayout).
-		SetValidFrom(validFrom).
-		SetValidUntil(validUntil).
 		SetIsDefault(req.IsDefault).
 		SetIsActive(req.IsActive).
 		Save(ctx)

@@ -878,6 +878,52 @@ func HasAffiliatesWith(preds ...predicate.Affiliate) predicate.User {
 	})
 }
 
+// HasEarningHistories applies the HasEdge predicate on the "earning_histories" edge.
+func HasEarningHistories() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, EarningHistoriesTable, EarningHistoriesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasEarningHistoriesWith applies the HasEdge predicate on the "earning_histories" edge with a given conditions (other predicates).
+func HasEarningHistoriesWith(preds ...predicate.EarningHistory) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newEarningHistoriesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCommissionHistories applies the HasEdge predicate on the "commission_histories" edge.
+func HasCommissionHistories() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CommissionHistoriesTable, CommissionHistoriesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCommissionHistoriesWith applies the HasEdge predicate on the "commission_histories" edge with a given conditions (other predicates).
+func HasCommissionHistoriesWith(preds ...predicate.CommissionHistory) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newCommissionHistoriesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

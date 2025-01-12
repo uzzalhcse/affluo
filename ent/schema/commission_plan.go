@@ -25,14 +25,14 @@ func (CommissionPlan) Fields() []ent.Field {
 			Default(0),
 		field.Float("impression_commission").
 			Default(0),
-		field.Float("lead_commission").
-			Default(0),
+		field.Float("first_lead_commission").
+			Default(25), // 25% for first order
+		field.Float("repeat_lead_commission").
+			Default(10), // 10% for subsequent orders
+		field.Int("valid_months").
+			Default(12), // How many months the repeat commission is valid
 		field.Float("minimum_payout").
 			Default(0),
-		field.Time("valid_from").
-			Optional(),
-		field.Time("valid_until").
-			Optional(),
 		field.Bool("is_active").
 			Default(true),
 		field.Bool("is_default").

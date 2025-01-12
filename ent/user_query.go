@@ -6,7 +6,9 @@ import (
 	"affluo/ent/affiliate"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/commissionhistory"
 	"affluo/ent/commissionplan"
+	"affluo/ent/earninghistory"
 	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
 	"affluo/ent/predicate"
@@ -25,17 +27,19 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx                *QueryContext
-	order              []user.OrderOption
-	inters             []Interceptor
-	predicates         []predicate.User
-	withCampaigns      *CampaignQuery
-	withPayouts        *PayoutQuery
-	withStats          *BannerStatsQuery
-	withGigTrackings   *GigTrackingQuery
-	withCommissionPlan *CommissionPlanQuery
-	withAffiliates     *AffiliateQuery
-	withFKs            bool
+	ctx                     *QueryContext
+	order                   []user.OrderOption
+	inters                  []Interceptor
+	predicates              []predicate.User
+	withCampaigns           *CampaignQuery
+	withPayouts             *PayoutQuery
+	withStats               *BannerStatsQuery
+	withGigTrackings        *GigTrackingQuery
+	withCommissionPlan      *CommissionPlanQuery
+	withAffiliates          *AffiliateQuery
+	withEarningHistories    *EarningHistoryQuery
+	withCommissionHistories *CommissionHistoryQuery
+	withFKs                 bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -197,6 +201,50 @@ func (uq *UserQuery) QueryAffiliates() *AffiliateQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(affiliate.Table, affiliate.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliatesTable, user.AffiliatesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryEarningHistories chains the current query on the "earning_histories" edge.
+func (uq *UserQuery) QueryEarningHistories() *EarningHistoryQuery {
+	query := (&EarningHistoryClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(earninghistory.Table, earninghistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.EarningHistoriesTable, user.EarningHistoriesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCommissionHistories chains the current query on the "commission_histories" edge.
+func (uq *UserQuery) QueryCommissionHistories() *CommissionHistoryQuery {
+	query := (&CommissionHistoryClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(commissionhistory.Table, commissionhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CommissionHistoriesTable, user.CommissionHistoriesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -391,17 +439,19 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:             uq.config,
-		ctx:                uq.ctx.Clone(),
-		order:              append([]user.OrderOption{}, uq.order...),
-		inters:             append([]Interceptor{}, uq.inters...),
-		predicates:         append([]predicate.User{}, uq.predicates...),
-		withCampaigns:      uq.withCampaigns.Clone(),
-		withPayouts:        uq.withPayouts.Clone(),
-		withStats:          uq.withStats.Clone(),
-		withGigTrackings:   uq.withGigTrackings.Clone(),
-		withCommissionPlan: uq.withCommissionPlan.Clone(),
-		withAffiliates:     uq.withAffiliates.Clone(),
+		config:                  uq.config,
+		ctx:                     uq.ctx.Clone(),
+		order:                   append([]user.OrderOption{}, uq.order...),
+		inters:                  append([]Interceptor{}, uq.inters...),
+		predicates:              append([]predicate.User{}, uq.predicates...),
+		withCampaigns:           uq.withCampaigns.Clone(),
+		withPayouts:             uq.withPayouts.Clone(),
+		withStats:               uq.withStats.Clone(),
+		withGigTrackings:        uq.withGigTrackings.Clone(),
+		withCommissionPlan:      uq.withCommissionPlan.Clone(),
+		withAffiliates:          uq.withAffiliates.Clone(),
+		withEarningHistories:    uq.withEarningHistories.Clone(),
+		withCommissionHistories: uq.withCommissionHistories.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -471,6 +521,28 @@ func (uq *UserQuery) WithAffiliates(opts ...func(*AffiliateQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withAffiliates = query
+	return uq
+}
+
+// WithEarningHistories tells the query-builder to eager-load the nodes that are connected to
+// the "earning_histories" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithEarningHistories(opts ...func(*EarningHistoryQuery)) *UserQuery {
+	query := (&EarningHistoryClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withEarningHistories = query
+	return uq
+}
+
+// WithCommissionHistories tells the query-builder to eager-load the nodes that are connected to
+// the "commission_histories" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithCommissionHistories(opts ...func(*CommissionHistoryQuery)) *UserQuery {
+	query := (&CommissionHistoryClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withCommissionHistories = query
 	return uq
 }
 
@@ -553,13 +625,15 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [8]bool{
 			uq.withCampaigns != nil,
 			uq.withPayouts != nil,
 			uq.withStats != nil,
 			uq.withGigTrackings != nil,
 			uq.withCommissionPlan != nil,
 			uq.withAffiliates != nil,
+			uq.withEarningHistories != nil,
+			uq.withCommissionHistories != nil,
 		}
 	)
 	if uq.withCommissionPlan != nil {
@@ -624,6 +698,22 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadAffiliates(ctx, query, nodes,
 			func(n *User) { n.Edges.Affiliates = []*Affiliate{} },
 			func(n *User, e *Affiliate) { n.Edges.Affiliates = append(n.Edges.Affiliates, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withEarningHistories; query != nil {
+		if err := uq.loadEarningHistories(ctx, query, nodes,
+			func(n *User) { n.Edges.EarningHistories = []*EarningHistory{} },
+			func(n *User, e *EarningHistory) { n.Edges.EarningHistories = append(n.Edges.EarningHistories, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withCommissionHistories; query != nil {
+		if err := uq.loadCommissionHistories(ctx, query, nodes,
+			func(n *User) { n.Edges.CommissionHistories = []*CommissionHistory{} },
+			func(n *User, e *CommissionHistory) {
+				n.Edges.CommissionHistories = append(n.Edges.CommissionHistories, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -812,6 +902,68 @@ func (uq *UserQuery) loadAffiliates(ctx context.Context, query *AffiliateQuery, 
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_affiliates" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadEarningHistories(ctx context.Context, query *EarningHistoryQuery, nodes []*User, init func(*User), assign func(*User, *EarningHistory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.EarningHistory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.EarningHistoriesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_earning_histories
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_earning_histories" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_earning_histories" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadCommissionHistories(ctx context.Context, query *CommissionHistoryQuery, nodes []*User, init func(*User), assign func(*User, *CommissionHistory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.CommissionHistory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.CommissionHistoriesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_commission_histories
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_commission_histories" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_commission_histories" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

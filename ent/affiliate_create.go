@@ -171,8 +171,18 @@ func (ac *AffiliateCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (ac *AffiliateCreate) check() error {
+	if v, ok := ac.mutation.TrackingCode(); ok {
+		if err := affiliate.TrackingCodeValidator(v); err != nil {
+			return &ValidationError{Name: "tracking_code", err: fmt.Errorf(`ent: validator failed for field "Affiliate.tracking_code": %w`, err)}
+		}
+	}
 	if _, ok := ac.mutation.AffiliateUserID(); !ok {
 		return &ValidationError{Name: "affiliate_user_id", err: errors.New(`ent: missing required field "Affiliate.affiliate_user_id"`)}
+	}
+	if v, ok := ac.mutation.AffiliateUserID(); ok {
+		if err := affiliate.AffiliateUserIDValidator(v); err != nil {
+			return &ValidationError{Name: "affiliate_user_id", err: fmt.Errorf(`ent: validator failed for field "Affiliate.affiliate_user_id": %w`, err)}
+		}
 	}
 	if _, ok := ac.mutation.Source(); !ok {
 		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "Affiliate.source"`)}

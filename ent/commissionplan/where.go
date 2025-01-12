@@ -4,7 +4,6 @@ package commissionplan
 
 import (
 	"affluo/ent/predicate"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -75,24 +74,24 @@ func ImpressionCommission(v float64) predicate.CommissionPlan {
 	return predicate.CommissionPlan(sql.FieldEQ(FieldImpressionCommission, v))
 }
 
-// LeadCommission applies equality check predicate on the "lead_commission" field. It's identical to LeadCommissionEQ.
-func LeadCommission(v float64) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldEQ(FieldLeadCommission, v))
+// FirstLeadCommission applies equality check predicate on the "first_lead_commission" field. It's identical to FirstLeadCommissionEQ.
+func FirstLeadCommission(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldEQ(FieldFirstLeadCommission, v))
+}
+
+// RepeatLeadCommission applies equality check predicate on the "repeat_lead_commission" field. It's identical to RepeatLeadCommissionEQ.
+func RepeatLeadCommission(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldEQ(FieldRepeatLeadCommission, v))
+}
+
+// ValidMonths applies equality check predicate on the "valid_months" field. It's identical to ValidMonthsEQ.
+func ValidMonths(v int) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldEQ(FieldValidMonths, v))
 }
 
 // MinimumPayout applies equality check predicate on the "minimum_payout" field. It's identical to MinimumPayoutEQ.
 func MinimumPayout(v float64) predicate.CommissionPlan {
 	return predicate.CommissionPlan(sql.FieldEQ(FieldMinimumPayout, v))
-}
-
-// ValidFrom applies equality check predicate on the "valid_from" field. It's identical to ValidFromEQ.
-func ValidFrom(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldEQ(FieldValidFrom, v))
-}
-
-// ValidUntil applies equality check predicate on the "valid_until" field. It's identical to ValidUntilEQ.
-func ValidUntil(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldEQ(FieldValidUntil, v))
 }
 
 // IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
@@ -345,44 +344,124 @@ func ImpressionCommissionLTE(v float64) predicate.CommissionPlan {
 	return predicate.CommissionPlan(sql.FieldLTE(FieldImpressionCommission, v))
 }
 
-// LeadCommissionEQ applies the EQ predicate on the "lead_commission" field.
-func LeadCommissionEQ(v float64) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldEQ(FieldLeadCommission, v))
+// FirstLeadCommissionEQ applies the EQ predicate on the "first_lead_commission" field.
+func FirstLeadCommissionEQ(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldEQ(FieldFirstLeadCommission, v))
 }
 
-// LeadCommissionNEQ applies the NEQ predicate on the "lead_commission" field.
-func LeadCommissionNEQ(v float64) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldNEQ(FieldLeadCommission, v))
+// FirstLeadCommissionNEQ applies the NEQ predicate on the "first_lead_commission" field.
+func FirstLeadCommissionNEQ(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldNEQ(FieldFirstLeadCommission, v))
 }
 
-// LeadCommissionIn applies the In predicate on the "lead_commission" field.
-func LeadCommissionIn(vs ...float64) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldIn(FieldLeadCommission, vs...))
+// FirstLeadCommissionIn applies the In predicate on the "first_lead_commission" field.
+func FirstLeadCommissionIn(vs ...float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldIn(FieldFirstLeadCommission, vs...))
 }
 
-// LeadCommissionNotIn applies the NotIn predicate on the "lead_commission" field.
-func LeadCommissionNotIn(vs ...float64) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldNotIn(FieldLeadCommission, vs...))
+// FirstLeadCommissionNotIn applies the NotIn predicate on the "first_lead_commission" field.
+func FirstLeadCommissionNotIn(vs ...float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldNotIn(FieldFirstLeadCommission, vs...))
 }
 
-// LeadCommissionGT applies the GT predicate on the "lead_commission" field.
-func LeadCommissionGT(v float64) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldGT(FieldLeadCommission, v))
+// FirstLeadCommissionGT applies the GT predicate on the "first_lead_commission" field.
+func FirstLeadCommissionGT(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldGT(FieldFirstLeadCommission, v))
 }
 
-// LeadCommissionGTE applies the GTE predicate on the "lead_commission" field.
-func LeadCommissionGTE(v float64) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldGTE(FieldLeadCommission, v))
+// FirstLeadCommissionGTE applies the GTE predicate on the "first_lead_commission" field.
+func FirstLeadCommissionGTE(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldGTE(FieldFirstLeadCommission, v))
 }
 
-// LeadCommissionLT applies the LT predicate on the "lead_commission" field.
-func LeadCommissionLT(v float64) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldLT(FieldLeadCommission, v))
+// FirstLeadCommissionLT applies the LT predicate on the "first_lead_commission" field.
+func FirstLeadCommissionLT(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldLT(FieldFirstLeadCommission, v))
 }
 
-// LeadCommissionLTE applies the LTE predicate on the "lead_commission" field.
-func LeadCommissionLTE(v float64) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldLTE(FieldLeadCommission, v))
+// FirstLeadCommissionLTE applies the LTE predicate on the "first_lead_commission" field.
+func FirstLeadCommissionLTE(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldLTE(FieldFirstLeadCommission, v))
+}
+
+// RepeatLeadCommissionEQ applies the EQ predicate on the "repeat_lead_commission" field.
+func RepeatLeadCommissionEQ(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldEQ(FieldRepeatLeadCommission, v))
+}
+
+// RepeatLeadCommissionNEQ applies the NEQ predicate on the "repeat_lead_commission" field.
+func RepeatLeadCommissionNEQ(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldNEQ(FieldRepeatLeadCommission, v))
+}
+
+// RepeatLeadCommissionIn applies the In predicate on the "repeat_lead_commission" field.
+func RepeatLeadCommissionIn(vs ...float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldIn(FieldRepeatLeadCommission, vs...))
+}
+
+// RepeatLeadCommissionNotIn applies the NotIn predicate on the "repeat_lead_commission" field.
+func RepeatLeadCommissionNotIn(vs ...float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldNotIn(FieldRepeatLeadCommission, vs...))
+}
+
+// RepeatLeadCommissionGT applies the GT predicate on the "repeat_lead_commission" field.
+func RepeatLeadCommissionGT(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldGT(FieldRepeatLeadCommission, v))
+}
+
+// RepeatLeadCommissionGTE applies the GTE predicate on the "repeat_lead_commission" field.
+func RepeatLeadCommissionGTE(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldGTE(FieldRepeatLeadCommission, v))
+}
+
+// RepeatLeadCommissionLT applies the LT predicate on the "repeat_lead_commission" field.
+func RepeatLeadCommissionLT(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldLT(FieldRepeatLeadCommission, v))
+}
+
+// RepeatLeadCommissionLTE applies the LTE predicate on the "repeat_lead_commission" field.
+func RepeatLeadCommissionLTE(v float64) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldLTE(FieldRepeatLeadCommission, v))
+}
+
+// ValidMonthsEQ applies the EQ predicate on the "valid_months" field.
+func ValidMonthsEQ(v int) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldEQ(FieldValidMonths, v))
+}
+
+// ValidMonthsNEQ applies the NEQ predicate on the "valid_months" field.
+func ValidMonthsNEQ(v int) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldNEQ(FieldValidMonths, v))
+}
+
+// ValidMonthsIn applies the In predicate on the "valid_months" field.
+func ValidMonthsIn(vs ...int) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldIn(FieldValidMonths, vs...))
+}
+
+// ValidMonthsNotIn applies the NotIn predicate on the "valid_months" field.
+func ValidMonthsNotIn(vs ...int) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldNotIn(FieldValidMonths, vs...))
+}
+
+// ValidMonthsGT applies the GT predicate on the "valid_months" field.
+func ValidMonthsGT(v int) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldGT(FieldValidMonths, v))
+}
+
+// ValidMonthsGTE applies the GTE predicate on the "valid_months" field.
+func ValidMonthsGTE(v int) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldGTE(FieldValidMonths, v))
+}
+
+// ValidMonthsLT applies the LT predicate on the "valid_months" field.
+func ValidMonthsLT(v int) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldLT(FieldValidMonths, v))
+}
+
+// ValidMonthsLTE applies the LTE predicate on the "valid_months" field.
+func ValidMonthsLTE(v int) predicate.CommissionPlan {
+	return predicate.CommissionPlan(sql.FieldLTE(FieldValidMonths, v))
 }
 
 // MinimumPayoutEQ applies the EQ predicate on the "minimum_payout" field.
@@ -423,106 +502,6 @@ func MinimumPayoutLT(v float64) predicate.CommissionPlan {
 // MinimumPayoutLTE applies the LTE predicate on the "minimum_payout" field.
 func MinimumPayoutLTE(v float64) predicate.CommissionPlan {
 	return predicate.CommissionPlan(sql.FieldLTE(FieldMinimumPayout, v))
-}
-
-// ValidFromEQ applies the EQ predicate on the "valid_from" field.
-func ValidFromEQ(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldEQ(FieldValidFrom, v))
-}
-
-// ValidFromNEQ applies the NEQ predicate on the "valid_from" field.
-func ValidFromNEQ(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldNEQ(FieldValidFrom, v))
-}
-
-// ValidFromIn applies the In predicate on the "valid_from" field.
-func ValidFromIn(vs ...time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldIn(FieldValidFrom, vs...))
-}
-
-// ValidFromNotIn applies the NotIn predicate on the "valid_from" field.
-func ValidFromNotIn(vs ...time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldNotIn(FieldValidFrom, vs...))
-}
-
-// ValidFromGT applies the GT predicate on the "valid_from" field.
-func ValidFromGT(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldGT(FieldValidFrom, v))
-}
-
-// ValidFromGTE applies the GTE predicate on the "valid_from" field.
-func ValidFromGTE(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldGTE(FieldValidFrom, v))
-}
-
-// ValidFromLT applies the LT predicate on the "valid_from" field.
-func ValidFromLT(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldLT(FieldValidFrom, v))
-}
-
-// ValidFromLTE applies the LTE predicate on the "valid_from" field.
-func ValidFromLTE(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldLTE(FieldValidFrom, v))
-}
-
-// ValidFromIsNil applies the IsNil predicate on the "valid_from" field.
-func ValidFromIsNil() predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldIsNull(FieldValidFrom))
-}
-
-// ValidFromNotNil applies the NotNil predicate on the "valid_from" field.
-func ValidFromNotNil() predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldNotNull(FieldValidFrom))
-}
-
-// ValidUntilEQ applies the EQ predicate on the "valid_until" field.
-func ValidUntilEQ(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldEQ(FieldValidUntil, v))
-}
-
-// ValidUntilNEQ applies the NEQ predicate on the "valid_until" field.
-func ValidUntilNEQ(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldNEQ(FieldValidUntil, v))
-}
-
-// ValidUntilIn applies the In predicate on the "valid_until" field.
-func ValidUntilIn(vs ...time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldIn(FieldValidUntil, vs...))
-}
-
-// ValidUntilNotIn applies the NotIn predicate on the "valid_until" field.
-func ValidUntilNotIn(vs ...time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldNotIn(FieldValidUntil, vs...))
-}
-
-// ValidUntilGT applies the GT predicate on the "valid_until" field.
-func ValidUntilGT(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldGT(FieldValidUntil, v))
-}
-
-// ValidUntilGTE applies the GTE predicate on the "valid_until" field.
-func ValidUntilGTE(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldGTE(FieldValidUntil, v))
-}
-
-// ValidUntilLT applies the LT predicate on the "valid_until" field.
-func ValidUntilLT(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldLT(FieldValidUntil, v))
-}
-
-// ValidUntilLTE applies the LTE predicate on the "valid_until" field.
-func ValidUntilLTE(v time.Time) predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldLTE(FieldValidUntil, v))
-}
-
-// ValidUntilIsNil applies the IsNil predicate on the "valid_until" field.
-func ValidUntilIsNil() predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldIsNull(FieldValidUntil))
-}
-
-// ValidUntilNotNil applies the NotNil predicate on the "valid_until" field.
-func ValidUntilNotNil() predicate.CommissionPlan {
-	return predicate.CommissionPlan(sql.FieldNotNull(FieldValidUntil))
 }
 
 // IsActiveEQ applies the EQ predicate on the "is_active" field.

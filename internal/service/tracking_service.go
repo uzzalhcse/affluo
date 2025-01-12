@@ -7,7 +7,9 @@ import (
 	"affluo/ent/banner"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/commissionhistory"
 	"affluo/ent/commissionplan"
+	"affluo/ent/earninghistory"
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
 	"affluo/ent/user"
@@ -268,7 +270,7 @@ func (s *TrackingService) SyncVisit(ctx context.Context, pubId int64, landingPag
 	return nil
 }
 
-func (s *TrackingService) GigLead(ctx context.Context, publisherID int64, trackID, targetType, affiliateUserID string) error {
+func (s *TrackingService) GigLead(ctx context.Context, publisherID int64, trackID, targetType, affiliateUserID string, price float64) error {
 	// Input validation
 	if err := validateInput(trackID, affiliateUserID); err != nil {
 		return fmt.Errorf("input validation failed: %w", err)
@@ -285,7 +287,7 @@ func (s *TrackingService) GigLead(ctx context.Context, publisherID int64, trackI
 	defer tx.Rollback()
 
 	// Execute business logic within transaction
-	if err := s.processGigLead(ctxWithTimeout, tx, publisherID, trackID, targetType, affiliateUserID); err != nil {
+	if err := s.processGigLead(ctxWithTimeout, tx, publisherID, trackID, targetType, affiliateUserID, price); err != nil {
 		return err
 	}
 
@@ -307,14 +309,15 @@ func validateInput(trackID, affiliateUserID string) error {
 	return nil
 }
 
-func (s *TrackingService) processGigLead(ctx context.Context, tx *ent.Tx, publisherID int64, trackID, targetType, affiliateUserID string) error {
+func (s *TrackingService) processGigLead(ctx context.Context, tx *ent.Tx, publisherID int64, trackID, targetType, affiliateUserID string, price float64) error {
 	// Query existing tracking record
-	affiliate, err := tx.Affiliate.Query().
+	affiliateList, err := tx.Affiliate.Query().
 		Where(
-			affiliate.TrackingCode(trackID),
-			affiliate.AffiliateUserID(affiliateUserID),
+			affiliate.TrackingCodeEQ(trackID),
+			affiliate.AffiliateUserIDEQ(affiliateUserID),
 			affiliate.HasUserWith(user.IDEQ(publisherID)),
 		).
+		WithUser().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -323,9 +326,24 @@ func (s *TrackingService) processGigLead(ctx context.Context, tx *ent.Tx, publis
 		return fmt.Errorf("failed to query affiliate record: %w", err)
 	}
 
-	// Validate lead expiration
-	if time.Since(affiliate.RegistrationDate) > 72*time.Hour {
-		return fmt.Errorf("lead expired: tracking record is more than 48 hours old")
+	if affiliateList.Edges.User.ID != publisherID {
+		return fmt.Errorf("publisher ID does not match affiliate record") // TODO: should this be an error? we should allow but less commission for non-publisher affiliates
+	}
+
+	// Check for duplicate earning
+	exists, err := tx.EarningHistory.Query().
+		Where(
+			earninghistory.TrackID(trackID),
+			earninghistory.EventType("lead"),
+			earninghistory.Source("gigs"),
+			earninghistory.HasUserWith(user.IDEQ(publisherID)),
+		).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check duplicate earning: %w", err)
+	}
+	if exists {
+		return fmt.Errorf("duplicate earning detected for track ID: %s", trackID)
 	}
 
 	// Get commission plan
@@ -334,25 +352,96 @@ func (s *TrackingService) processGigLead(ctx context.Context, tx *ent.Tx, publis
 		return fmt.Errorf("failed to get commission plan: %w", err)
 	}
 
-	// Update tracking record and affiliate commission atomically
-	if err := s.updateTrackingAndCommission(ctx, tx, commission, targetType, affiliateUserID, trackID); err != nil {
-		return fmt.Errorf("failed to update tracking and commission: %w", err)
+	// Update tracking record and histories atomically
+	if err := s.updateTrackingAndHistories(ctx, tx, commission, targetType, affiliateUserID, trackID, publisherID, price); err != nil {
+		return fmt.Errorf("failed to update tracking and histories: %w", err)
 	}
 
 	return nil
 }
 
-func (s *TrackingService) updateTrackingAndCommission(ctx context.Context, tx *ent.Tx, commission *ent.CommissionPlan, targetType, affiliateUserID, trackingCode string) error {
+// Updated service code
+func (s *TrackingService) updateTrackingAndHistories(ctx context.Context, tx *ent.Tx, commission *ent.CommissionPlan,
+	targetType, affiliateUserID, trackID string, publisherID int64, price float64) error {
+
+	// Check if this is the first order for this affiliate-publisher pair
+	isFirstOrder, err := tx.CommissionHistory.Query().
+		Where(
+			commissionhistory.AffiliateUserID(affiliateUserID),
+			commissionhistory.HasUserWith(user.IDEQ(publisherID)),
+		).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check order history: %w", err)
+	}
+
+	// Get the commission rate based on order history
+	var commissionRate float64
+	if !isFirstOrder {
+		commissionRate = commission.FirstLeadCommission
+	} else {
+		// Check if within valid months period
+		firstOrder, err := tx.CommissionHistory.Query().
+			Where(
+				commissionhistory.AffiliateUserID(affiliateUserID),
+				commissionhistory.HasUserWith(user.IDEQ(publisherID)),
+			).
+			Order(ent.Desc(commissionhistory.FieldDate)).
+			First(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to get first order date: %w", err)
+		}
+
+		// Parse the date string to time.Time
+		firstOrderDate, err := time.Parse("2006-01-02", firstOrder.Date)
+		if err != nil {
+			return fmt.Errorf("failed to parse first order date: %w", err)
+		}
+
+		// Check if within valid period
+		monthsSinceFirst := time.Since(firstOrderDate).Hours() / 24 / 30
+		if monthsSinceFirst <= float64(commission.ValidMonths) {
+			commissionRate = commission.RepeatLeadCommission
+		} else {
+			commissionRate = 0 // Or set to a default rate for expired period
+		}
+	}
+
+	// Calculate actual commission amount
+	commissionAmount := (commissionRate / 100.0) * price
 
 	// Update affiliate commission
 	if err := tx.Affiliate.Update().
 		Where(
-			affiliate.TrackingCode(trackingCode),
+			affiliate.TrackingCode(trackID),
 			affiliate.AffiliateUserID(affiliateUserID),
 		).
-		AddCommission(commission.LeadCommission). // Use AddCommission instead of SetCommission to increment
+		AddCommission(commissionAmount).
 		Exec(ctx); err != nil {
 		return fmt.Errorf("failed to update affiliate commission: %w", err)
+	}
+
+	// Create earning history
+	if _, err := tx.EarningHistory.Create().
+		SetAmount(commissionAmount).
+		SetEventType("lead").
+		SetSource("gigs").
+		SetTrackID(trackID).
+		SetUserID(publisherID).
+		Save(ctx); err != nil {
+		return fmt.Errorf("failed to create earning history: %w", err)
+	}
+
+	// Create commission history with additional metadata
+	if _, err := tx.CommissionHistory.Create().
+		SetAmount(commissionAmount).
+		SetAffiliateUserID(affiliateUserID).
+		SetTrackID(trackID).
+		SetUserID(publisherID).
+		SetCommissionRate(commissionRate).
+		SetIsFirstOrder(!isFirstOrder).
+		Save(ctx); err != nil {
+		return fmt.Errorf("failed to create commission history: %w", err)
 	}
 
 	return nil

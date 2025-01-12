@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"log"
+	"time"
 )
 
 type TrackingHandler struct {
@@ -49,8 +50,10 @@ func (h *TrackingHandler) RecordClick(c *fiber.Ctx) error {
 		return Error(c, "Failed to record click", err.Error())
 	}
 
+	// add expired time to the tracking code
+	expiredAt := time.Now().Add(time.Hour * 24 * 7)
 	// Create tracking code and encrypt it
-	trackingCode := fmt.Sprintf("publisher-%d_banner-%d", publisherID, bannerID)
+	trackingCode := fmt.Sprintf("publisher-%d_%s-%d_expired-%s", publisherID, "banner", bannerID, expiredAt.Format("20060102150405"))
 	encryptedCode, err := helper.Encrypt(trackingCode)
 	if err != nil {
 		return Error(c, "Failed to generate tracking code", err.Error())
@@ -132,7 +135,9 @@ func (h *TrackingHandler) VisitTracking(c *fiber.Ctx) error {
 	terget := c.Query("target")
 	utm_query := c.Query("utm_query")
 
-	trackingCode := fmt.Sprintf("publisher-%d_%s-%s", pubId, terget, term)
+	expiredAt := time.Now().Add(time.Hour * 24 * 7)
+	// Create tracking code and encrypt it
+	trackingCode := fmt.Sprintf("publisher-%d_%s-%d_expired-%s", pubId, terget, term, expiredAt.Format("20060102150405"))
 	encryptedCode, err := helper.Encrypt(trackingCode)
 
 	err = h.trackingService.SyncVisit(c.Context(), int64(pubId), landingPage, term, utm_query, encryptedCode)
@@ -147,13 +152,17 @@ func (h *TrackingHandler) GigLeadCallBack(c *fiber.Ctx) error {
 	trackId := c.Query("track_id")
 	eventType := c.Query("event_type")
 	affiliateUserId := c.Query("affiliate_user_id")
-	publisherID, targetType, _, err := helper.DecodeTrackingCode(trackId)
+	price := c.QueryFloat("price")
+	publisherID, targetType, _, expiredAt, err := helper.DecodeTrackingCode(trackId)
 	if err != nil {
 		return Error(c, "Failed to decrypt tracking code", err.Error())
 	}
 
+	if expiredAt.Before(time.Now()) {
+		return Error(c, "Tracking code expired", err.Error())
+	}
 	if eventType == "lead" {
-		err = h.trackingService.GigLead(c.Context(), publisherID, trackId, targetType, affiliateUserId)
+		err = h.trackingService.GigLead(c.Context(), publisherID, trackId, targetType, affiliateUserId, price)
 		if err != nil {
 			return Error(c, "Something went wrong", err.Error())
 		}

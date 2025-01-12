@@ -76,6 +76,10 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// TrackingCodeValidator is a validator for the "tracking_code" field. It is called by the builders before save.
+	TrackingCodeValidator func(string) error
+	// AffiliateUserIDValidator is a validator for the "affiliate_user_id" field. It is called by the builders before save.
+	AffiliateUserIDValidator func(string) error
 	// DefaultRegistrationDate holds the default value on creation for the "registration_date" field.
 	DefaultRegistrationDate time.Time
 	// DefaultDate holds the default value on creation for the "date" field.

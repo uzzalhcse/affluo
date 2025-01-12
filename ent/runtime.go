@@ -9,8 +9,10 @@ import (
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
 	"affluo/ent/campaignlink"
+	"affluo/ent/commissionhistory"
 	"affluo/ent/commissionplan"
 	"affluo/ent/creative"
+	"affluo/ent/earninghistory"
 	"affluo/ent/gigtracking"
 	"affluo/ent/lead"
 	"affluo/ent/schema"
@@ -24,6 +26,14 @@ import (
 func init() {
 	affiliateFields := schema.Affiliate{}.Fields()
 	_ = affiliateFields
+	// affiliateDescTrackingCode is the schema descriptor for tracking_code field.
+	affiliateDescTrackingCode := affiliateFields[1].Descriptor()
+	// affiliate.TrackingCodeValidator is a validator for the "tracking_code" field. It is called by the builders before save.
+	affiliate.TrackingCodeValidator = affiliateDescTrackingCode.Validators[0].(func(string) error)
+	// affiliateDescAffiliateUserID is the schema descriptor for affiliate_user_id field.
+	affiliateDescAffiliateUserID := affiliateFields[2].Descriptor()
+	// affiliate.AffiliateUserIDValidator is a validator for the "affiliate_user_id" field. It is called by the builders before save.
+	affiliate.AffiliateUserIDValidator = affiliateDescAffiliateUserID.Validators[0].(func(string) error)
 	// affiliateDescRegistrationDate is the schema descriptor for registration_date field.
 	affiliateDescRegistrationDate := affiliateFields[4].Descriptor()
 	// affiliate.DefaultRegistrationDate holds the default value on creation for the registration_date field.
@@ -162,6 +172,16 @@ func init() {
 	campaignlinkDescID := campaignlinkFields[0].Descriptor()
 	// campaignlink.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	campaignlink.IDValidator = campaignlinkDescID.Validators[0].(func(int64) error)
+	commissionhistoryFields := schema.CommissionHistory{}.Fields()
+	_ = commissionhistoryFields
+	// commissionhistoryDescDate is the schema descriptor for date field.
+	commissionhistoryDescDate := commissionhistoryFields[7].Descriptor()
+	// commissionhistory.DefaultDate holds the default value on creation for the date field.
+	commissionhistory.DefaultDate = commissionhistoryDescDate.Default.(string)
+	// commissionhistoryDescID is the schema descriptor for id field.
+	commissionhistoryDescID := commissionhistoryFields[0].Descriptor()
+	// commissionhistory.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	commissionhistory.IDValidator = commissionhistoryDescID.Validators[0].(func(int64) error)
 	commissionplanFields := schema.CommissionPlan{}.Fields()
 	_ = commissionplanFields
 	// commissionplanDescName is the schema descriptor for name field.
@@ -176,12 +196,20 @@ func init() {
 	commissionplanDescImpressionCommission := commissionplanFields[4].Descriptor()
 	// commissionplan.DefaultImpressionCommission holds the default value on creation for the impression_commission field.
 	commissionplan.DefaultImpressionCommission = commissionplanDescImpressionCommission.Default.(float64)
-	// commissionplanDescLeadCommission is the schema descriptor for lead_commission field.
-	commissionplanDescLeadCommission := commissionplanFields[5].Descriptor()
-	// commissionplan.DefaultLeadCommission holds the default value on creation for the lead_commission field.
-	commissionplan.DefaultLeadCommission = commissionplanDescLeadCommission.Default.(float64)
+	// commissionplanDescFirstLeadCommission is the schema descriptor for first_lead_commission field.
+	commissionplanDescFirstLeadCommission := commissionplanFields[5].Descriptor()
+	// commissionplan.DefaultFirstLeadCommission holds the default value on creation for the first_lead_commission field.
+	commissionplan.DefaultFirstLeadCommission = commissionplanDescFirstLeadCommission.Default.(float64)
+	// commissionplanDescRepeatLeadCommission is the schema descriptor for repeat_lead_commission field.
+	commissionplanDescRepeatLeadCommission := commissionplanFields[6].Descriptor()
+	// commissionplan.DefaultRepeatLeadCommission holds the default value on creation for the repeat_lead_commission field.
+	commissionplan.DefaultRepeatLeadCommission = commissionplanDescRepeatLeadCommission.Default.(float64)
+	// commissionplanDescValidMonths is the schema descriptor for valid_months field.
+	commissionplanDescValidMonths := commissionplanFields[7].Descriptor()
+	// commissionplan.DefaultValidMonths holds the default value on creation for the valid_months field.
+	commissionplan.DefaultValidMonths = commissionplanDescValidMonths.Default.(int)
 	// commissionplanDescMinimumPayout is the schema descriptor for minimum_payout field.
-	commissionplanDescMinimumPayout := commissionplanFields[6].Descriptor()
+	commissionplanDescMinimumPayout := commissionplanFields[8].Descriptor()
 	// commissionplan.DefaultMinimumPayout holds the default value on creation for the minimum_payout field.
 	commissionplan.DefaultMinimumPayout = commissionplanDescMinimumPayout.Default.(float64)
 	// commissionplanDescIsActive is the schema descriptor for is_active field.
@@ -212,6 +240,16 @@ func init() {
 	creativeDescID := creativeFields[0].Descriptor()
 	// creative.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	creative.IDValidator = creativeDescID.Validators[0].(func(int64) error)
+	earninghistoryFields := schema.EarningHistory{}.Fields()
+	_ = earninghistoryFields
+	// earninghistoryDescDate is the schema descriptor for date field.
+	earninghistoryDescDate := earninghistoryFields[5].Descriptor()
+	// earninghistory.DefaultDate holds the default value on creation for the date field.
+	earninghistory.DefaultDate = earninghistoryDescDate.Default.(string)
+	// earninghistoryDescID is the schema descriptor for id field.
+	earninghistoryDescID := earninghistoryFields[0].Descriptor()
+	// earninghistory.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	earninghistory.IDValidator = earninghistoryDescID.Validators[0].(func(int64) error)
 	gigtrackingFields := schema.GigTracking{}.Fields()
 	_ = gigtrackingFields
 	// gigtrackingDescDate is the schema descriptor for date field.

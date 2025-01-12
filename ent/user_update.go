@@ -6,7 +6,9 @@ import (
 	"affluo/ent/affiliate"
 	"affluo/ent/bannerstats"
 	"affluo/ent/campaign"
+	"affluo/ent/commissionhistory"
 	"affluo/ent/commissionplan"
+	"affluo/ent/earninghistory"
 	"affluo/ent/gigtracking"
 	"affluo/ent/payout"
 	"affluo/ent/predicate"
@@ -318,6 +320,36 @@ func (uu *UserUpdate) AddAffiliates(a ...*Affiliate) *UserUpdate {
 	return uu.AddAffiliateIDs(ids...)
 }
 
+// AddEarningHistoryIDs adds the "earning_histories" edge to the EarningHistory entity by IDs.
+func (uu *UserUpdate) AddEarningHistoryIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddEarningHistoryIDs(ids...)
+	return uu
+}
+
+// AddEarningHistories adds the "earning_histories" edges to the EarningHistory entity.
+func (uu *UserUpdate) AddEarningHistories(e ...*EarningHistory) *UserUpdate {
+	ids := make([]int64, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return uu.AddEarningHistoryIDs(ids...)
+}
+
+// AddCommissionHistoryIDs adds the "commission_histories" edge to the CommissionHistory entity by IDs.
+func (uu *UserUpdate) AddCommissionHistoryIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddCommissionHistoryIDs(ids...)
+	return uu
+}
+
+// AddCommissionHistories adds the "commission_histories" edges to the CommissionHistory entity.
+func (uu *UserUpdate) AddCommissionHistories(c ...*CommissionHistory) *UserUpdate {
+	ids := make([]int64, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.AddCommissionHistoryIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -432,6 +464,48 @@ func (uu *UserUpdate) RemoveAffiliates(a ...*Affiliate) *UserUpdate {
 		ids[i] = a[i].ID
 	}
 	return uu.RemoveAffiliateIDs(ids...)
+}
+
+// ClearEarningHistories clears all "earning_histories" edges to the EarningHistory entity.
+func (uu *UserUpdate) ClearEarningHistories() *UserUpdate {
+	uu.mutation.ClearEarningHistories()
+	return uu
+}
+
+// RemoveEarningHistoryIDs removes the "earning_histories" edge to EarningHistory entities by IDs.
+func (uu *UserUpdate) RemoveEarningHistoryIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveEarningHistoryIDs(ids...)
+	return uu
+}
+
+// RemoveEarningHistories removes "earning_histories" edges to EarningHistory entities.
+func (uu *UserUpdate) RemoveEarningHistories(e ...*EarningHistory) *UserUpdate {
+	ids := make([]int64, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return uu.RemoveEarningHistoryIDs(ids...)
+}
+
+// ClearCommissionHistories clears all "commission_histories" edges to the CommissionHistory entity.
+func (uu *UserUpdate) ClearCommissionHistories() *UserUpdate {
+	uu.mutation.ClearCommissionHistories()
+	return uu
+}
+
+// RemoveCommissionHistoryIDs removes the "commission_histories" edge to CommissionHistory entities by IDs.
+func (uu *UserUpdate) RemoveCommissionHistoryIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveCommissionHistoryIDs(ids...)
+	return uu
+}
+
+// RemoveCommissionHistories removes "commission_histories" edges to CommissionHistory entities.
+func (uu *UserUpdate) RemoveCommissionHistories(c ...*CommissionHistory) *UserUpdate {
+	ids := make([]int64, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.RemoveCommissionHistoryIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -802,6 +876,96 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.EarningHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.EarningHistoriesTable,
+			Columns: []string{user.EarningHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(earninghistory.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedEarningHistoriesIDs(); len(nodes) > 0 && !uu.mutation.EarningHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.EarningHistoriesTable,
+			Columns: []string{user.EarningHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(earninghistory.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.EarningHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.EarningHistoriesTable,
+			Columns: []string{user.EarningHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(earninghistory.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.CommissionHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommissionHistoriesTable,
+			Columns: []string{user.CommissionHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionhistory.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedCommissionHistoriesIDs(); len(nodes) > 0 && !uu.mutation.CommissionHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommissionHistoriesTable,
+			Columns: []string{user.CommissionHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionhistory.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.CommissionHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommissionHistoriesTable,
+			Columns: []string{user.CommissionHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionhistory.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -1106,6 +1270,36 @@ func (uuo *UserUpdateOne) AddAffiliates(a ...*Affiliate) *UserUpdateOne {
 	return uuo.AddAffiliateIDs(ids...)
 }
 
+// AddEarningHistoryIDs adds the "earning_histories" edge to the EarningHistory entity by IDs.
+func (uuo *UserUpdateOne) AddEarningHistoryIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddEarningHistoryIDs(ids...)
+	return uuo
+}
+
+// AddEarningHistories adds the "earning_histories" edges to the EarningHistory entity.
+func (uuo *UserUpdateOne) AddEarningHistories(e ...*EarningHistory) *UserUpdateOne {
+	ids := make([]int64, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return uuo.AddEarningHistoryIDs(ids...)
+}
+
+// AddCommissionHistoryIDs adds the "commission_histories" edge to the CommissionHistory entity by IDs.
+func (uuo *UserUpdateOne) AddCommissionHistoryIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddCommissionHistoryIDs(ids...)
+	return uuo
+}
+
+// AddCommissionHistories adds the "commission_histories" edges to the CommissionHistory entity.
+func (uuo *UserUpdateOne) AddCommissionHistories(c ...*CommissionHistory) *UserUpdateOne {
+	ids := make([]int64, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.AddCommissionHistoryIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -1220,6 +1414,48 @@ func (uuo *UserUpdateOne) RemoveAffiliates(a ...*Affiliate) *UserUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return uuo.RemoveAffiliateIDs(ids...)
+}
+
+// ClearEarningHistories clears all "earning_histories" edges to the EarningHistory entity.
+func (uuo *UserUpdateOne) ClearEarningHistories() *UserUpdateOne {
+	uuo.mutation.ClearEarningHistories()
+	return uuo
+}
+
+// RemoveEarningHistoryIDs removes the "earning_histories" edge to EarningHistory entities by IDs.
+func (uuo *UserUpdateOne) RemoveEarningHistoryIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveEarningHistoryIDs(ids...)
+	return uuo
+}
+
+// RemoveEarningHistories removes "earning_histories" edges to EarningHistory entities.
+func (uuo *UserUpdateOne) RemoveEarningHistories(e ...*EarningHistory) *UserUpdateOne {
+	ids := make([]int64, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return uuo.RemoveEarningHistoryIDs(ids...)
+}
+
+// ClearCommissionHistories clears all "commission_histories" edges to the CommissionHistory entity.
+func (uuo *UserUpdateOne) ClearCommissionHistories() *UserUpdateOne {
+	uuo.mutation.ClearCommissionHistories()
+	return uuo
+}
+
+// RemoveCommissionHistoryIDs removes the "commission_histories" edge to CommissionHistory entities by IDs.
+func (uuo *UserUpdateOne) RemoveCommissionHistoryIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveCommissionHistoryIDs(ids...)
+	return uuo
+}
+
+// RemoveCommissionHistories removes "commission_histories" edges to CommissionHistory entities.
+func (uuo *UserUpdateOne) RemoveCommissionHistories(c ...*CommissionHistory) *UserUpdateOne {
+	ids := make([]int64, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.RemoveCommissionHistoryIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1613,6 +1849,96 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(affiliate.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.EarningHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.EarningHistoriesTable,
+			Columns: []string{user.EarningHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(earninghistory.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedEarningHistoriesIDs(); len(nodes) > 0 && !uuo.mutation.EarningHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.EarningHistoriesTable,
+			Columns: []string{user.EarningHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(earninghistory.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.EarningHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.EarningHistoriesTable,
+			Columns: []string{user.EarningHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(earninghistory.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.CommissionHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommissionHistoriesTable,
+			Columns: []string{user.CommissionHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionhistory.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedCommissionHistoriesIDs(); len(nodes) > 0 && !uuo.mutation.CommissionHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommissionHistoriesTable,
+			Columns: []string{user.CommissionHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionhistory.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.CommissionHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommissionHistoriesTable,
+			Columns: []string{user.CommissionHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(commissionhistory.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

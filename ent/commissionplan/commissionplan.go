@@ -24,14 +24,14 @@ const (
 	FieldClickCommission = "click_commission"
 	// FieldImpressionCommission holds the string denoting the impression_commission field in the database.
 	FieldImpressionCommission = "impression_commission"
-	// FieldLeadCommission holds the string denoting the lead_commission field in the database.
-	FieldLeadCommission = "lead_commission"
+	// FieldFirstLeadCommission holds the string denoting the first_lead_commission field in the database.
+	FieldFirstLeadCommission = "first_lead_commission"
+	// FieldRepeatLeadCommission holds the string denoting the repeat_lead_commission field in the database.
+	FieldRepeatLeadCommission = "repeat_lead_commission"
+	// FieldValidMonths holds the string denoting the valid_months field in the database.
+	FieldValidMonths = "valid_months"
 	// FieldMinimumPayout holds the string denoting the minimum_payout field in the database.
 	FieldMinimumPayout = "minimum_payout"
-	// FieldValidFrom holds the string denoting the valid_from field in the database.
-	FieldValidFrom = "valid_from"
-	// FieldValidUntil holds the string denoting the valid_until field in the database.
-	FieldValidUntil = "valid_until"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
 	// FieldIsDefault holds the string denoting the is_default field in the database.
@@ -57,10 +57,10 @@ var Columns = []string{
 	FieldType,
 	FieldClickCommission,
 	FieldImpressionCommission,
-	FieldLeadCommission,
+	FieldFirstLeadCommission,
+	FieldRepeatLeadCommission,
+	FieldValidMonths,
 	FieldMinimumPayout,
-	FieldValidFrom,
-	FieldValidUntil,
 	FieldIsActive,
 	FieldIsDefault,
 }
@@ -82,8 +82,12 @@ var (
 	DefaultClickCommission float64
 	// DefaultImpressionCommission holds the default value on creation for the "impression_commission" field.
 	DefaultImpressionCommission float64
-	// DefaultLeadCommission holds the default value on creation for the "lead_commission" field.
-	DefaultLeadCommission float64
+	// DefaultFirstLeadCommission holds the default value on creation for the "first_lead_commission" field.
+	DefaultFirstLeadCommission float64
+	// DefaultRepeatLeadCommission holds the default value on creation for the "repeat_lead_commission" field.
+	DefaultRepeatLeadCommission float64
+	// DefaultValidMonths holds the default value on creation for the "valid_months" field.
+	DefaultValidMonths int
 	// DefaultMinimumPayout holds the default value on creation for the "minimum_payout" field.
 	DefaultMinimumPayout float64
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
@@ -148,24 +152,24 @@ func ByImpressionCommission(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldImpressionCommission, opts...).ToFunc()
 }
 
-// ByLeadCommission orders the results by the lead_commission field.
-func ByLeadCommission(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLeadCommission, opts...).ToFunc()
+// ByFirstLeadCommission orders the results by the first_lead_commission field.
+func ByFirstLeadCommission(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFirstLeadCommission, opts...).ToFunc()
+}
+
+// ByRepeatLeadCommission orders the results by the repeat_lead_commission field.
+func ByRepeatLeadCommission(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRepeatLeadCommission, opts...).ToFunc()
+}
+
+// ByValidMonths orders the results by the valid_months field.
+func ByValidMonths(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldValidMonths, opts...).ToFunc()
 }
 
 // ByMinimumPayout orders the results by the minimum_payout field.
 func ByMinimumPayout(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldMinimumPayout, opts...).ToFunc()
-}
-
-// ByValidFrom orders the results by the valid_from field.
-func ByValidFrom(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldValidFrom, opts...).ToFunc()
-}
-
-// ByValidUntil orders the results by the valid_until field.
-func ByValidUntil(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldValidUntil, opts...).ToFunc()
 }
 
 // ByIsActive orders the results by the is_active field.

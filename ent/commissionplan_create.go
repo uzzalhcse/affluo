@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -75,16 +74,44 @@ func (cpc *CommissionPlanCreate) SetNillableImpressionCommission(f *float64) *Co
 	return cpc
 }
 
-// SetLeadCommission sets the "lead_commission" field.
-func (cpc *CommissionPlanCreate) SetLeadCommission(f float64) *CommissionPlanCreate {
-	cpc.mutation.SetLeadCommission(f)
+// SetFirstLeadCommission sets the "first_lead_commission" field.
+func (cpc *CommissionPlanCreate) SetFirstLeadCommission(f float64) *CommissionPlanCreate {
+	cpc.mutation.SetFirstLeadCommission(f)
 	return cpc
 }
 
-// SetNillableLeadCommission sets the "lead_commission" field if the given value is not nil.
-func (cpc *CommissionPlanCreate) SetNillableLeadCommission(f *float64) *CommissionPlanCreate {
+// SetNillableFirstLeadCommission sets the "first_lead_commission" field if the given value is not nil.
+func (cpc *CommissionPlanCreate) SetNillableFirstLeadCommission(f *float64) *CommissionPlanCreate {
 	if f != nil {
-		cpc.SetLeadCommission(*f)
+		cpc.SetFirstLeadCommission(*f)
+	}
+	return cpc
+}
+
+// SetRepeatLeadCommission sets the "repeat_lead_commission" field.
+func (cpc *CommissionPlanCreate) SetRepeatLeadCommission(f float64) *CommissionPlanCreate {
+	cpc.mutation.SetRepeatLeadCommission(f)
+	return cpc
+}
+
+// SetNillableRepeatLeadCommission sets the "repeat_lead_commission" field if the given value is not nil.
+func (cpc *CommissionPlanCreate) SetNillableRepeatLeadCommission(f *float64) *CommissionPlanCreate {
+	if f != nil {
+		cpc.SetRepeatLeadCommission(*f)
+	}
+	return cpc
+}
+
+// SetValidMonths sets the "valid_months" field.
+func (cpc *CommissionPlanCreate) SetValidMonths(i int) *CommissionPlanCreate {
+	cpc.mutation.SetValidMonths(i)
+	return cpc
+}
+
+// SetNillableValidMonths sets the "valid_months" field if the given value is not nil.
+func (cpc *CommissionPlanCreate) SetNillableValidMonths(i *int) *CommissionPlanCreate {
+	if i != nil {
+		cpc.SetValidMonths(*i)
 	}
 	return cpc
 }
@@ -99,34 +126,6 @@ func (cpc *CommissionPlanCreate) SetMinimumPayout(f float64) *CommissionPlanCrea
 func (cpc *CommissionPlanCreate) SetNillableMinimumPayout(f *float64) *CommissionPlanCreate {
 	if f != nil {
 		cpc.SetMinimumPayout(*f)
-	}
-	return cpc
-}
-
-// SetValidFrom sets the "valid_from" field.
-func (cpc *CommissionPlanCreate) SetValidFrom(t time.Time) *CommissionPlanCreate {
-	cpc.mutation.SetValidFrom(t)
-	return cpc
-}
-
-// SetNillableValidFrom sets the "valid_from" field if the given value is not nil.
-func (cpc *CommissionPlanCreate) SetNillableValidFrom(t *time.Time) *CommissionPlanCreate {
-	if t != nil {
-		cpc.SetValidFrom(*t)
-	}
-	return cpc
-}
-
-// SetValidUntil sets the "valid_until" field.
-func (cpc *CommissionPlanCreate) SetValidUntil(t time.Time) *CommissionPlanCreate {
-	cpc.mutation.SetValidUntil(t)
-	return cpc
-}
-
-// SetNillableValidUntil sets the "valid_until" field if the given value is not nil.
-func (cpc *CommissionPlanCreate) SetNillableValidUntil(t *time.Time) *CommissionPlanCreate {
-	if t != nil {
-		cpc.SetValidUntil(*t)
 	}
 	return cpc
 }
@@ -217,9 +216,17 @@ func (cpc *CommissionPlanCreate) defaults() {
 		v := commissionplan.DefaultImpressionCommission
 		cpc.mutation.SetImpressionCommission(v)
 	}
-	if _, ok := cpc.mutation.LeadCommission(); !ok {
-		v := commissionplan.DefaultLeadCommission
-		cpc.mutation.SetLeadCommission(v)
+	if _, ok := cpc.mutation.FirstLeadCommission(); !ok {
+		v := commissionplan.DefaultFirstLeadCommission
+		cpc.mutation.SetFirstLeadCommission(v)
+	}
+	if _, ok := cpc.mutation.RepeatLeadCommission(); !ok {
+		v := commissionplan.DefaultRepeatLeadCommission
+		cpc.mutation.SetRepeatLeadCommission(v)
+	}
+	if _, ok := cpc.mutation.ValidMonths(); !ok {
+		v := commissionplan.DefaultValidMonths
+		cpc.mutation.SetValidMonths(v)
 	}
 	if _, ok := cpc.mutation.MinimumPayout(); !ok {
 		v := commissionplan.DefaultMinimumPayout
@@ -259,8 +266,14 @@ func (cpc *CommissionPlanCreate) check() error {
 	if _, ok := cpc.mutation.ImpressionCommission(); !ok {
 		return &ValidationError{Name: "impression_commission", err: errors.New(`ent: missing required field "CommissionPlan.impression_commission"`)}
 	}
-	if _, ok := cpc.mutation.LeadCommission(); !ok {
-		return &ValidationError{Name: "lead_commission", err: errors.New(`ent: missing required field "CommissionPlan.lead_commission"`)}
+	if _, ok := cpc.mutation.FirstLeadCommission(); !ok {
+		return &ValidationError{Name: "first_lead_commission", err: errors.New(`ent: missing required field "CommissionPlan.first_lead_commission"`)}
+	}
+	if _, ok := cpc.mutation.RepeatLeadCommission(); !ok {
+		return &ValidationError{Name: "repeat_lead_commission", err: errors.New(`ent: missing required field "CommissionPlan.repeat_lead_commission"`)}
+	}
+	if _, ok := cpc.mutation.ValidMonths(); !ok {
+		return &ValidationError{Name: "valid_months", err: errors.New(`ent: missing required field "CommissionPlan.valid_months"`)}
 	}
 	if _, ok := cpc.mutation.MinimumPayout(); !ok {
 		return &ValidationError{Name: "minimum_payout", err: errors.New(`ent: missing required field "CommissionPlan.minimum_payout"`)}
@@ -317,21 +330,21 @@ func (cpc *CommissionPlanCreate) createSpec() (*CommissionPlan, *sqlgraph.Create
 		_spec.SetField(commissionplan.FieldImpressionCommission, field.TypeFloat64, value)
 		_node.ImpressionCommission = value
 	}
-	if value, ok := cpc.mutation.LeadCommission(); ok {
-		_spec.SetField(commissionplan.FieldLeadCommission, field.TypeFloat64, value)
-		_node.LeadCommission = value
+	if value, ok := cpc.mutation.FirstLeadCommission(); ok {
+		_spec.SetField(commissionplan.FieldFirstLeadCommission, field.TypeFloat64, value)
+		_node.FirstLeadCommission = value
+	}
+	if value, ok := cpc.mutation.RepeatLeadCommission(); ok {
+		_spec.SetField(commissionplan.FieldRepeatLeadCommission, field.TypeFloat64, value)
+		_node.RepeatLeadCommission = value
+	}
+	if value, ok := cpc.mutation.ValidMonths(); ok {
+		_spec.SetField(commissionplan.FieldValidMonths, field.TypeInt, value)
+		_node.ValidMonths = value
 	}
 	if value, ok := cpc.mutation.MinimumPayout(); ok {
 		_spec.SetField(commissionplan.FieldMinimumPayout, field.TypeFloat64, value)
 		_node.MinimumPayout = value
-	}
-	if value, ok := cpc.mutation.ValidFrom(); ok {
-		_spec.SetField(commissionplan.FieldValidFrom, field.TypeTime, value)
-		_node.ValidFrom = value
-	}
-	if value, ok := cpc.mutation.ValidUntil(); ok {
-		_spec.SetField(commissionplan.FieldValidUntil, field.TypeTime, value)
-		_node.ValidUntil = value
 	}
 	if value, ok := cpc.mutation.IsActive(); ok {
 		_spec.SetField(commissionplan.FieldIsActive, field.TypeBool, value)
